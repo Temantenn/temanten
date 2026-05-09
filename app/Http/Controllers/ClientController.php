@@ -152,11 +152,43 @@ class ClientController extends Controller
             $content['amplop']['qris_image'] = $path;
         }
 
-        $galleryPaths = $content['media']['gallery'] ?? [];
+        // Normalisasi: pastikan array numeric 0-based sebelum proses delete
+        $galleryPaths = array_values($content['media']['gallery'] ?? []);
+
         if ($request->has('delete_gallery')) {
-            foreach ($request->delete_gallery as $idx) {
+            $toDelete = array_map('intval', (array) $request->delete_gallery);
+            $toDelete = array_unique($toDelete);
+
+            foreach ($toDelete as $idx) {
+                if (!array_key_exists($idx, $galleryPaths)) {
+                    continue;
+                }
+                $path = $galleryPaths[$idx];
+
+                // Hanya hapus file fisik bila path lokal (bukan URL eksternal)
+                if (is_string($path) && $path !== '' && !preg_match('#^https?://#i', $path)) {
+                    // Path disimpan sebagai "storage/invitations/..." → mapping ke disk "public/invitations/..."
+                    $storagePath = Str::startsWith($path, 'storage/')
+                        ? 'public/' . Str::after($path, 'storage/')
+                        : (Str::startsWith($path, 'public/') ? $path : null);
+
+                    if ($storagePath) {
+                        try {
+                            if (Storage::exists($storagePath)) {
+                                Storage::delete($storagePath);
+                            }
+                        } catch (\Throwable $e) {
+                            Log::warning('Gagal menghapus file gallery', [
+                                'path'  => $storagePath,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+                }
+
                 unset($galleryPaths[$idx]);
             }
+            // Reindex supaya urutan rapi
             $galleryPaths = array_values($galleryPaths);
         }
 
@@ -167,7 +199,7 @@ class ClientController extends Controller
                 $galleryPaths[] = str_replace('public/', 'storage/', $path);
             }
         }
-        $content['media']['gallery'] = $galleryPaths;
+        $content['media']['gallery'] = array_values($galleryPaths);
 
         $content['media']['video_link'] = $request->video_link;
 

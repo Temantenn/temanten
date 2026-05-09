@@ -108,7 +108,17 @@ html,body{overflow:hidden;height:100vh;background:var(--bg);font-family:'Plus Ja
 .home-sec{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:var(--bg);padding:0 24px}
 .home-sec::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='2' fill='none' stroke='%23D4898B' stroke-width='0.5' opacity='0.2'/%3E%3Ccircle cx='30' cy='30' r='8' fill='none' stroke='%23D4898B' stroke-width='0.4' opacity='0.12'/%3E%3Cpath d='M30,22 Q34,26 30,30 Q26,26 30,22' fill='%23D4898B' opacity='0.08'/%3E%3Cpath d='M30,38 Q34,34 30,30 Q26,34 30,38' fill='%23D4898B' opacity='0.08'/%3E%3Cpath d='M22,30 Q26,34 30,30 Q26,26 22,30' fill='%23D4898B' opacity='0.08'/%3E%3Cpath d='M38,30 Q34,34 30,30 Q34,26 38,30' fill='%23D4898B' opacity='0.08'/%3E%3C/svg%3E");background-size:60px 60px;pointer-events:none}
 .home-eyebrow{font-size:8px;letter-spacing:5px;text-transform:uppercase;color:var(--pink);margin-bottom:14px;position:relative}
-.home-cover-photo{width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid var(--warm);box-shadow:0 0 0 6px rgba(212,137,139,0.2),0 8px 32px rgba(176,100,112,0.25);margin-bottom:16px;position:relative}
+.home-cover-photo{
+    width:180px;height:220px;
+    object-fit:cover;
+    border-radius:100px 100px 18px 18px;
+    border:4px solid var(--warm);
+    box-shadow:0 0 0 6px rgba(212,137,139,0.18),0 12px 36px rgba(176,100,112,0.28);
+    margin-bottom:18px;
+    position:relative;
+    background:var(--warm);
+}
+
 .home-names{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;font-style:italic;color:var(--navy);line-height:1.2;margin-bottom:4px;position:relative}
 .home-amp{color:var(--rose)}
 .home-date{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:18px;position:relative}
@@ -124,7 +134,7 @@ html,body{overflow:hidden;height:100vh;background:var(--bg);font-family:'Plus Ja
 .couple-diag{display:grid;grid-template-columns:1fr 1fr;height:100%}
 .cd-pria{background:var(--navy);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='8' fill='none' stroke='%23E4B857' stroke-width='0.4' opacity='0.1'/%3E%3C/svg%3E");background-size:60px 60px;clip-path:polygon(0 0,100% 0,80% 100%,0 100%);padding:32px 14px 24px 18px;display:flex;flex-direction:column;align-items:center}
 .cd-wanita{background:var(--warm);clip-path:polygon(20% 0,100% 0,100% 100%,0 100%);padding:32px 18px 24px 32px;display:flex;flex-direction:column;align-items:center}
-.cp-photo{width:100px;height:130px;object-fit:cover;border-radius:50% 50% 50% 50% / 40% 40% 60% 60%;border:3px solid;margin-bottom:12px}
+.cp-photo{width:100px;height:130px;object-fit:cover;object-position:center top;border-radius:50% 50% 50% 50% / 40% 40% 60% 60%;border:3px solid;margin-bottom:12px}
 .cd-pria .cp-photo{border-color:var(--gold-l);box-shadow:0 6px 24px rgba(0,0,0,0.3)}
 .cd-wanita .cp-photo{border-color:var(--rose);box-shadow:0 6px 24px rgba(176,100,112,0.25)}
 .cp-role{font-size:7px;letter-spacing:3px;text-transform:uppercase;font-weight:700;margin-bottom:4px}
@@ -246,6 +256,29 @@ html,body{overflow:hidden;height:100vh;background:var(--bg);font-family:'Plus Ja
 </head>
 <body>
 @php
+    $formatInstagram = function ($value) {
+        $value = trim((string) ($value ?? ''));
+        if ($value === '') {
+            return ['username' => '', 'display' => '', 'url' => ''];
+        }
+
+        $value = preg_replace('/^https?:\/\/(www\.)?instagram\.com\//i', '', $value);
+        $value = preg_replace('/^instagram\.com\//i', '', $value);
+        $value = ltrim($value, '@');
+        $value = strtok($value, '?/#');
+        $value = trim((string) $value, " /	
+
+ ");
+
+        return [
+            'username' => $value,
+            'display' => $value !== '' ? '@' . $value : '',
+            'url' => $value !== '' ? 'https://instagram.com/' . $value : '',
+        ];
+    };
+@endphp
+
+@php
 function sjImg($p,$fb='https://images.unsplash.com/photo-1519741497674-611481863552?w=800&fit=crop'){
     if(!$p||str_contains($p,'placeholder'))return $fb;
     return \Illuminate\Support\Str::startsWith($p,'http')?$p:asset($p);
@@ -274,7 +307,7 @@ $sections=[
     ['id'=>'s-story','label'=>'Kisah'],
     ['id'=>'s-acara','label'=>'Acara'],
     ['id'=>'s-galeri','label'=>'Galeri'],
-    ['id'=>'s-gift','label'=>'Hadiah & RSVP'],
+    ['id'=>'s-gift','label'=>'Hadiah & Ucapan'],
 ];
 @endphp
 
@@ -345,7 +378,15 @@ $sections=[
     {{-- HOME --}}
     <section class="snap-sec home-sec floral-bg" id="s-home">
         <p class="home-eyebrow">✦ Selamat Datang ✦</p>
-        <img src="{{ sjImg($pria['foto'] ?? '', 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400&fit=crop') }}" class="home-cover-photo" alt="">
+        @php
+            $coverSrc = $invitation->content['media']['cover']
+                ?? $invitation->content['media']['hero']
+                ?? ($gallery[0] ?? null);
+        @endphp
+        <img src="{{ sjImg($coverSrc, 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&fit=crop') }}"
+             class="home-cover-photo"
+             alt="Foto {{ $pria['panggilan'] ?? 'Mempelai' }} & {{ $wanita['panggilan'] ?? 'Mempelai' }}"
+             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1519741497674-611481863552?w=800&fit=crop';">
         <h2 class="home-names">{{ $pria['panggilan'] ?? 'Aryo' }} <span class="home-amp">&amp;</span> {{ $wanita['panggilan'] ?? 'Kirana' }}</h2>
         <p class="home-date">{{ $target->translatedFormat('d · F · Y') }}</p>
         <div class="cd-row">
@@ -365,14 +406,14 @@ $sections=[
                 <p class="cp-role">Mempelai Pria</p>
                 <h3 class="cp-name">{{ $pria['nama'] ?? 'Aryo Wicaksono, S.T.' }}</h3>
                 <p class="cp-parents">Putra dari<br><strong>Bp. {{ $pria['ayah'] ?? '...' }}</strong><br>&amp; <strong>Ibu {{ $pria['ibu'] ?? '...' }}</strong></p>
-                @if(!empty($pria['instagram']))<a href="https://instagram.com/{{ $pria['instagram'] }}" class="cp-ig" target="_blank">✦ @{{ $pria['instagram'] }}</a>@endif
+                @if(!empty($formatInstagram($pria['instagram'] ?? '')['username']))<a href="{{ $formatInstagram($pria['instagram'] ?? '')['url'] }}" class="cp-ig" target="_blank">✦ {{ $formatInstagram($pria['instagram'] ?? '')['display'] }}</a>@endif
             </div>
             <div class="cd-wanita">
                 <img src="{{ sjImg($wanita['foto'] ?? '', 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=600&fit=crop') }}" class="cp-photo" alt="">
                 <p class="cp-role">Mempelai Wanita</p>
                 <h3 class="cp-name">{{ $wanita['nama'] ?? 'Kirana Sari, S.Pd.' }}</h3>
                 <p class="cp-parents">Putri dari<br><strong>Bp. {{ $wanita['ayah'] ?? '...' }}</strong><br>&amp; <strong>Ibu {{ $wanita['ibu'] ?? '...' }}</strong></p>
-                @if(!empty($wanita['instagram']))<a href="https://instagram.com/{{ $wanita['instagram'] }}" class="cp-ig" target="_blank">♡ @{{ $wanita['instagram'] }}</a>@endif
+                @if(!empty($formatInstagram($wanita['instagram'] ?? '')['username']))<a href="{{ $formatInstagram($wanita['instagram'] ?? '')['url'] }}" class="cp-ig" target="_blank">♡ {{ $formatInstagram($wanita['instagram'] ?? '')['display'] }}</a>@endif
             </div>
         </div>
     </section>
@@ -418,7 +459,15 @@ $sections=[
                     @endphp
                     @if($akadL1)<div class="ev-row" style="padding-left:22px;"><span>{{ $akadL1 }}</span></div>@endif
                     @if($akadL2)<div class="ev-row" style="padding-left:22px;"><span>{{ $akadL2 }}</span></div>@endif
-                    @if(!empty($akad['maps']))<a href="{{ $akad['maps'] }}" class="btn-map-flip" target="_blank" onclick="event.stopPropagation()">🗺 Peta Lokasi</a>@endif
+                    @if(!empty($akad['maps'] ?? null) || !empty($akad['alamat'] ?? null))
+                    @php
+                        $maps = $akad['maps'] ?? $akad['alamat'];
+                        $mapsUrl = (str_starts_with($maps, 'http://') || str_starts_with($maps, 'https://')) 
+                            ? $maps 
+                            : "https://www.google.com/maps/search/?api=1&query=" . urlencode($maps);
+                    @endphp
+                    <a href="{{ $mapsUrl }}" class="btn-map-flip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🗺 Peta Lokasi</a>
+                    @endif
                 </div>
                 {{-- BACK: RESEPSI --}}
                 <div class="flip-face flip-back">
@@ -434,7 +483,15 @@ $sections=[
                     @endphp
                     @if($resepsiL1)<div class="ev-row" style="padding-left:22px;"><span>{{ $resepsiL1 }}</span></div>@endif
                     @if($resepsiL2)<div class="ev-row" style="padding-left:22px;"><span>{{ $resepsiL2 }}</span></div>@endif
-                    @if(!empty($resepsi['maps']))<a href="{{ $resepsi['maps'] }}" class="btn-map-flip" target="_blank" onclick="event.stopPropagation()">🗺 Peta Lokasi</a>@endif
+                    @if(!empty($resepsi['maps'] ?? null) || !empty($resepsi['alamat'] ?? null))
+                    @php
+                        $maps = $resepsi['maps'] ?? $resepsi['alamat'];
+                        $mapsUrl = (str_starts_with($maps, 'http://') || str_starts_with($maps, 'https://')) 
+                            ? $maps 
+                            : "https://www.google.com/maps/search/?api=1&query=" . urlencode($maps);
+                    @endphp
+                    <a href="{{ $mapsUrl }}" class="btn-map-flip" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🗺 Peta Lokasi</a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -442,9 +499,18 @@ $sections=[
             <div class="fi-dot active" id="fd0"></div>
             <div class="fi-dot" id="fd1"></div>
         </div>
+        @php
+            $dressSJ = $invitation->content['acara']['dresscode'] ?? [];
+            $dressSJJudul = trim($dressSJ['judul'] ?? '');
+            $dressSJInfo = trim($dressSJ['info'] ?? '');
+        @endphp
+        @if($dressSJJudul !== '' || $dressSJInfo !== '')
         <div class="dresscode-strip">
-            Dresscode: <strong style="color:var(--navy)">Dusty Rose &amp; Navy</strong>
+            Dresscode:
+            @if($dressSJJudul !== '')<strong style="color:var(--navy)">{{ $dressSJJudul }}</strong>@endif
+            @if($dressSJInfo !== '')<span style="color:var(--muted);margin-left:6px">· {{ $dressSJInfo }}</span>@endif
         </div>
+        @endif
     </section>
 
     {{-- GALLERY — CSS masonry --}}
@@ -468,7 +534,7 @@ $sections=[
     <section class="snap-sec auto-h gift-sec" id="s-gift">
         <div style="padding:28px 0 14px;text-align:center">
             <p class="sec-eyebrow">✦ Hadiah &amp; Ucapan ✦</p>
-            <h2 class="sec-title">Amplop &amp; RSVP</h2>
+            <h2 class="sec-title">Ucapan &amp; Doa</h2>
             <div class="sec-line"></div>
         </div>
 
@@ -500,20 +566,20 @@ $sections=[
             <form action="{{ route('kirim.ucapan') }}" method="POST">
                 @csrf
                 <input type="hidden" name="invitation_slug" value="{{ $invitation->slug }}">
-                <input type="text" name="nama" class="form-input" placeholder="Nama Anda..." required>
+                <input type="text" name="nama" class="form-input" placeholder="Nama..." required>
                 <select name="kehadiran" class="form-input">
                     <option value="hadir">✦ Insya Allah hadir</option>
                     <option value="tidak_hadir">Mohon maaf, berhalangan</option>
                     <option value="ragu">Belum dapat memastikan</option>
                 </select>
-                <textarea name="ucapan" rows="3" class="form-input" placeholder="Ucapan dan doa untuk kedua mempelai..." required style="resize:none"></textarea>
+                <textarea name="ucapan" rows="3" class="form-input" placeholder="Tulis ucapan dan doa..." required style="resize:none"></textarea>
                 <button type="submit" class="btn-kirim">✦ &nbsp; Kirim Ucapan</button>
             </form>
         </div>
 
         @if($invitation->comments->count() > 0)
         <div style="padding:0 22px 30px">
-            <p style="font-size:9px;letter-spacing:3px;color:var(--pink);font-weight:600;margin-bottom:12px">✦ Ucapan Tamu</p>
+            <p style="font-size:9px;letter-spacing:3px;color:var(--pink);font-weight:600;margin-bottom:12px">✦ Ucapan &amp; Doa Tamu</p>
             @foreach($invitation->comments->sortByDesc('created_at')->take(8) as $c)
             <div class="wish-card">
                 <div class="wish-hdr">

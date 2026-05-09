@@ -45,7 +45,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .gate.open .gate-right{transform:translateX(100%)}
 .gate-center{position:relative;z-index:2;text-align:center;padding:0 24px;pointer-events:none}
 .gate-center.hide{opacity:0;transition:opacity 0.4s}
-.gate-ornament{margin:0 auto 20px;display:block;opacity:0.95;filter: drop-shadow(0 0 10px rgba(184,134,26,0.3))}
+.jawa-ornament{
+    width:80px;
+    height:80px;
+    margin:0 auto 20px auto;
+    position:relative;
+}
+.jawa-ornament::before,
+.jawa-ornament::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    border-left:30px solid transparent;
+    border-right:30px solid transparent;
+    border-bottom:50px solid #D4AF37;
+}
+.jawa-ornament::after{
+    top:25px;
+    border-bottom:40px solid rgba(212,175,55,0.6);
+}
 .gate-eyebrow{font-size:10px;letter-spacing:6px;text-transform:uppercase;color:var(--gold-l);margin-bottom:15px;opacity:0.9}
 .gate-names{font-family:'Cormorant Garamond',serif;font-size:3.2rem;font-weight:400;font-style:italic;color:var(--ivory);line-height:1.1;margin:18px 0}
 .gate-amp{color:var(--ivory);font-style:normal;font-weight:300;display:inline-block;margin:0 10px}
@@ -56,7 +75,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .btn-buka:hover{box-shadow:0 12px 35px rgba(184,134,26,0.45);transform:translateY(-3px);filter:brightness(1.05)}
 
 /* ═══ PAGES ═══ */
-.page{position:absolute;inset:0;overflow-y:auto;display:none;padding-bottom:90px}
+.page{position:absolute;inset:0;overflow-y:auto;display:none;padding-bottom:130px}
 .page.active{display:block}
 .page::-webkit-scrollbar{width:0}
 
@@ -70,10 +89,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .radial-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:300;opacity:0;pointer-events:none;transition:opacity 0.5s}
 .radial-nav.show{opacity:1;pointer-events:all}
 .radial-bar{height:70px;background:rgba(61,31,13,0.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:0 8px}
-.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 10px;border-radius:8px;transition:0.2s;color:rgba(224,184,74,0.45);border:none;background:none}
-.nav-btn.active,.nav-btn:hover{color:var(--gold-l)}
-.nav-btn span{font-size:7px;letter-spacing:1.5px;text-transform:uppercase;font-family:'Cinzel',serif}
-.nav-icon{font-size:20px;line-height:1}
+.nav-btn{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:0;height:100%;transition:0.2s;color:rgba(224,184,74,0.45);border:none;background:none;pointer-events:auto;min-width:0}
+.nav-btn.active,.nav-btn:hover{color:var(--gold-l);background:rgba(224,184,74,0.05)}
+.nav-btn span{font-size:7px;letter-spacing:1px;text-transform:uppercase;font-family:'Cinzel',serif;white-space:nowrap}
+.nav-icon{font-size:18px;line-height:1}
 
 /* ═══ SECTION TITLE ═══ */
 .sec-title{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;font-style:italic;color:var(--gold);text-align:center;margin-bottom:6px}
@@ -97,7 +116,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .couple-half{padding:30px 14px 20px;display:flex;flex-direction:column;align-items:center}
 .couple-half:first-child{background:var(--sogan);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='10' r='9' fill='none' stroke='%23E0B84A' stroke-width='0.7' opacity='0.1'/%3E%3Ccircle cx='30' cy='50' r='9' fill='none' stroke='%23E0B84A' stroke-width='0.7' opacity='0.1'/%3E%3Ccircle cx='10' cy='30' r='9' fill='none' stroke='%23E0B84A' stroke-width='0.7' opacity='0.1'/%3E%3Ccircle cx='50' cy='30' r='9' fill='none' stroke='%23E0B84A' stroke-width='0.7' opacity='0.1'/%3E%3C/svg%3E");}
 .couple-half:last-child{background:var(--krem)}
-.couple-photo{width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);box-shadow:0 0 0 6px rgba(184,134,26,0.2),0 8px 24px rgba(61,31,13,0.4);margin-bottom:14px}
+.couple-photo{width:110px;height:110px;border-radius:50%;object-fit:cover;object-position:center top;border:3px solid var(--gold);box-shadow:0 0 0 6px rgba(184,134,26,0.2),0 8px 24px rgba(61,31,13,0.4);margin-bottom:14px}
 .couple-role{font-size:8px;letter-spacing:4px;text-transform:uppercase;font-family:'Cinzel',serif;margin-bottom:2px}
 .couple-half:first-child .couple-role{color:var(--gold-l)}
 .couple-half:last-child .couple-role{color:var(--sogan)}
@@ -140,15 +159,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 
 /* ═══ GALERI — BATIK FRAME ═══ */
 .gallery-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:3px;padding:0}
-.gallery-item{position:relative;overflow:hidden}
-.gallery-img{width:100%;height:160px;object-fit:cover;display:block;filter:sepia(0.15) contrast(1.05);transition:transform 0.5s,filter 0.3s}
-.gallery-item:hover .gallery-img{transform:scale(1.06);filter:sepia(0) contrast(1)}
+.gallery-item{position:relative;overflow:hidden;aspect-ratio:4/5;background:var(--ivory2)}
+.gallery-img{width:100%;height:100%;object-fit:contain;display:block;filter:sepia(0.15) contrast(1.05);transition:transform 0.5s,filter 0.3s}
+.gallery-item:hover .gallery-img{transform:scale(1.04);filter:sepia(0) contrast(1)}
 .gallery-item::after{content:'';position:absolute;inset:6px;border:1px solid rgba(184,134,26,0.5);pointer-events:none}
-.gallery-item:first-child{grid-column:1/-1}
-.gallery-item:first-child .gallery-img{height:210px}
+.gallery-item:first-child{grid-column:1/-1;aspect-ratio:16/10}
 
 /* ═══ RSVP & GIFT ═══ */
-.wishes-page{padding:40px 0 0}
+.wishes-page{padding:40px 0 140px}
 .gift-strip{background:linear-gradient(135deg,var(--sogan),var(--sogan2));border:1px solid var(--border);margin:0 16px 16px;padding:20px;position:relative;overflow:hidden}
 .gift-strip::before{content:'✦ ✦ ✦';position:absolute;top:10px;right:14px;color:var(--gold-l);opacity:0.3;font-size:10px;letter-spacing:6px}
 .gift-bank{font-size:9px;letter-spacing:3px;color:var(--gold-l);text-transform:uppercase;margin-bottom:4px;font-family:'Cinzel',serif}
@@ -181,6 +199,29 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 </style>
 </head>
 <body>
+@php
+    $formatInstagram = function ($value) {
+        $value = trim((string) ($value ?? ''));
+        if ($value === '') {
+            return ['username' => '', 'display' => '', 'url' => ''];
+        }
+
+        $value = preg_replace('/^https?:\/\/(www\.)?instagram\.com\//i', '', $value);
+        $value = preg_replace('/^instagram\.com\//i', '', $value);
+        $value = ltrim($value, '@');
+        $value = strtok($value, '?/#');
+        $value = trim((string) $value, " /	
+
+ ");
+
+        return [
+            'username' => $value,
+            'display' => $value !== '' ? '@' . $value : '',
+            'url' => $value !== '' ? 'https://instagram.com/' . $value : '',
+        ];
+    };
+@endphp
+
 @php
 function jwImg($p) {
     if(!$p||str_contains($p,'placeholder')) return 'https://images.unsplash.com/photo-1519225421980-715cb0202128?w=800&fit=crop&q=80';
@@ -238,25 +279,6 @@ $target = \Carbon\Carbon::parse($akad['waktu'] ?? now()->addDays(90));
                 <div class="gate-divider"></div>
             </div>
 
-            {{-- High Fidelity Gunungan SVG --}}
-            <svg class="gate-ornament" width="110" height="150" viewBox="0 0 110 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Outer Shape -->
-                <path d="M55,5 L105,135 L55,145 L5,135 Z" stroke="var(--gold-l)" stroke-width="1.8"/>
-                <path d="M55,15 L95,128 L55,138 L15,128 Z" stroke="var(--gold-l)" stroke-width="0.8" opacity="0.6"/>
-                <!-- Tree of Life Trunk -->
-                <rect x="54" y="45" width="2" height="90" fill="var(--gold-l)"/>
-                <!-- Detailed Foliage / Motif -->
-                <circle cx="55" cy="55" r="12" stroke="var(--gold-l)" stroke-width="0.8" opacity="0.8"/>
-                <path d="M55,43 Q65,43 75,55 Q65,67 55,67 Q45,67 35,55 Q45,43 55,43" stroke="var(--gold-l)" stroke-width="0.8"/>
-                <path d="M55,75 Q75,75 85,95 M55,75 Q35,75 25,95" stroke="var(--gold-l)" stroke-width="0.8" opacity="0.7"/>
-                <!-- Wings / Roots -->
-                <path d="M55,105 Q85,105 100,125 M55,105 Q25,105 10,125" stroke="var(--gold-l)" stroke-width="1.2"/>
-                <!-- Base / House Decor -->
-                <rect x="42" y="115" width="26" height="15" stroke="var(--gold-l)" stroke-width="1"/>
-                <line x1="42" y1="122" x2="68" y2="122" stroke="var(--gold-l)" stroke-width="0.5"/>
-                <line x1="55" y1="115" x2="55" y2="130" stroke="var(--gold-l)" stroke-width="0.5"/>
-            </svg>
-
             <h1 class="gate-names">
                 {{ $pria['panggilan'] ?? 'Raka' }} <span class="gate-amp">&amp;</span> {{ $wanita['panggilan'] ?? 'Sari' }}
             </h1>
@@ -269,9 +291,7 @@ $target = \Carbon\Carbon::parse($akad['waktu'] ?? now()->addDays(90));
 
             <br><br>
 
-            <button class="btn-buka" onclick="openSurat()">
-                <span style="font-size:16px">💎</span> &nbsp; BUKA SURAT &nbsp;
-            </button>
+            <button class="btn-buka" onclick="openSurat()">Buka Surat</button>
         </div>
     </div>
 
@@ -313,9 +333,9 @@ $target = \Carbon\Carbon::parse($akad['waktu'] ?? now()->addDays(90));
                     <strong style="color:var(--ivory2)">Bp. {{ $pria['ayah'] ?? '...' }}</strong><br>
                     &amp; <strong style="color:var(--ivory2)">Ibu {{ $pria['ibu'] ?? '...' }}</strong>
                 </p>
-                @if(!empty($pria['instagram']))
-                <a href="https://instagram.com/{{ $pria['instagram'] }}" target="_blank" style="margin-top:10px;color:var(--gold-l);font-size:11px;text-decoration:none">
-                    IG @{{ $pria['instagram'] }}
+                @if(!empty($formatInstagram($pria['instagram'] ?? '')['username']))
+                <a href="{{ $formatInstagram($pria['instagram'] ?? '')['url'] }}" target="_blank" rel="noopener noreferrer" style="margin-top:10px;color:var(--gold-l);font-size:11px;text-decoration:none">
+                    IG &#64;{{ ltrim($pria['instagram'], '@') }}
                 </a>
                 @endif
             </div>
@@ -329,9 +349,9 @@ $target = \Carbon\Carbon::parse($akad['waktu'] ?? now()->addDays(90));
                     <strong>Bp. {{ $wanita['ayah'] ?? '...' }}</strong><br>
                     &amp; <strong>Ibu {{ $wanita['ibu'] ?? '...' }}</strong>
                 </p>
-                @if(!empty($wanita['instagram']))
-                <a href="https://instagram.com/{{ $wanita['instagram'] }}" target="_blank" style="margin-top:10px;color:var(--gold);font-size:11px;text-decoration:none">
-                    IG @{{ $wanita['instagram'] }}
+                @if(!empty($formatInstagram($wanita['instagram'] ?? '')['username']))
+                <a href="{{ $formatInstagram($wanita['instagram'] ?? '')['url'] }}" target="_blank" rel="noopener noreferrer" style="margin-top:10px;color:var(--gold);font-size:11px;text-decoration:none">
+                    IG &#64;{{ ltrim($wanita['instagram'], '@') }}
                 </a>
                 @endif
             </div>
@@ -383,7 +403,15 @@ $target = \Carbon\Carbon::parse($akad['waktu'] ?? now()->addDays(90));
                     @endphp
                     @if($akadL1)<div class="ev-detail" style="padding-left: 26px;"><span>{{ $akadL1 }}</span></div>@endif
                     @if($akadL2)<div class="ev-detail" style="padding-left: 26px;"><span>{{ $akadL2 }}</span></div>@endif
-                    @if(!empty($akad['maps']))<a href="{{ $akad['maps'] }}" target="_blank" class="btn-maps-jawa">◈ &nbsp; Peta Lokasi</a>@endif
+                    @if(!empty($akad['maps'] ?? null) || !empty($akad['alamat'] ?? null))
+                    @php
+                        $maps = $akad['maps'] ?? $akad['alamat'];
+                        $mapsUrl = (str_starts_with($maps, 'http://') || str_starts_with($maps, 'https://')) 
+                            ? $maps 
+                            : "https://www.google.com/maps/search/?api=1&query=" . urlencode($maps);
+                    @endphp
+                    <a href="{{ $mapsUrl }}" target="_blank" rel="noopener noreferrer" class="btn-maps-jawa">◈ &nbsp; Peta Lokasi</a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -409,17 +437,32 @@ $target = \Carbon\Carbon::parse($akad['waktu'] ?? now()->addDays(90));
                     @endphp
                     @if($resepsiL1)<div class="ev-detail" style="padding-left: 26px;"><span>{{ $resepsiL1 }}</span></div>@endif
                     @if($resepsiL2)<div class="ev-detail" style="padding-left: 26px;"><span>{{ $resepsiL2 }}</span></div>@endif
-                    @if(!empty($resepsi['maps']))<a href="{{ $resepsi['maps'] }}" target="_blank" class="btn-maps-jawa">◈ &nbsp; Peta Lokasi</a>@endif
+                    @if(!empty($resepsi['maps'] ?? null) || !empty($resepsi['alamat'] ?? null))
+                    @php
+                        $maps = $resepsi['maps'] ?? $resepsi['alamat'];
+                        $mapsUrl = (str_starts_with($maps, 'http://') || str_starts_with($maps, 'https://')) 
+                            ? $maps 
+                            : "https://www.google.com/maps/search/?api=1&query=" . urlencode($maps);
+                    @endphp
+                    <a href="{{ $mapsUrl }}" target="_blank" rel="noopener noreferrer" class="btn-maps-jawa">◈ &nbsp; Peta Lokasi</a>
+                    @endif
                 </div>
             </div>
         </div>
 
         {{-- Pakaian info --}}
+        @php
+            $dress = $invitation->content['acara']['dresscode'] ?? [];
+            $dressJudul = trim($dress['judul'] ?? '');
+            $dressInfo = trim($dress['info'] ?? '');
+        @endphp
+        @if($dressJudul !== '' || $dressInfo !== '')
         <div style="margin:20px 16px;padding:16px;background:rgba(184,134,26,0.08);border:1px solid var(--border);text-align:center">
             <p style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:6px">Dresscode</p>
-            <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.1rem;color:var(--sogan)">Batik &amp; Kebaya Tradisional</p>
-            <p style="font-size:10px;color:var(--sogan2);opacity:0.7;margin-top:4px">Nuansa Sogan · Emas · Hijau Tua</p>
+            @if($dressJudul !== '')<p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.1rem;color:var(--sogan)">{{ $dressJudul }}</p>@endif
+            @if($dressInfo !== '')<p style="font-size:10px;color:var(--sogan2);opacity:0.7;margin-top:4px">{{ $dressInfo }}</p>@endif
         </div>
+        @endif
     </div>
 
     {{-- ▼▼▼ PAGE: GALERI ▼▼▼ --}}
@@ -491,7 +534,7 @@ $target = \Carbon\Carbon::parse($akad['waktu'] ?? now()->addDays(90));
     </div>
 
     {{-- RADIAL NAV --}}
-    <nav class="radial-nav" id="radialNav">
+    <nav class="radial-nav" id="radialNav" style="z-index: 10000; pointer-events: auto;">
         <div class="radial-bar">
             <button class="nav-btn active" id="nb-home" onclick="goPage('home',this)">
                 <span class="nav-icon">⌂</span><span>Griyo</span>
@@ -539,22 +582,23 @@ function openSurat(){
     const gate = document.getElementById('gate');
     const gc   = document.getElementById('gateContent');
     gc.classList.add('hide');
+    gate.style.pointerEvents = 'none';
     setTimeout(()=>{ gate.classList.add('open'); },300);
     setTimeout(()=>{
-        gate.style.display = 'none'; // hide completely so it never blocks clicks
+        gate.style.display = 'none';
         document.getElementById('radialNav').classList.add('show');
         document.getElementById('musicFab').classList.add('show');
         const a = document.getElementById('bgAudio');
         if(a) a.play().catch(()=>{});
-    }, 1700);
+    }, 1200);
 }
 
 // ── Navigation ───────────────────────────────────────
 function goPage(id, btn){
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id === 'pg-'+id));
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
     const pg = document.getElementById('pg-'+id);
-    if(pg){pg.classList.add('active');pg.scrollTop=0;}
+    if(pg){pg.scrollTop=0;}
     if(btn) btn.classList.add('active');
 }
 

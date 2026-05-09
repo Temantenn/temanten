@@ -17,8 +17,26 @@
     <div class="py-8 bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 min-h-screen pb-32">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
+            {{-- Toast kanan-atas (otomatis hilang 4 detik) --}}
             @if(session('success'))
                 <x-alert-success :message="session('success')" />
+            @endif
+
+            {{-- Banner inline persisten (tidak tergantung Alpine, tidak auto-dismiss) --}}
+            @if(session('success'))
+                <div id="settings-success-banner" role="status" aria-live="polite"
+                    class="relative flex items-start gap-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-5 rounded-2xl shadow-xl shadow-emerald-500/25 animate-fade-in">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-bold text-lg leading-tight">Data berhasil disimpan</p>
+                        <p class="text-sm text-white/90 mt-1">{{ session('success') }}</p>
+                    </div>
+                    <button type="button" onclick="document.getElementById('settings-success-banner')?.remove()" aria-label="Tutup notifikasi" class="text-white/80 hover:text-white transition-colors flex-shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
             @endif
 
             @if ($errors->any())
@@ -37,7 +55,7 @@
             </div>
             @endif
 
-            <form action="{{ route('client.updateSettings') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+            <form id="settingsForm" action="{{ route('client.updateSettings') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
                 @csrf
                 @method('PUT')
 
@@ -69,6 +87,9 @@
                                 <div>
                                     <h4 class="text-lg font-bold text-indigo-600 dark:text-indigo-400">Mempelai Pria</h4>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">Klik foto untuk mengubah</p>
+                                    <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-1 leading-snug">
+                                        📸 Disarankan upload foto <strong>portrait 4:5</strong> atau <strong>3:4</strong>. Crop manual dari galeri/HP sebelum upload agar hasil tiap tema lebih rapi.
+                                    </p>
                                 </div>
                             </div>
 
@@ -113,6 +134,9 @@
                                 <div>
                                     <h4 class="text-lg font-bold text-pink-600 dark:text-pink-400">Mempelai Wanita</h4>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">Klik foto untuk mengubah</p>
+                                    <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-1 leading-snug">
+                                        📸 Disarankan upload foto <strong>portrait 4:5</strong> atau <strong>3:4</strong>. Crop manual dari galeri/HP sebelum upload agar hasil tiap tema lebih rapi.
+                                    </p>
                                 </div>
                             </div>
 
@@ -352,16 +376,36 @@
                             <input type="file" name="gallery_photos[]" multiple class="file-input">
                         </div>
                         
-                        @if(isset($invitation->content['media']['gallery']) && count($invitation->content['media']['gallery']) > 0)
-                            <div class="grid grid-cols-3 md:grid-cols-6 gap-3 mt-4" id="gallery-preview-container">
-                                @foreach($invitation->content['media']['gallery'] as $index => $photo)
-                                    <div class="relative aspect-square rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all group gallery-item" data-index="{{ $index }}">
-                                        <img src="{{ asset($photo) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                                        <button type="button" onclick="deleteGalleryPhoto(this, {{ $index }})" class="absolute top-2 right-2 bg-red-500/90 hover:bg-red-600 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm z-10 shadow-lg" title="Hapus Foto">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        </button>
-                                    </div>
-                                @endforeach
+                        @php
+                            $gallery = array_values($invitation->content['media']['gallery'] ?? []);
+                        @endphp
+                        @if(count($gallery) > 0)
+                            <div class="mt-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">Foto Galeri ({{ count($gallery) }})</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">Klik ikon <svg class="w-3 h-3 inline text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> untuk menandai foto yang akan dihapus saat Simpan</p>
+                                </div>
+                                <div class="grid grid-cols-3 md:grid-cols-6 gap-3" id="gallery-preview-container">
+                                    @foreach($gallery as $index => $photo)
+                                        <div class="relative aspect-square rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all group gallery-item" data-index="{{ $index }}">
+                                            <img src="{{ asset($photo) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Foto galeri {{ $index + 1 }}">
+                                            {{-- Overlay penanda 'akan dihapus' (disembunyikan default) --}}
+                                            <div class="gallery-delete-overlay absolute inset-0 bg-red-600/70 flex items-center justify-center text-white text-xs font-bold hidden z-10">
+                                                <div class="text-center">
+                                                    <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    AKAN DIHAPUS
+                                                </div>
+                                            </div>
+                                            <button type="button" onclick="toggleDeleteGallery(this, {{ $index }})"
+                                                class="gallery-delete-btn absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-lg md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-all backdrop-blur-sm z-20 shadow-lg"
+                                                aria-label="Hapus foto galeri"
+                                                title="Tandai foto ini untuk dihapus saat Simpan Perubahan">
+                                                <svg class="w-4 h-4 gallery-delete-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                <svg class="w-4 h-4 gallery-undo-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -721,7 +765,15 @@
                 transform: translateY(0);
             }
         }
-        
+
+        @keyframes fadeInSlide {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeInSlide 0.35s ease-out forwards;
+        }
+
         .settings-card {
             animation: fadeInUp 0.5s ease-out forwards;
         }
@@ -744,18 +796,51 @@
             }
         }
 
-        function deleteGalleryPhoto(btn, index) {
-            if(confirm('Hapus foto ini dari galeri? (Berlaku setelah klik Simpan)')) {
-                const container = document.getElementById('gallery-preview-container');
+        /**
+         * Toggle penanda hapus foto gallery.
+         * - Klik pertama: tandai foto untuk dihapus (overlay merah + hidden input delete_gallery[] ditambahkan).
+         * - Klik kedua: batalkan penandaan (overlay & hidden input dihilangkan).
+         * Penghapusan aktual dan hapus file storage dilakukan oleh controller saat Simpan.
+         */
+        function toggleDeleteGallery(btn, index) {
+            const item = btn.closest('.gallery-item');
+            if (!item) return;
+            const container = document.getElementById('gallery-preview-container');
+            const overlay = item.querySelector('.gallery-delete-overlay');
+            const delIcon = btn.querySelector('.gallery-delete-icon');
+            const undoIcon = btn.querySelector('.gallery-undo-icon');
+            const hiddenInputId = 'delete_gallery_input_' + index;
+            const existing = document.getElementById(hiddenInputId);
+
+            if (existing) {
+                // Batal hapus
+                existing.remove();
+                if (overlay) overlay.classList.add('hidden');
+                if (delIcon) delIcon.classList.remove('hidden');
+                if (undoIcon) undoIcon.classList.add('hidden');
+                btn.setAttribute('title', 'Tandai foto ini untuk dihapus saat Simpan Perubahan');
+                btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+                btn.classList.add('bg-red-500', 'hover:bg-red-600');
+            } else {
+                // Tandai untuk dihapus
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'delete_gallery[]';
                 input.value = index;
+                input.id = hiddenInputId;
                 container.appendChild(input);
-                
-                const item = btn.closest('.gallery-item');
-                item.style.display = 'none';
+                if (overlay) overlay.classList.remove('hidden');
+                if (delIcon) delIcon.classList.add('hidden');
+                if (undoIcon) undoIcon.classList.remove('hidden');
+                btn.setAttribute('title', 'Batalkan - Foto tidak jadi dihapus');
+                btn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
             }
+        }
+
+        // Backward compatibility (bila masih ada script lama yang memanggil)
+        function deleteGalleryPhoto(btn, index) {
+            toggleDeleteGallery(btn, index);
         }
 
         function addStory() {
@@ -945,12 +1030,26 @@
         // Initialize all dropdown groups on DOM ready
         document.addEventListener('DOMContentLoaded', function() {
             wilayahGroups.forEach(prefix => initProvince(prefix));
+
+            // Auto-scroll ke banner sukses / error supaya notifikasi pasti terlihat
+            const notifEl = document.getElementById('settings-success-banner')
+                || document.querySelector('[role="status"]')
+                || document.querySelector('.bg-gradient-to-r.from-red-500');
+            if (notifEl) {
+                try {
+                    notifEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } catch (e) {
+                    window.scrollTo(0, 0);
+                }
+            }
         });
+
 
         // =============================================
         // Client-Side Image Compression (Fix POST Too Large)
         // =============================================
-        document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+        const settingsFormEl = document.getElementById('settingsForm');
+        settingsFormEl && settingsFormEl.addEventListener('submit', async function(e) {
             e.preventDefault(); // Pause submission
             
             const submitBtn = this.querySelector('button[type="submit"]');

@@ -29,7 +29,10 @@ body{width:100%;overflow-x:hidden;background-color:var(--krem);
 /* ── COVER GATE ─────────────────────────────────────── */
 .gate{position:fixed;inset:0;z-index:999;display:flex;align-items:stretch;max-width:480px;margin:0 auto;left:0;right:0;background:var(--krem);
     background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+    transition: opacity 0.8s ease;
 }
+.gate.fade-out{opacity:0;pointer-events:none;}
+
 .tirai{position:absolute;top:0;bottom:0;width:50%;transition:transform 1.3s cubic-bezier(0.77,0,0.18,1);overflow:hidden;background-color:var(--krem2);}
 .tirai-left{left:0;transform-origin:left;border-right:1px solid var(--border)}
 .tirai-right{right:0;transform-origin:right;border-left:1px solid var(--border)}
@@ -112,7 +115,7 @@ body{width:100%;overflow-x:hidden;background-color:var(--krem);
 .mp-card{display:flex;gap:14px;padding:20px 18px;align-items:center}
 .mp-card:first-child{background:var(--krem2)}
 .mp-card:last-child{background:var(--hijau);flex-direction:row-reverse}
-.mp-photo{width:90px;height:120px;object-fit:cover;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;border:3px solid var(--emas);box-shadow:0 6px 20px rgba(45,90,39,0.3);flex-shrink:0}
+.mp-photo{width:90px;height:120px;object-fit:cover;object-position:center top;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;border:3px solid var(--emas);box-shadow:0 6px 20px rgba(45,90,39,0.3);flex-shrink:0}
 .mp-card:last-child .mp-photo{border-color:var(--sage-l)}
 .mp-info{flex:1}
 .mp-role{font-size:7.5px;letter-spacing:3px;text-transform:uppercase;font-weight:600;margin-bottom:4px}
@@ -164,13 +167,13 @@ body{width:100%;overflow-x:hidden;background-color:var(--krem);
 .ev-col:last-child .btn-map{background:rgba(255,255,255,0.07);border-color:rgba(222,185,108,0.3);color:var(--emas-l)}
 
 /* ── GALERI — featured + thumb strip ─────────────── */
-.g-feat{position:relative;overflow:hidden}
+.g-feat{position:relative;overflow:hidden;background:var(--krem2);display:flex;align-items:center;justify-content:center;min-height:260px}
 .g-feat::before{content:'';position:absolute;inset:12px;border:1px solid rgba(196,151,60,0.5);z-index:2;pointer-events:none}
-.g-feat-img{width:100%;height:250px;object-fit:cover;display:block;filter:saturate(0.95)}
+.g-feat-img{width:100%;max-height:70vh;height:auto;object-fit:contain;display:block;filter:saturate(0.95)}
 .g-strip{display:flex;gap:3px;overflow-x:auto;padding:3px 0;background:var(--krem)}
 .g-strip::-webkit-scrollbar{height:2px}
 .g-strip::-webkit-scrollbar-thumb{background:var(--sage)}
-.g-thumb{flex:0 0 90px;height:80px;object-fit:cover;display:block;filter:saturate(0.75) brightness(0.9);cursor:pointer;transition:filter 0.3s}
+.g-thumb{flex:0 0 90px;height:110px;object-fit:cover;display:block;filter:saturate(0.75) brightness(0.9);cursor:pointer;transition:filter 0.3s;background:var(--krem2)}
 .g-thumb:hover,.g-thumb.active{filter:saturate(1.1) brightness(1)}
 
 /* ── GIFT + RSVP ─────────────────────────────────── */
@@ -199,9 +202,36 @@ body{width:100%;overflow-x:hidden;background-color:var(--krem);
 .ff-layer{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 @keyframes ff{0%{opacity:0;transform:translate(0,0)}30%{opacity:0.8}70%{opacity:0.3}100%{opacity:0;transform:translate(var(--dx),var(--dy))}}
 .ff{position:absolute;width:3px;height:3px;background:#a8e890;border-radius:50%;box-shadow:0 0 6px 2px rgba(168,232,144,0.6);animation:ff 6s infinite}
+@keyframes fadeInPage{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.app-scroll{opacity:0}
+.app-scroll.animate-in{animation:fadeInPage 0.9s cubic-bezier(0.22,0.61,0.36,1) forwards}
+
 </style>
 </head>
 <body>
+@php
+    $formatInstagram = function ($value) {
+        $value = trim((string) ($value ?? ''));
+        if ($value === '') {
+            return ['username' => '', 'display' => '', 'url' => ''];
+        }
+
+        $value = preg_replace('/^https?:\/\/(www\.)?instagram\.com\//i', '', $value);
+        $value = preg_replace('/^instagram\.com\//i', '', $value);
+        $value = ltrim($value, '@');
+        $value = strtok($value, '?/#');
+        $value = trim((string) $value, " /	
+
+ ");
+
+        return [
+            'username' => $value,
+            'display' => $value !== '' ? '@' . $value : '',
+            'url' => $value !== '' ? 'https://instagram.com/' . $value : '',
+        ];
+    };
+@endphp
+
 @php
 function saImg2($p,$fb='https://images.unsplash.com/photo-1519741497674-611481863552?w=800&fit=crop'){
     if(!$p||str_contains($p,'placeholder'))return $fb;
@@ -394,7 +424,7 @@ $target=\Carbon\Carbon::parse($akad['waktu']??now()->addDays(90));
                     <p class="mp-role">Mempelai Pameget</p>
                     <h3 class="mp-name">{{ $pria['nama'] ?? 'Dian Ramdhan, S.T.' }}</h3>
                     <p class="mp-parents">Putra ti<br><strong>Bp. {{ $pria['ayah'] ?? '...' }}</strong><br>&amp; <strong>Ibu {{ $pria['ibu'] ?? '...' }}</strong></p>
-                    @if(!empty($pria['instagram']))<a href="https://instagram.com/{{ $pria['instagram'] }}" class="mp-ig" target="_blank">🍃 @{{ $pria['instagram'] }}</a>@endif
+                    @if(!empty($formatInstagram($pria['instagram'] ?? '')['username']))<a href="{{ $formatInstagram($pria['instagram'] ?? '')['url'] }}" class="mp-ig" target="_blank">🍃 {{ $formatInstagram($pria['instagram'] ?? '')['display'] }}</a>@endif
                 </div>
             </div>
             <div class="mp-card">
@@ -403,7 +433,7 @@ $target=\Carbon\Carbon::parse($akad['waktu']??now()->addDays(90));
                     <p class="mp-role">Mempelai Istri</p>
                     <h3 class="mp-name">{{ $wanita['nama'] ?? 'Sari Melati, S.Pd.' }}</h3>
                     <p class="mp-parents">Putri ti<br><strong>Bp. {{ $wanita['ayah'] ?? '...' }}</strong><br>&amp; <strong>Ibu {{ $wanita['ibu'] ?? '...' }}</strong></p>
-                    @if(!empty($wanita['instagram']))<a href="https://instagram.com/{{ $wanita['instagram'] }}" class="mp-ig" target="_blank">🌸 @{{ $wanita['instagram'] }}</a>@endif
+                    @if(!empty($formatInstagram($wanita['instagram'] ?? '')['username']))<a href="{{ $formatInstagram($wanita['instagram'] ?? '')['url'] }}" class="mp-ig" target="_blank">🌸 {{ $formatInstagram($wanita['instagram'] ?? '')['display'] }}</a>@endif
                 </div>
             </div>
         </div>
@@ -474,7 +504,15 @@ $target=\Carbon\Carbon::parse($akad['waktu']??now()->addDays(90));
                 @endphp
                 @if($akadL1)<div class="ev-row" style="padding-left:20px;"><span>{{ $akadL1 }}</span></div>@endif
                 @if($akadL2)<div class="ev-row" style="padding-left:20px;"><span>{{ $akadL2 }}</span></div>@endif
-                @if(!empty($akad['maps']))<a href="{{ $akad['maps'] }}" class="btn-map" target="_blank">🌿 Maps</a>@endif
+                @if(!empty($akad['maps'] ?? null) || !empty($akad['alamat'] ?? null))
+                @php
+                    $maps = $akad['maps'] ?? $akad['alamat'];
+                    $mapsUrl = (str_starts_with($maps, 'http://') || str_starts_with($maps, 'https://')) 
+                        ? $maps 
+                        : "https://www.google.com/maps/search/?api=1&query=" . urlencode($maps);
+                @endphp
+                <a href="{{ $mapsUrl }}" class="btn-map" target="_blank" rel="noopener noreferrer">🌿 Maps</a>
+                @endif
             </div>
             <div class="ev-col">
                 <div class="ev-num">II</div>
@@ -490,13 +528,29 @@ $target=\Carbon\Carbon::parse($akad['waktu']??now()->addDays(90));
                 @endphp
                 @if($resepsiL1)<div class="ev-row" style="padding-left:20px;"><span>{{ $resepsiL1 }}</span></div>@endif
                 @if($resepsiL2)<div class="ev-row" style="padding-left:20px;"><span>{{ $resepsiL2 }}</span></div>@endif
-                @if(!empty($resepsi['maps']))<a href="{{ $resepsi['maps'] }}" class="btn-map" target="_blank">🌸 Maps</a>@endif
+                @if(!empty($resepsi['maps'] ?? null) || !empty($resepsi['alamat'] ?? null))
+                @php
+                    $maps = $resepsi['maps'] ?? $resepsi['alamat'];
+                    $mapsUrl = (str_starts_with($maps, 'http://') || str_starts_with($maps, 'https://')) 
+                        ? $maps 
+                        : "https://www.google.com/maps/search/?api=1&query=" . urlencode($maps);
+                @endphp
+                <a href="{{ $mapsUrl }}" class="btn-map" target="_blank" rel="noopener noreferrer">🌸 Maps</a>
+                @endif
             </div>
         </div>
+        @php
+            $dressSA = $invitation->content['acara']['dresscode'] ?? [];
+            $dressSAJudul = trim($dressSA['judul'] ?? '');
+            $dressSAInfo = trim($dressSA['info'] ?? '');
+        @endphp
+        @if($dressSAJudul !== '' || $dressSAInfo !== '')
         <div style="margin:12px 14px;padding:14px 16px;background:rgba(122,158,126,0.1);border:1px solid var(--border);border-radius:2px 12px 2px 12px;text-align:center">
-            <p style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--sage);font-weight:600;margin-bottom:4px">Dangdanan Sunda</p>
-            <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:var(--hijau)">Kebaya Sunda · Pangsi &amp; Bendo</p>
+            <p style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--sage);font-weight:600;margin-bottom:4px">Dresscode</p>
+            @if($dressSAJudul !== '')<p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:var(--hijau)">{{ $dressSAJudul }}</p>@endif
+            @if($dressSAInfo !== '')<p style="font-size:10px;color:var(--kayu);opacity:0.75;margin-top:2px">{{ $dressSAInfo }}</p>@endif
         </div>
+        @endif
         <div style="height:10px"></div>
     </section>
 
@@ -551,6 +605,13 @@ $target=\Carbon\Carbon::parse($akad['waktu']??now()->addDays(90));
         </div>
         @endif
 
+        @if(!empty($amplop['qris_image']))
+        <div class="gift-card" style="margin-top:14px; text-align:center;">
+            <p class="gift-bank" style="margin-bottom:10px;">🍃 &nbsp; Atawa Pindai QRIS &nbsp; 🍃</p>
+            <img src="{{ asset($amplop['qris_image']) }}" alt="QRIS" loading="lazy" style="width:170px; max-width:70%; height:auto; aspect-ratio:1/1; object-fit:contain; background:#fff; padding:8px; border-radius:12px; border:1px solid var(--border); margin:0 auto; display:block;">
+        </div>
+        @endif
+
         <div style="padding:0 14px 14px">
             @if(session('success'))
             <div style="background:rgba(122,158,126,0.15);border:1px solid var(--border);color:var(--hijau);padding:10px 14px;margin-bottom:14px;font-size:12px;text-align:center;border-radius:8px">{{ session('success') }}</div>
@@ -602,19 +663,34 @@ $target=\Carbon\Carbon::parse($akad['waktu']??now()->addDays(90));
     }
 })();
 
-// ── Open Gate → reveal continuous scroll
+// ── Open Gate → smooth reveal of continuous scroll
 function openSurat(){
-    document.getElementById('gateContent').classList.add('fade-out');
-    setTimeout(()=>document.getElementById('gate').classList.add('open'),300);
-    setTimeout(()=>{
-        document.getElementById('gate').style.display='none';
-        document.getElementById('appScroll').style.display='block';
+    const gate = document.getElementById('gate');
+    const gc   = document.getElementById('gateContent');
+    const app  = document.getElementById('appScroll');
+
+    // 1) Pre-render home content behind the gate so no blank flash
+    app.style.display = 'block';
+    window.scrollTo(0, 0);
+
+    // 2) Fade inner content first
+    gc.classList.add('fade-out');
+
+    // 3) Slide the tirai (curtains) open
+    setTimeout(() => gate.classList.add('open'), 200);
+
+    // 4) Crossfade: gate fades to transparent while home fades in
+    setTimeout(() => {
+        gate.classList.add('fade-out');
+        app.classList.add('animate-in');
         document.getElementById('scrollSpy').classList.add('show');
         document.getElementById('musicFab').classList.add('show');
-        document.getElementById('bgAudio')?.play().catch(()=>{});
-        window.scrollTo(0,0);
+        document.getElementById('bgAudio')?.play().catch(() => {});
         initScrollSpy();
-    },1650);
+    }, 900);
+
+    // 5) Remove the gate completely after the crossfade finishes
+    setTimeout(() => { gate.style.display = 'none'; }, 1800);
 }
 
 // ── Scroll spy

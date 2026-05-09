@@ -197,11 +197,12 @@
             align-items: center;
             gap: 3px;
             cursor: pointer;
-            padding: 4px 12px;
+            padding: 8px 12px;
             border-radius: 10px;
             transition: 0.2s;
-            font-size: 22px;
+            font-size: 20px;
             color: var(--text-muted);
+            z-index: 10;
         }
         .nav-item.active, .nav-item:hover { color: var(--gold); }
         .nav-item span { font-size: 8px; letter-spacing: 1px; text-transform: uppercase; }
@@ -312,6 +313,8 @@
             height: 130px;
             border-radius: 50%;
             object-fit: cover;
+            object-position: center top;
+
             border: 3px solid var(--gold);
             box-shadow: 0 0 30px rgba(201,168,76,0.25);
             display: block;
@@ -395,13 +398,19 @@
         /* ───── GALLERY ───── */
         .gallery-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; padding: 0 20px; }
         .gallery-img {
-            width: 100%; height: 180px; object-fit: cover; border-radius: 14px;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 4 / 5;
+            object-fit: contain;
+            background: rgba(13, 13, 24, 0.6);
+            border-radius: 14px;
             border: 1px solid var(--border);
-            filter: brightness(0.55) saturate(0.75) sepia(0.15);
+            filter: brightness(0.65) saturate(0.8) sepia(0.15);
             transition: filter 0.4s;
+            display: block;
         }
-        .gallery-img:hover { filter: brightness(0.8) saturate(0.9); }
-        .gallery-img:first-child { grid-column: 1/-1; height: 220px; }
+        .gallery-img:hover { filter: brightness(0.85) saturate(0.95); }
+        .gallery-img:first-child { grid-column: 1/-1; aspect-ratio: 16 / 10; }
         /* Give couple photos a subtle gold tint to match theme */
         .couple-photo { filter: brightness(0.85) contrast(1.05); }
 
@@ -530,6 +539,29 @@
     </style>
 </head>
 <body>
+@php
+    $formatInstagram = function ($value) {
+        $value = trim((string) ($value ?? ''));
+        if ($value === '') {
+            return ['username' => '', 'display' => '', 'url' => ''];
+        }
+
+        $value = preg_replace('/^https?:\/\/(www\.)?instagram\.com\//i', '', $value);
+        $value = preg_replace('/^instagram\.com\//i', '', $value);
+        $value = ltrim($value, '@');
+        $value = strtok($value, '?/#');
+        $value = trim((string) $value, " /	
+
+ ");
+
+        return [
+            'username' => $value,
+            'display' => $value !== '' ? '@' . $value : '',
+            'url' => $value !== '' ? 'https://instagram.com/' . $value : '',
+        ];
+    };
+@endphp
+
 
 @php
     function mgImgUrl($path) {
@@ -637,9 +669,9 @@
                 <p class="couple-parents" style="margin-top:8px;">
                     Putra dari Bapak {{ $pria['ayah'] ?? '...' }}<br>& Ibu {{ $pria['ibu'] ?? '...' }}
                 </p>
-                @if(!empty($pria['instagram']))
-                <a href="https://instagram.com/{{ $pria['instagram'] }}" target="_blank" style="display:block; text-align:center; margin-top:10px; color:var(--gold); font-size:12px;">
-                    <i class="ph-fill ph-instagram-logo"></i> @{{ $pria['instagram'] }}
+                @if(!empty($formatInstagram($pria['instagram'] ?? '')['username']))
+                <a href="{{ $formatInstagram($pria['instagram'] ?? '')['url'] }}" target="_blank" rel="noopener noreferrer" style="display:block; text-align:center; margin-top:10px; color:var(--gold); font-size:12px;">
+                    <i class="ph-fill ph-instagram-logo"></i> {{ $formatInstagram($pria['instagram'] ?? '')['display'] }}
                 </a>
                 @endif
             </div>
@@ -653,9 +685,9 @@
                 <p class="couple-parents" style="margin-top:8px;">
                     Putri dari Bapak {{ $wanita['ayah'] ?? '...' }}<br>& Ibu {{ $wanita['ibu'] ?? '...' }}
                 </p>
-                @if(!empty($wanita['instagram']))
-                <a href="https://instagram.com/{{ $wanita['instagram'] }}" target="_blank" style="display:block; text-align:center; margin-top:10px; color:var(--gold); font-size:12px;">
-                    <i class="ph-fill ph-instagram-logo"></i> @{{ $wanita['instagram'] }}
+                @if(!empty($formatInstagram($wanita['instagram'] ?? '')['username']))
+                <a href="{{ $formatInstagram($wanita['instagram'] ?? '')['url'] }}" target="_blank" rel="noopener noreferrer" style="display:block; text-align:center; margin-top:10px; color:var(--gold); font-size:12px;">
+                    <i class="ph-fill ph-instagram-logo"></i> {{ $formatInstagram($wanita['instagram'] ?? '')['display'] }}
                 </a>
                 @endif
             </div>
@@ -711,8 +743,14 @@
                     @if($akadL1)<span>{{ $akadL1 }}</span>@endif
                     @if($akadL2)<span>{{ $akadL2 }}</span>@endif
                 </div>
-                @if(!empty($akad['maps']))
-                <a href="{{ $akad['maps'] }}" target="_blank" class="btn-maps">
+                @if(!empty($akad['maps'] ?? null) || !empty($akad['alamat'] ?? null))
+                @php
+                    $maps = $akad['maps'] ?? $akad['alamat'];
+                    $mapsUrl = (str_starts_with($maps, 'http://') || str_starts_with($maps, 'https://')) 
+                        ? $maps 
+                        : "https://www.google.com/maps/search/?api=1&query=" . urlencode($maps);
+                @endphp
+                <a href="{{ $mapsUrl }}" target="_blank" rel="noopener noreferrer" class="btn-maps">
                     <i class="ph-bold ph-navigation-arrow"></i> Google Maps
                 </a>
                 @endif
@@ -739,8 +777,14 @@
                     @if($resepsiL1)<span>{{ $resepsiL1 }}</span>@endif
                     @if($resepsiL2)<span>{{ $resepsiL2 }}</span>@endif
                 </div>
-                @if(!empty($resepsi['maps']))
-                <a href="{{ $resepsi['maps'] }}" target="_blank" class="btn-maps">
+                @if(!empty($resepsi['maps'] ?? null) || !empty($resepsi['alamat'] ?? null))
+                @php
+                    $maps = $resepsi['maps'] ?? $resepsi['alamat'];
+                    $mapsUrl = (str_starts_with($maps, 'http://') || str_starts_with($maps, 'https://')) 
+                        ? $maps 
+                        : "https://www.google.com/maps/search/?api=1&query=" . urlencode($maps);
+                @endphp
+                <a href="{{ $mapsUrl }}" target="_blank" rel="noopener noreferrer" class="btn-maps">
                     <i class="ph-bold ph-navigation-arrow"></i> Google Maps
                 </a>
                 @endif
@@ -777,6 +821,13 @@
                 <button class="btn-copy" onclick="copyGift()">
                     <i class="ph-bold ph-copy"></i> Salin Nomor
                 </button>
+            </div>
+            @endif
+
+            @if(!empty($amplop['qris_image']))
+            <div class="gift-card" style="margin-top:16px; text-align:center;">
+                <p class="gift-bank" style="margin-bottom:10px;">✦ Atau Pindai QRIS ✦</p>
+                <img src="{{ asset($amplop['qris_image']) }}" alt="QRIS" loading="lazy" style="width:170px; max-width:70%; height:auto; aspect-ratio:1/1; object-fit:contain; background:#fff; padding:8px; border-radius:12px; border:1px solid rgba(212,175,55,0.4); margin:0 auto; display:block;">
             </div>
             @endif
 
@@ -870,14 +921,17 @@
 
     // Open invitation
     function openInvitation() {
-        document.getElementById('gate').classList.add('open');
+        const gate = document.getElementById('gate');
+        gate.classList.add('open');
+        gate.style.pointerEvents = 'none';
         document.body.style.overflow = 'auto';
         setTimeout(() => {
             document.getElementById('bottomNav').classList.add('visible');
             document.getElementById('musicBtn').classList.add('visible');
-        }, 900);
+        }, 800);
         const audio = document.getElementById('bgMusic');
         if(audio) audio.play().catch(()=>{});
+        setTimeout(() => { gate.style.display = 'none'; }, 1500);
     }
 
     // Nav

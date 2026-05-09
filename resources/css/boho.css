@@ -80,6 +80,7 @@ body {
 .couple-arch {
     width: 140px; height: 190px;
     object-fit: cover;
+    object-position: center top;
     border-radius: 100px 100px 0 0;
     border: 5px solid white;
     box-shadow: 0 10px 25px rgba(0,0,0,0.08);

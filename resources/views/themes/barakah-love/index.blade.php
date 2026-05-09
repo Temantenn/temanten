@@ -346,9 +346,11 @@
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
+            object-position: center top; /* Prioritas wajah bagian atas */
             border: 4px solid white;
             z-index: 1;
         }
+
 
         .couple-name {
             font-size: 1.6rem;
@@ -959,6 +961,29 @@
     </style>
 </head>
 <body>
+@php
+    $formatInstagram = function ($value) {
+        $value = trim((string) ($value ?? ''));
+        if ($value === '') {
+            return ['username' => '', 'display' => '', 'url' => ''];
+        }
+
+        $value = preg_replace('/^https?:\/\/(www\.)?instagram\.com\//i', '', $value);
+        $value = preg_replace('/^instagram\.com\//i', '', $value);
+        $value = ltrim($value, '@');
+        $value = strtok($value, '?/#');
+        $value = trim((string) $value, " /	
+
+ ");
+
+        return [
+            'username' => $value,
+            'display' => $value !== '' ? '@' . $value : '',
+            'url' => $value !== '' ? 'https://instagram.com/' . $value : '',
+        ];
+    };
+@endphp
+
     @php
         function getImgUrl($path) {
             if (!$path) return 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=400&fit=crop';
@@ -1036,8 +1061,9 @@
                     <h3 class="couple-name font-elegant">{{ $invitation->content['mempelai']['pria']['panggilan'] ?? 'Pria' }}</h3>
                     <p class="couple-fullname">{{ $invitation->content['mempelai']['pria']['nama'] ?? 'Nama Lengkap' }}</p>
                     <p class="couple-parents">Putra dari<br>Bpk. {{ $invitation->content['mempelai']['pria']['ayah'] ?? '...' }} & Ibu {{ $invitation->content['mempelai']['pria']['ibu'] ?? '...' }}</p>
-                    @if(!empty($invitation->content['mempelai']['pria']['instagram']))
-                    <a href="https://instagram.com/{{ $invitation->content['mempelai']['pria']['instagram'] }}" target="_blank" class="couple-ig">📷 @{{ $invitation->content['mempelai']['pria']['instagram'] }}</a>
+                    @php $igPria = $formatInstagram($invitation->content['mempelai']['pria']['instagram'] ?? ''); @endphp
+                    @if(!empty($igPria['username']))
+                    <a href="{{ $igPria['url'] }}" target="_blank" rel="noopener noreferrer" class="couple-ig">📷 {{ $igPria['display'] }}</a>
                     @endif
                 </div>
 
@@ -1052,8 +1078,9 @@
                     <h3 class="couple-name font-elegant">{{ $invitation->content['mempelai']['wanita']['panggilan'] ?? 'Wanita' }}</h3>
                     <p class="couple-fullname">{{ $invitation->content['mempelai']['wanita']['nama'] ?? 'Nama Lengkap' }}</p>
                     <p class="couple-parents">Putri dari<br>Bpk. {{ $invitation->content['mempelai']['wanita']['ayah'] ?? '...' }} & Ibu {{ $invitation->content['mempelai']['wanita']['ibu'] ?? '...' }}</p>
-                    @if(!empty($invitation->content['mempelai']['wanita']['instagram']))
-                    <a href="https://instagram.com/{{ $invitation->content['mempelai']['wanita']['instagram'] }}" target="_blank" class="couple-ig">📷 @{{ $invitation->content['mempelai']['wanita']['instagram'] }}</a>
+                    @php $igWanita = $formatInstagram($invitation->content['mempelai']['wanita']['instagram'] ?? ''); @endphp
+                    @if(!empty($igWanita['username']))
+                    <a href="{{ $igWanita['url'] }}" target="_blank" rel="noopener noreferrer" class="couple-ig">📷 {{ $igWanita['display'] }}</a>
                     @endif
                 </div>
             </section>
@@ -1131,8 +1158,14 @@
                                 @if($akadLine2)<span>{{ $akadLine2 }}</span>@endif
                             </div>
                         </div>
-                        @if(!empty($invitation->content['acara']['akad']['maps']))
-                        <a href="{{ $invitation->content['acara']['akad']['maps'] }}" target="_blank" class="btn-maps">📍 Buka Maps</a>
+                        @if(!empty($invitation->content['acara']['akad']['maps'] ?? null) || !empty($invitation->content['acara']['akad']['alamat'] ?? null))
+                        @php
+                            $akadMaps = $invitation->content['acara']['akad']['maps'] ?? $invitation->content['acara']['akad']['alamat'];
+                            $akadMapsUrl = (str_starts_with($akadMaps, 'http://') || str_starts_with($akadMaps, 'https://')) 
+                                ? $akadMaps 
+                                : "https://www.google.com/maps/search/?api=1&query=" . urlencode($akadMaps);
+                        @endphp
+                        <a href="{{ $akadMapsUrl }}" target="_blank" rel="noopener noreferrer" class="btn-maps">📍 Buka Maps</a>
                         @endif
                     </div>
 
@@ -1166,8 +1199,14 @@
                                 @if($resepsiLine2)<span>{{ $resepsiLine2 }}</span>@endif
                             </div>
                         </div>
-                        @if(!empty($invitation->content['acara']['resepsi']['maps']))
-                        <a href="{{ $invitation->content['acara']['resepsi']['maps'] }}" target="_blank" class="btn-maps">📍 Buka Maps</a>
+                        @if(!empty($invitation->content['acara']['resepsi']['maps'] ?? null) || !empty($invitation->content['acara']['resepsi']['alamat'] ?? null))
+                        @php
+                            $resepsiMaps = $invitation->content['acara']['resepsi']['maps'] ?? $invitation->content['acara']['resepsi']['alamat'];
+                            $resepsiMapsUrl = (str_starts_with($resepsiMaps, 'http://') || str_starts_with($resepsiMaps, 'https://')) 
+                                ? $resepsiMaps 
+                                : "https://www.google.com/maps/search/?api=1&query=" . urlencode($resepsiMaps);
+                        @endphp
+                        <a href="{{ $resepsiMapsUrl }}" target="_blank" rel="noopener noreferrer" class="btn-maps">📍 Buka Maps</a>
                         @endif
                     </div>
                 </div>
@@ -1208,6 +1247,15 @@
                         <p class="gift-number" id="rekening">{{ $invitation->content['amplop']['account_number'] ?? '' }}</p>
                         <p class="gift-name">a.n {{ $invitation->content['amplop']['account_holder'] ?? '' }}</p>
                         <button class="btn-copy" onclick="copyRek()">📋 Salin Nomor</button>
+                    </div>
+                </div>
+                @endif
+
+                @if(!empty($invitation->content['amplop']['qris_image']))
+                <div class="gift-card" style="margin-top: 20px; text-align: center;">
+                    <div class="gift-card-content">
+                        <p class="gift-bank" style="margin-bottom: 12px;">Atau Pindai QRIS</p>
+                        <img src="{{ asset($invitation->content['amplop']['qris_image']) }}" alt="QRIS" loading="lazy" style="width: 180px; max-width: 70%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; background: #fff; padding: 8px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); margin: 0 auto; display: block;">
                     </div>
                 </div>
                 @endif
@@ -1305,7 +1353,7 @@
             <footer>
                 <p style="margin-bottom: 0.5rem;">Created with ❤️</p>
                 <p style="color: var(--gold); font-weight: 600;">Barakah Love Theme</p>
-                <p style="margin-top: 0.75rem;">© 2026 <a href="#">Temanten</a></p>
+                <p style="margin-top: 0.75rem;">© 2026 <a href="{{ url('/') }}">Temanten</a></p>
             </footer>
         </div>
     </div>
