@@ -43,6 +43,8 @@ Route::get('/undangan/{slug}', [InvitationController::class, 'show'])->name('inv
 
 Route::middleware('throttle:10,1')->group(function () {
     Route::post('/kirim-ucapan', [InvitationController::class, 'kirimUcapan'])->name('kirim.ucapan');
+    Route::get('/undangan/{slug}/ucapan', [InvitationController::class, 'listUcapan'])->name('invitation.ucapan.index');
+    Route::post('/undangan/{slug}/ucapan', [InvitationController::class, 'storeUcapan'])->name('invitation.ucapan.store');
     Route::post('/rsvp/{id}', [InvitationController::class, 'submitRSVP'])->name('invitation.rsvp');
 });
 

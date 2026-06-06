@@ -9,25 +9,39 @@ use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class InvitationController extends Controller
 {
     public function show($slug, Request $request)
     {
-        $invitation = Invitation::where('slug', $slug)
-            ->where('status', 'active')
-            ->firstOrFail();
+        $cacheKey = "invitation:{$slug}";
+        $cached = Cache::get($cacheKey);
+
+        if ($cached) {
+            $invitation = $this->findViewableInvitationBySlug($slug);
+            $comments = $cached['comments'];
+        } else {
+            $invitation = $this->findViewableInvitationBySlug($slug);
+
+            $comments = $invitation->guests()
+                ->whereNotNull('comment')
+                ->where('comment', '!=', '')
+                ->orderBy('updated_at', 'desc')
+                ->get();
+
+            Cache::put($cacheKey, [
+                'invitation' => $invitation,
+                'comments'   => $comments,
+            ], 3600);
+        }
 
         $guest = null;
         if ($request->has('to')) {
-            $guest = Guest::where('slug', $request->query('to'))->first();
+            $guest = $invitation->guests()
+                ->where('slug', $request->query('to'))
+                ->first();
         }
-
-        $comments = $invitation->guests()
-            ->whereNotNull('comment')
-            ->where('comment', '!=', '')
-            ->orderBy('updated_at', 'desc')
-            ->get();
 
         $viewPath = $invitation->theme->view_path;
 
@@ -141,46 +155,21 @@ class InvitationController extends Controller
 
     public function kirimUcapan(Request $request)
     {
-        $request->validate([
-            'invitation_slug' => 'required|exists:invitations,slug',
+        $validated = $request->validate([
+            'invitation_slug' => 'required|string',
             'nama'            => 'required|string|max:255',
             'ucapan'          => 'required|string|max:2000',
             'kehadiran'       => 'required|in:hadir,tidak_hadir,ragu',
         ]);
 
+        $invitation = $this->findViewableInvitationBySlug($validated['invitation_slug']);
+
         try {
-            $invitation = Invitation::where('slug', $request->invitation_slug)->firstOrFail();
+            $this->saveGuestResponse($invitation, $validated);
 
-            $guest = Guest::where('invitation_id', $invitation->id)
-                ->where('name', $request->nama)
-                ->first();
-
-            if ($guest) {
-                $guest->update([
-                    'comment'     => $request->ucapan,
-                    'rsvp_status' => $request->kehadiran,
-                ]);
-            } else {
-                $guestSlug = Str::slug($request->nama) . '-' . Str::random(4);
-
-                $invitation->guests()->create([
-                    'name'        => $request->nama,
-                    'slug'        => $guestSlug,
-                    'category'    => 'Umum',
-                    'comment'     => $request->ucapan,
-                    'rsvp_status' => $request->kehadiran,
-                ]);
-            }
-
-            // Log ucapan masuk
-            ActivityLog::record('info', 'guest.rsvp_submitted', $invitation, [
-                'nama'      => $request->nama,
-                'kehadiran' => $request->kehadiran,
-            ]);
-
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::channel('daily')->error('Failed to save ucapan/rsvp', [
-                'invitation_slug' => $request->invitation_slug,
+                'invitation_slug' => $validated['invitation_slug'],
                 'error'           => $e->getMessage(),
             ]);
 
@@ -188,5 +177,195 @@ class InvitationController extends Controller
         }
 
         return back()->with('success', 'Terima kasih! Ucapan Anda berhasil dikirim.');
+    }
+
+    public function listUcapan($slug)
+    {
+        $invitation = $this->findViewableInvitationBySlug($slug);
+
+        $guests = $invitation->guests()
+            ->whereNotNull('comment')
+            ->where('comment', '!=', '')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $guests->map(fn (Guest $guest) => $this->formatGuestResponse($guest))->values(),
+        ]);
+    }
+
+    public function storeUcapan($slug, Request $request)
+    {
+        $validated = $request->validate([
+            'nama'        => 'required|string|max:255',
+            'ucapan'      => 'nullable|string|max:2000',
+            'kehadiran'   => 'required|in:hadir,tidak_hadir,ragu',
+            'jumlah_tamu' => 'nullable|integer|min:1|max:10',
+        ]);
+
+        $invitation = $this->findViewableInvitationBySlug($slug);
+
+        try {
+            $guest = $this->saveGuestResponse($invitation, $validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Terima kasih! RSVP Anda berhasil dikirim.',
+                'data'    => $this->formatGuestResponse($guest),
+            ]);
+        } catch (\Throwable $e) {
+            Log::channel('daily')->error('Failed to save ucapan/rsvp', [
+                'invitation_slug' => $slug,
+                'error'           => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengirim ucapan. Silakan coba lagi.',
+            ], 500);
+        }
+    }
+
+    public function submitRSVP($id, Request $request)
+    {
+        $this->normalizeGuestResponseAliases($request);
+
+        $validated = $request->validate([
+            'nama'        => 'required|string|max:255',
+            'ucapan'      => 'nullable|string|max:2000',
+            'kehadiran'   => 'required|in:hadir,tidak_hadir,ragu',
+            'jumlah_tamu' => 'nullable|integer|min:1|max:10',
+        ]);
+
+        $invitation = $this->findViewableInvitationById($id);
+
+        try {
+            $guest = $this->saveGuestResponse($invitation, $validated);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Terima kasih! RSVP Anda berhasil dikirim.',
+                    'data'    => $this->formatGuestResponse($guest),
+                ]);
+            }
+
+            return back()->with('success', 'Terima kasih! RSVP Anda berhasil dikirim.');
+        } catch (\Throwable $e) {
+            Log::channel('daily')->error('Failed to save rsvp', [
+                'invitation_id' => $id,
+                'error'         => $e->getMessage(),
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal mengirim RSVP. Silakan coba lagi.',
+                ], 500);
+            }
+
+            return back()->with('error', 'Gagal mengirim RSVP. Silakan coba lagi.');
+        }
+    }
+
+    private function findViewableInvitationBySlug(string $slug): Invitation
+    {
+        $invitation = Invitation::where('slug', $slug)
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        if ($invitation->isExpired()) {
+            Cache::forget("invitation:{$invitation->slug}");
+            abort(410, 'Undangan ini sudah kedaluwarsa.');
+        }
+
+        return $invitation;
+    }
+
+    private function findViewableInvitationById($id): Invitation
+    {
+        $invitation = Invitation::whereKey($id)
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        if ($invitation->isExpired()) {
+            Cache::forget("invitation:{$invitation->slug}");
+            abort(410, 'Undangan ini sudah kedaluwarsa.');
+        }
+
+        return $invitation;
+    }
+
+    private function normalizeGuestResponseAliases(Request $request): void
+    {
+        $aliases = [];
+
+        if (!$request->has('nama') && $request->has('name')) {
+            $aliases['nama'] = $request->input('name');
+        }
+
+        if (!$request->has('ucapan') && $request->has('comment')) {
+            $aliases['ucapan'] = $request->input('comment');
+        }
+
+        if (!$request->has('kehadiran') && $request->has('rsvp_status')) {
+            $aliases['kehadiran'] = $request->input('rsvp_status');
+        }
+
+        if ($aliases !== []) {
+            $request->merge($aliases);
+        }
+    }
+
+    private function saveGuestResponse(Invitation $invitation, array $data): Guest
+    {
+        $name = trim($data['nama']);
+        $comment = array_key_exists('ucapan', $data)
+            ? trim((string) $data['ucapan'])
+            : null;
+
+        $payload = [
+            'rsvp_status' => $data['kehadiran'],
+        ];
+
+        if (array_key_exists('ucapan', $data)) {
+            $payload['comment'] = $comment === '' ? null : $comment;
+        }
+
+        $guest = $invitation->guests()
+            ->where('name', $name)
+            ->first();
+
+        if ($guest) {
+            $guest->update($payload);
+        } else {
+            $guest = $invitation->guests()->create(array_merge([
+                'name'     => $name,
+                'slug'     => Str::slug($name) . '-' . Str::random(4),
+                'category' => 'Umum',
+            ], $payload));
+        }
+
+        Cache::forget("invitation:{$invitation->slug}");
+
+        ActivityLog::record('info', 'guest.rsvp_submitted', $invitation, [
+            'nama'      => $name,
+            'kehadiran' => $data['kehadiran'],
+        ]);
+
+        return $guest->fresh();
+    }
+
+    private function formatGuestResponse(Guest $guest): array
+    {
+        return [
+            'id'               => $guest->id,
+            'nama'             => $guest->name,
+            'ucapan'           => $guest->comment,
+            'kehadiran'        => $guest->rsvp_status,
+            'created_at'       => optional($guest->updated_at)->toDateTimeString(),
+            'created_at_human' => optional($guest->updated_at)->diffForHumans(),
+        ];
     }
 }
