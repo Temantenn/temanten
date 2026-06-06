@@ -15,6 +15,7 @@ class Invitation extends Model
     protected $casts = [
         'content' => 'array',
         'event_date' => 'datetime',
+        'expires_at' => 'datetime',
     ];
 
     public function getGroomNameAttribute()
@@ -230,5 +231,36 @@ class Invitation extends Model
             ->whereNotNull('comment')
             ->where('comment', '!=', '')
             ->orderBy('updated_at', 'desc');
+    }
+
+    // ── Expiry helpers ──────────────────────────────────────────
+
+    /**
+     * Is this invitation past its expiry date?
+     */
+    public function isExpired(): bool
+    {
+        return $this->expires_at !== null && $this->expires_at->isPast();
+    }
+
+    /**
+     * Set expiry based on INVITATION_EXPIRY_DAYS config.
+     * Called automatically when invitation is created/activated.
+     */
+    public function setDefaultExpiry(): void
+    {
+        $days = (int) config('temanten.invitation_expiry_days', 365);
+        if ($days > 0 && $this->expires_at === null) {
+            $this->expires_at = now()->addDays($days);
+            $this->save();
+        }
+    }
+
+    /**
+     * Check if invitation is viewable (active + not expired).
+     */
+    public function isViewable(): bool
+    {
+        return $this->status === 'active' && !$this->isExpired();
     }
 }

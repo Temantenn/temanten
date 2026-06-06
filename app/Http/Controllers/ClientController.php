@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Invitation;
 use App\Models\Guest;
 use App\Models\ActivityLog;
+use App\Http\Requests\UpdateSettingsRequest;
+use App\Http\Requests\StoreGuestRequest;
+use App\Http\Requests\ImportGuestsRequest;
+use App\Services\InvitationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -53,190 +57,12 @@ class ClientController extends Controller
         return view('client.settings', compact('invitation'));
     }
 
-    public function updateSettings(Request $request)
+    public function updateSettings(UpdateSettingsRequest $request, InvitationService $invitationService)
     {
         $user = auth()->user();
         $invitation = $user->invitations()->firstOrFail();
 
-        $content = $invitation->content ?? [];
-        $folderName = $invitation->id;
-
-        $uploadFile = function ($inputName, $subFolder) use ($request, $folderName) {
-            if ($request->hasFile($inputName)) {
-                $file = $request->file($inputName);
-                $filename = uniqid() . '_' . $inputName . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs("public/invitations/{$folderName}", $filename);
-                return str_replace('public/', 'storage/', $path);
-            }
-            return null;
-        };
-
-        $content['mempelai']['pria']['nama'] = $request->groom_name;
-        $content['mempelai']['pria']['panggilan'] = $request->groom_nickname;
-        $content['mempelai']['pria']['ayah'] = $request->groom_father;
-        $content['mempelai']['pria']['ibu'] = $request->groom_mother;
-        $content['mempelai']['pria']['instagram'] = $request->groom_instagram;
-
-        $content['mempelai']['wanita']['nama'] = $request->bride_name;
-        $content['mempelai']['wanita']['panggilan'] = $request->bride_nickname;
-        $content['mempelai']['wanita']['ayah'] = $request->bride_father;
-        $content['mempelai']['wanita']['ibu'] = $request->bride_mother;
-        $content['mempelai']['wanita']['instagram'] = $request->bride_instagram;
-
-        $content['quote'] = $request->quote;
-
-        $content['acara']['akad']['judul'] = $request->akad_title;
-        $content['acara']['akad']['waktu'] = $request->akad_datetime;
-        $content['acara']['akad']['tempat'] = $request->akad_location;
-        $content['acara']['akad']['alamat'] = $request->akad_address;
-        $content['acara']['akad']['maps'] = $request->akad_map_link;
-        // Wilayah Akad
-        if ($request->akad_province_name) {
-            $content['acara']['akad']['wilayah'] = [
-                'province' => $request->akad_province_name,
-                'regency'  => $request->akad_regency_name,
-                'district' => $request->akad_district_name,
-                'village'  => $request->akad_village_name,
-            ];
-        }
-
-        $content['acara']['resepsi']['judul'] = $request->resepsi_title;
-        $content['acara']['resepsi']['waktu'] = $request->resepsi_datetime;
-        $content['acara']['resepsi']['tempat'] = $request->resepsi_location;
-        $content['acara']['resepsi']['alamat'] = $request->resepsi_address;
-        $content['acara']['resepsi']['maps'] = $request->resepsi_map_link;
-        // Wilayah Resepsi
-        if ($request->resepsi_province_name) {
-            $content['acara']['resepsi']['wilayah'] = [
-                'province' => $request->resepsi_province_name,
-                'regency'  => $request->resepsi_regency_name,
-                'district' => $request->resepsi_district_name,
-                'village'  => $request->resepsi_village_name,
-            ];
-        }
-
-        $content['amplop']['bank_name'] = $request->bank_name;
-        $content['amplop']['account_number'] = $request->bank_number;
-        $content['amplop']['account_holder'] = $request->bank_holder;
-        $content['amplop']['alamat_kado'] = $request->gift_address;
-        $content['amplop']['maps_kado'] = $request->gift_map_link;
-        // Wilayah Kado
-        if ($request->kado_province_name) {
-            $content['amplop']['wilayah'] = [
-                'province' => $request->kado_province_name,
-                'regency'  => $request->kado_regency_name,
-                'district' => $request->kado_district_name,
-                'village'  => $request->kado_village_name,
-            ];
-        }
-        if (isset($invitation->content['amplop']['qris_image'])) {
-            $content['amplop']['qris_image'] = $invitation->content['amplop']['qris_image'];
-        }
-
-        if ($path = $uploadFile('groom_photo', $folderName)) {
-            $content['mempelai']['pria']['foto'] = $path;
-        }
-        if ($path = $uploadFile('bride_photo', $folderName)) {
-            $content['mempelai']['wanita']['foto'] = $path;
-        }
-        if ($path = $uploadFile('cover_image', $folderName)) {
-            $content['media']['cover'] = $path;
-        }
-        if ($path = $uploadFile('og_image', $folderName)) {
-            $content['media']['og_image'] = $path;
-        }
-        if ($path = $uploadFile('music_file', $folderName)) {
-            $content['media']['music'] = $path;
-        }
-        if ($path = $uploadFile('qris_image', $folderName)) {
-            $content['amplop']['qris_image'] = $path;
-        }
-
-        // Normalisasi: pastikan array numeric 0-based sebelum proses delete
-        $galleryPaths = array_values($content['media']['gallery'] ?? []);
-
-        if ($request->has('delete_gallery')) {
-            $toDelete = array_map('intval', (array) $request->delete_gallery);
-            $toDelete = array_unique($toDelete);
-
-            foreach ($toDelete as $idx) {
-                if (!array_key_exists($idx, $galleryPaths)) {
-                    continue;
-                }
-                $path = $galleryPaths[$idx];
-
-                // Hanya hapus file fisik bila path lokal (bukan URL eksternal)
-                if (is_string($path) && $path !== '' && !preg_match('#^https?://#i', $path)) {
-                    // Path disimpan sebagai "storage/invitations/..." → mapping ke disk "public/invitations/..."
-                    $storagePath = Str::startsWith($path, 'storage/')
-                        ? 'public/' . Str::after($path, 'storage/')
-                        : (Str::startsWith($path, 'public/') ? $path : null);
-
-                    if ($storagePath) {
-                        try {
-                            if (Storage::exists($storagePath)) {
-                                Storage::delete($storagePath);
-                            }
-                        } catch (\Throwable $e) {
-                            Log::warning('Gagal menghapus file gallery', [
-                                'path'  => $storagePath,
-                                'error' => $e->getMessage(),
-                            ]);
-                        }
-                    }
-                }
-
-                unset($galleryPaths[$idx]);
-            }
-            // Reindex supaya urutan rapi
-            $galleryPaths = array_values($galleryPaths);
-        }
-
-        if ($request->hasFile('gallery_photos')) {
-            foreach ($request->file('gallery_photos') as $photo) {
-                $filename = uniqid() . '_gallery.' . $photo->getClientOriginalExtension();
-                $path = $photo->storeAs("public/invitations/{$folderName}", $filename);
-                $galleryPaths[] = str_replace('public/', 'storage/', $path);
-            }
-        }
-        $content['media']['gallery'] = array_values($galleryPaths);
-
-        $content['media']['video_link'] = $request->video_link;
-
-        if ($request->has('love_stories')) {
-            $stories = $request->love_stories;
-            $filteredStories = [];
-            foreach ($stories as $key => $story) {
-                if ($request->hasFile("love_stories.{$key}.image")) {
-                    $file = $request->file("love_stories.{$key}.image");
-                    $filename = uniqid() . '_story.' . $file->getClientOriginalExtension();
-                    $path = $file->storeAs("public/invitations/{$folderName}", $filename);
-                    $story['image'] = str_replace('public/', 'storage/', $path);
-                } elseif (isset($content['love_stories'][$key]['image'])) {
-                    $story['image'] = $content['love_stories'][$key]['image'];
-                }
-                
-                // Only save if it has at least one filled field
-                if (!empty($story['year']) || !empty($story['title']) || !empty($story['story'])) {
-                    $filteredStories[] = $story;
-                }
-            }
-            $content['love_stories'] = array_values($filteredStories);
-        }
-
-        if (isset($content['acara']['resepsi']['waktu'])) {
-            $invitation->event_date = Carbon::parse($content['acara']['resepsi']['waktu']);
-        } elseif (isset($content['acara']['akad']['waktu'])) {
-            $invitation->event_date = Carbon::parse($content['acara']['akad']['waktu']);
-        }
-
-        $invitation->content = $content;
-        $invitation->save();
-
-        // Log perubahan settings undangan
-        ActivityLog::record('info', 'invitation.settings_updated', $invitation, [
-            'updated_by' => auth()->user()->email,
-        ]);
+        $invitationService->updateSettings($invitation, $request);
 
         return back()->with('success', 'Data undangan berhasil diperbarui!');
     }
@@ -264,12 +90,8 @@ class ClientController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function importGuests(Request $request)
+    public function importGuests(ImportGuestsRequest $request)
     {
-        $request->validate([
-            'file' => 'required|mimes:csv,txt,xlsx,xls|max:2048'
-        ]);
-
         $user = auth()->user();
         $invitation = $user->invitations()->firstOrFail();
 
@@ -333,15 +155,8 @@ class ClientController extends Controller
         return back()->with('success', "Berhasil mengimpor {$count} data tamu!");
     }
 
-    public function storeGuest(Request $request)
+    public function storeGuest(StoreGuestRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'whatsapp' => 'nullable|string|max:20',
-            'category' => 'nullable|string',
-            'address' => 'nullable|string',
-        ]);
-
         $user = auth()->user();
         $invitation = $user->invitations()->firstOrFail();
 

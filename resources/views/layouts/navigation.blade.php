@@ -51,7 +51,7 @@
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="logout-btn group">
+                    <button type="submit" data-testid="logout-button" class="logout-btn group">
                         <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                         </svg>
@@ -109,7 +109,7 @@
         <div class="mobile-logout">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="mobile-logout-btn">
+                <button type="submit" data-testid="logout-button" class="mobile-logout-btn">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                     </svg>
@@ -121,18 +121,17 @@
 
     <style>
         .nav-container {
-            background: white;
-            border-bottom: 1px solid rgba(229, 231, 235, 0.8);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            background: color-mix(in srgb, var(--dashboard-bg) 94%, transparent);
+            border-bottom: 1px solid var(--dashboard-border);
+            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.14);
             position: sticky;
             top: 0;
             z-index: 40;
-            backdrop-filter: blur(12px);
-            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(16px);
         }
         .dark .nav-container {
-            background: rgba(17, 24, 39, 0.95);
-            border-color: rgba(55, 65, 81, 0.8);
+            background: color-mix(in srgb, var(--dashboard-bg) 94%, transparent);
+            border-color: var(--dashboard-border);
         }
 
         /* Logo */
@@ -160,10 +159,16 @@
         .logo-text {
             font-size: 1.25rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #ec4899, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--dashboard-text);
+            letter-spacing: -0.03em;
+        }
+        .logo-text::after {
+            content: ' / LIVE';
+            color: var(--dashboard-accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.08em;
+            margin-left: 0.35rem;
         }
 
         /* Nav Links */
@@ -174,24 +179,28 @@
             padding: 0.5rem 0.875rem;
             font-size: 0.875rem;
             font-weight: 600;
-            color: #6b7280;
+            color: var(--dashboard-muted);
             border-radius: 0.625rem;
+            border: 1px solid transparent;
             transition: all 0.2s;
             text-decoration: none;
         }
         .nav-link:hover {
-            color: #1f2937;
-            background: rgba(99, 102, 241, 0.08);
+            color: var(--dashboard-text);
+            background: color-mix(in srgb, var(--dashboard-accent) 8%, transparent);
+            border-color: color-mix(in srgb, var(--dashboard-accent) 18%, transparent);
         }
-        .dark .nav-link { color: #9ca3af; }
-        .dark .nav-link:hover { color: white; background: rgba(99, 102, 241, 0.15); }
+        .dark .nav-link { color: var(--dashboard-muted); }
+        .dark .nav-link:hover { color: var(--dashboard-text); background: color-mix(in srgb, var(--dashboard-accent) 8%, transparent); }
         .nav-link-active {
-            color: #6366f1 !important;
-            background: rgba(99, 102, 241, 0.1);
+            color: var(--dashboard-accent) !important;
+            background: color-mix(in srgb, var(--dashboard-accent) 12%, transparent);
+            border-color: color-mix(in srgb, var(--dashboard-accent) 28%, transparent);
+            box-shadow: 0 0 20px color-mix(in srgb, var(--dashboard-accent) 8%, transparent);
         }
         .dark .nav-link-active {
-            color: #818cf8 !important;
-            background: rgba(99, 102, 241, 0.2);
+            color: var(--dashboard-accent) !important;
+            background: color-mix(in srgb, var(--dashboard-accent) 12%, transparent);
         }
 
         /* User Info */
@@ -203,7 +212,7 @@
         .user-avatar {
             width: 2.25rem;
             height: 2.25rem;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            background: linear-gradient(135deg, var(--dashboard-accent), var(--dashboard-live));
             border-radius: 0.625rem;
             display: flex;
             align-items: center;
@@ -221,7 +230,7 @@
         .user-name {
             font-size: 0.875rem;
             font-weight: 700;
-            color: #1f2937;
+            color: var(--dashboard-text);
         }
         .dark .user-name { color: white; }
         .user-role {
@@ -233,28 +242,28 @@
             border-radius: 0.25rem;
         }
         .role-admin {
-            background: rgba(236, 72, 153, 0.1);
-            color: #db2777;
+            background: color-mix(in srgb, var(--dashboard-danger) 14%, transparent);
+            color: var(--dashboard-danger);
         }
         .dark .role-admin {
-            background: rgba(236, 72, 153, 0.2);
-            color: #f472b6;
+            background: rgba(255, 69, 58, 0.18);
+            color: #FF453A;
         }
         .role-client {
-            background: rgba(16, 185, 129, 0.1);
-            color: #059669;
+            background: color-mix(in srgb, var(--dashboard-live) 14%, transparent);
+            color: var(--dashboard-live);
         }
         .dark .role-client {
-            background: rgba(16, 185, 129, 0.2);
-            color: #34d399;
+            background: rgba(50, 215, 75, 0.18);
+            color: #32D74B;
         }
 
         .nav-divider {
             width: 1px;
             height: 2rem;
-            background: #e5e7eb;
+            background: var(--dashboard-border);
         }
-        .dark .nav-divider { background: #374151; }
+        .dark .nav-divider { background: var(--dashboard-border); }
 
         /* Logout Button */
         .logout-btn {
@@ -280,23 +289,23 @@
         .mobile-menu-btn {
             padding: 0.5rem;
             border-radius: 0.625rem;
-            color: #6b7280;
+            color: #98989D;
             transition: all 0.2s;
         }
         .mobile-menu-btn:hover {
-            background: #f3f4f6;
-            color: #1f2937;
+            background: rgba(0, 229, 255, 0.08);
+            color: #00E5FF;
         }
-        .dark .mobile-menu-btn { color: #9ca3af; }
-        .dark .mobile-menu-btn:hover { background: #374151; color: white; }
+        .dark .mobile-menu-btn { color: #98989D; }
+        .dark .mobile-menu-btn:hover { background: rgba(0, 229, 255, 0.08); color: #00E5FF; }
 
         /* Mobile Menu */
         .mobile-menu {
-            background: white;
-            border-top: 1px solid #e5e7eb;
+            background: #1E1E1E;
+            border-top: 1px solid #2C2C2E;
             animation: slideDown 0.2s ease;
         }
-        .dark .mobile-menu { background: rgb(17 24 39); border-color: #374151; }
+        .dark .mobile-menu { background: #1E1E1E; border-color: #2C2C2E; }
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -307,14 +316,14 @@
             align-items: center;
             gap: 0.75rem;
             padding: 1rem;
-            background: linear-gradient(to right, rgba(99, 102, 241, 0.05), transparent);
-            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(to right, rgba(0, 229, 255, 0.08), transparent);
+            border-bottom: 1px solid #2C2C2E;
         }
-        .dark .mobile-menu-header { border-color: #374151; background: linear-gradient(to right, rgba(99, 102, 241, 0.1), transparent); }
+        .dark .mobile-menu-header { border-color: #2C2C2E; background: linear-gradient(to right, rgba(0, 229, 255, 0.08), transparent); }
         .mobile-user-avatar {
             width: 2.75rem;
             height: 2.75rem;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            background: linear-gradient(135deg, #00E5FF, #32D74B);
             border-radius: 0.75rem;
             display: flex;
             align-items: center;
@@ -325,7 +334,7 @@
         }
         .mobile-user-name {
             font-weight: 700;
-            color: #1f2937;
+            color: #FFFFFF;
         }
         .dark .mobile-user-name { color: white; }
         .mobile-user-email {
@@ -344,28 +353,28 @@
             padding: 0.75rem 1rem;
             font-size: 0.9375rem;
             font-weight: 600;
-            color: #374151;
+            color: #98989D;
             border-radius: 0.625rem;
             text-decoration: none;
             transition: all 0.2s;
         }
-        .mobile-nav-link:hover { background: #f3f4f6; }
-        .dark .mobile-nav-link { color: #d1d5db; }
-        .dark .mobile-nav-link:hover { background: #374151; }
+        .mobile-nav-link:hover { background: rgba(0, 229, 255, 0.08); color: #FFFFFF; }
+        .dark .mobile-nav-link { color: #98989D; }
+        .dark .mobile-nav-link:hover { background: rgba(0, 229, 255, 0.08); }
         .mobile-nav-active {
-            background: rgba(99, 102, 241, 0.1) !important;
-            color: #6366f1 !important;
+            background: rgba(0, 229, 255, 0.12) !important;
+            color: #00E5FF !important;
         }
         .dark .mobile-nav-active {
-            background: rgba(99, 102, 241, 0.2) !important;
-            color: #818cf8 !important;
+            background: rgba(0, 229, 255, 0.12) !important;
+            color: #00E5FF !important;
         }
 
         .mobile-logout {
             padding: 0.5rem;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #2C2C2E;
         }
-        .dark .mobile-logout { border-color: #374151; }
+        .dark .mobile-logout { border-color: #2C2C2E; }
         .mobile-logout-btn {
             display: flex;
             align-items: center;

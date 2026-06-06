@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
+use App\Mail\InvitationApprovedMail;
 
 class AdminController extends Controller
 {
@@ -39,44 +42,48 @@ class AdminController extends Controller
         }
 
         $credentials = [];
+        $user = $invitation->user;
 
         try {
-            DB::transaction(function () use ($invitation, &$credentials) {
+            DB::transaction(function () use ($invitation, &$credentials, $user) {
+                
+                // Cek jika email masih dummy bawaan order
+                $email = $user->email;
+                if (str_ends_with($email, '@temanten.biz.id')) {
+                    $content  = $invitation->content;
+                    $namaPria = $content['mempelai']['pria']['nama'] ?? 'Mempelai Pria';
+                    $namaWanita = $content['mempelai']['wanita']['nama'] ?? 'Mempelai Wanita';
 
-                $content  = $invitation->content;
-                $namaPria = $content['mempelai']['pria']['nama'] ?? 'Mempelai Pria';
-                $namaWanita = $content['mempelai']['wanita']['nama'] ?? 'Mempelai Wanita';
+                    $pria   = strtolower(preg_replace('/[^a-z0-9]/i', '', explode(' ', trim($namaPria))[0]));
+                    $wanita = strtolower(preg_replace('/[^a-z0-9]/i', '', explode(' ', trim($namaWanita))[0]));
 
-                $namaAkun = $namaPria . ' & ' . $namaWanita;
+                    $baseEmail = "{$pria}.{$wanita}";
+                    $newEmail  = $baseEmail . '@temanten.inv';
 
-                $pria   = strtolower(preg_replace('/[^a-z0-9]/i', '', explode(' ', trim($namaPria))[0]));
-                $wanita = strtolower(preg_replace('/[^a-z0-9]/i', '', explode(' ', trim($namaWanita))[0]));
-
-                $baseEmail = "{$pria}.{$wanita}";
-                $email     = $baseEmail . '@temanten.inv';
-
-                $counter = 1;
-                while (User::where('email', $email)->exists()) {
-                    $email = $baseEmail . $counter . '@temanten.inv';
-                    $counter++;
+                    $counter = 1;
+                    while (User::where('email', $newEmail)->where('id', '!=', $user->id)->exists()) {
+                        $newEmail = $baseEmail . $counter . '@temanten.inv';
+                        $counter++;
+                    }
+                    $email = $newEmail;
                 }
 
                 $rawPassword = Str::random(8);
 
-                $user = User::create([
-                    'name'     => $namaAkun,
+                $user->update([
                     'email'    => $email,
                     'password' => Hash::make($rawPassword),
-                    'role'     => 'client',
                 ]);
 
                 $invitation->update([
                     'status'  => 'active',
-                    'user_id' => $user->id,
                 ]);
 
+                // Set default expiry
+                $invitation->setDefaultExpiry();
+
                 $credentials = [
-                    'name'     => $namaAkun,
+                    'name'     => $user->name,
                     'email'    => $email,
                     'password' => $rawPassword,
                 ];
@@ -85,21 +92,33 @@ class AdminController extends Controller
             // Log aktivitas admin: persetujuan undangan
             ActivityLog::record('admin_action', 'invitation.approved', $invitation, [
                 'invitation_slug' => $invitation->slug,
-                'approved_by'     => auth()->user()->email,
+                'approved_by'     => Auth::user()->email,
             ]);
 
             Log::channel('daily')->info('Admin approved invitation', [
-                'admin'           => auth()->user()->email,
+                'admin'           => Auth::user()->email,
                 'invitation_id'   => $invitation->id,
                 'invitation_slug' => $invitation->slug,
             ]);
+
+            // Jangan kirim email jika email dummy .inv atau .biz.id
+            if (!str_ends_with($user->email, '.inv') && !str_ends_with($user->email, '.biz.id')) {
+                try {
+                    Mail::to($user->email)->send(new InvitationApprovedMail($invitation, $credentials['password']));
+                } catch (\Throwable $e) {
+                    Log::channel('daily')->warning('Failed to send approval email', [
+                        'invitation_id' => $invitation->id,
+                        'error'         => $e->getMessage(),
+                    ]);
+                }
+            }
 
             return redirect()->back()->with('new_account', $credentials);
 
         } catch (\Exception $e) {
 
             Log::channel('daily')->error('Failed to approve invitation', [
-                'admin'         => auth()->user()->email,
+                'admin'         => Auth::user()->email,
                 'invitation_id' => $id,
                 'error'         => $e->getMessage(),
                 'trace'         => $e->getTraceAsString(),
@@ -122,11 +141,11 @@ class AdminController extends Controller
         // Log aktivitas admin: reset password klien
         ActivityLog::record('admin_action', 'user.password_reset', $user, [
             'target_email'  => $user->email,
-            'reset_by'      => auth()->user()->email,
+            'reset_by'      => Auth::user()->email,
         ]);
 
         Log::channel('daily')->info('Admin reset client password', [
-            'admin'        => auth()->user()->email,
+            'admin'        => Auth::user()->email,
             'target_user'  => $user->email,
         ]);
 
@@ -170,7 +189,7 @@ class AdminController extends Controller
             'theme_slug'   => $theme->slug,
             'new_price'    => $theme->price,
             'promo_price'  => $theme->promo_price,
-            'updated_by'   => auth()->user()->email,
+            'updated_by'   => Auth::user()->email,
         ]);
 
         return redirect()->back()->with('success', "Harga tema \"{$theme->name}\" berhasil diperbarui.");
@@ -201,7 +220,7 @@ class AdminController extends Controller
 
         ActivityLog::record('admin_action', 'theme.default_price_updated', null, [
             'new_default_price' => $newPrice,
-            'updated_by'        => auth()->user()->email,
+            'updated_by'        => Auth::user()->email,
         ]);
 
         return redirect()->back()->with('success', 'Harga default berhasil diperbarui menjadi Rp ' . number_format($newPrice, 0, ',', '.'));
@@ -233,7 +252,7 @@ class AdminController extends Controller
 
         ActivityLog::record('admin_action', 'admin.created', $admin, [
             'created_admin' => $admin->email,
-            'created_by'    => auth()->user()->email,
+            'created_by'    => Auth::user()->email,
         ]);
 
         return redirect()->back()->with('success', "Akun admin baru ({$admin->name}) berhasil ditambahkan.");
@@ -243,7 +262,7 @@ class AdminController extends Controller
     {
         $admin = User::findOrFail($id);
 
-        if ($admin->id === auth()->id()) {
+        if ($admin->id === Auth::id()) {
             return redirect()->back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri secara langsung.');
         }
 
@@ -256,7 +275,7 @@ class AdminController extends Controller
 
         ActivityLog::record('admin_action', 'admin.deleted', null, [
             'deleted_admin' => $email,
-            'deleted_by'    => auth()->user()->email,
+            'deleted_by'    => Auth::user()->email,
         ]);
 
         return redirect()->back()->with('success', "Akun admin {$email} berhasil dihapus permanen.");

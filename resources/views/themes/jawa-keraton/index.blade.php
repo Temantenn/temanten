@@ -21,50 +21,43 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Jost',sans-serif;color:var(--sogan)}
 
-/* ═══ BATIK BACKGROUND PATTERN ═══ */
+/* ═══ BATIK BACKGROUND PATTERN — KAWUNG & PARANG ═══ */
 .batik-bg {
     background-color:var(--krem);
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='10' r='9' fill='none' stroke='%23B8861A' stroke-width='0.6' opacity='0.18'/%3E%3Ccircle cx='30' cy='50' r='9' fill='none' stroke='%23B8861A' stroke-width='0.6' opacity='0.18'/%3E%3Ccircle cx='10' cy='30' r='9' fill='none' stroke='%23B8861A' stroke-width='0.6' opacity='0.18'/%3E%3Ccircle cx='50' cy='30' r='9' fill='none' stroke='%23B8861A' stroke-width='0.6' opacity='0.18'/%3E%3Ccircle cx='30' cy='30' r='5' fill='none' stroke='%23B8861A' stroke-width='0.5' opacity='0.12'/%3E%3C/svg%3E");
+    background-image:
+        radial-gradient(circle at center, rgba(250,243,224,0.78) 0 38%, rgba(250,243,224,0) 39%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='none' stroke='%23B8861A' stroke-width='1' opacity='.22'%3E%3Cellipse cx='48' cy='22' rx='13' ry='22'/%3E%3Cellipse cx='48' cy='74' rx='13' ry='22'/%3E%3Cellipse cx='22' cy='48' rx='22' ry='13'/%3E%3Cellipse cx='74' cy='48' rx='22' ry='13'/%3E%3Ccircle cx='48' cy='48' r='6'/%3E%3C/g%3E%3Cg fill='%23B8861A' opacity='.09'%3E%3Cpath d='M0 8 C18 22 18 38 0 52 V42 C8 34 8 26 0 18z'/%3E%3Cpath d='M96 44 C78 58 78 74 96 88 V78 C88 70 88 62 96 54z'/%3E%3C/g%3E%3C/svg%3E");
+    background-size:140px 140px, 96px 96px;
 }
 .batik-dark {
     background-color:var(--sogan);
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='10' r='9' fill='none' stroke='%23E0B84A' stroke-width='0.7' opacity='0.12'/%3E%3Ccircle cx='30' cy='50' r='9' fill='none' stroke='%23E0B84A' stroke-width='0.7' opacity='0.12'/%3E%3Ccircle cx='10' cy='30' r='9' fill='none' stroke='%23E0B84A' stroke-width='0.7' opacity='0.12'/%3E%3Ccircle cx='50' cy='30' r='9' fill='none' stroke='%23E0B84A' stroke-width='0.7' opacity='0.12'/%3E%3C/svg%3E");
+    background-image:
+        linear-gradient(135deg, rgba(224,184,74,0.06) 25%, transparent 25%, transparent 50%, rgba(224,184,74,0.06) 50%, rgba(224,184,74,0.06) 75%, transparent 75%, transparent),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='92' height='92' viewBox='0 0 92 92'%3E%3Cg fill='none' stroke='%23E0B84A' stroke-width='1' opacity='.16'%3E%3Cpath d='M-12 74 C18 54 30 28 18 -8'/%3E%3Cpath d='M14 100 C44 80 56 54 44 18'/%3E%3Cpath d='M40 126 C70 106 82 80 70 44'/%3E%3Cpath d='M66 152 C96 132 108 106 96 70'/%3E%3C/g%3E%3Cg fill='%23E0B84A' opacity='.12'%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='66' cy='46' r='2'/%3E%3Ccircle cx='42' cy='78' r='2'/%3E%3C/g%3E%3C/svg%3E");
+    background-size:36px 36px, 92px 92px;
 }
 
 /* ═══ APP WRAPPER ═══ */
 .app{max-width:480px;height:100vh;margin:0 auto;position:relative;overflow:hidden}
 
 /* ═══ GUNUNGAN GATE ═══ */
-.gate{position:absolute;inset:0;z-index:999;display:flex;align-items:center;justify-content:center}
+.gate{position:absolute;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,rgba(92,46,20,0.18),transparent 58%)}
+.gate::before,.gate::after{content:"";position:absolute;top:18px;bottom:18px;width:22px;z-index:1;border-top:1px solid rgba(224,184,74,0.55);border-bottom:1px solid rgba(224,184,74,0.55);background:repeating-linear-gradient(45deg,rgba(224,184,74,0.25) 0 7px,rgba(224,184,74,0.05) 7px 14px)}
+.gate::before{left:18px}.gate::after{right:18px}
 .gate-half{position:absolute;top:0;bottom:0;width:50%;transition:transform 1.4s cubic-bezier(0.77,0,0.18,1)}
-.gate-left{left:0;transform-origin:left center;background:var(--hitam);
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ccircle cx='40' cy='40' r='12' fill='none' stroke='%23B8861A' stroke-width='0.5' opacity='0.08'/%3E%3Ccircle cx='40' cy='40' r='8' fill='none' stroke='%23B8861A' stroke-width='0.4' opacity='0.06'/%3E%3Ccircle cx='0' cy='0' r='10' fill='none' stroke='%23B8861A' stroke-width='0.4' opacity='0.05'/%3E%3Ccircle cx='80' cy='80' r='10' fill='none' stroke='%23B8861A' stroke-width='0.4' opacity='0.05'/%3E%3C/svg%3E");}
-.gate-right{right:0;transform-origin:right center;background:var(--hitam);
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ccircle cx='40' cy='40' r='12' fill='none' stroke='%23B8861A' stroke-width='0.5' opacity='0.08'/%3E%3Ccircle cx='40' cy='40' r='8' fill='none' stroke='%23B8861A' stroke-width='0.4' opacity='0.06'/%3E%3Ccircle cx='0' cy='0' r='10' fill='none' stroke='%23B8861A' stroke-width='0.4' opacity='0.05'/%3E%3Ccircle cx='80' cy='80' r='10' fill='none' stroke='%23B8861A' stroke-width='0.4' opacity='0.05'/%3E%3C/svg%3E");}
+.gate-left{left:0;transform-origin:left center;background:var(--hitam);background-image:linear-gradient(90deg,rgba(224,184,74,0.12),transparent 26%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='92' height='92' viewBox='0 0 92 92'%3E%3Cg fill='none' stroke='%23B8861A' stroke-width='1' opacity='.16'%3E%3Cellipse cx='46' cy='21' rx='12' ry='21'/%3E%3Cellipse cx='46' cy='71' rx='12' ry='21'/%3E%3Cellipse cx='21' cy='46' rx='21' ry='12'/%3E%3Cellipse cx='71' cy='46' rx='21' ry='12'/%3E%3C/g%3E%3C/svg%3E")}
+.gate-right{right:0;transform-origin:right center;background:var(--hitam);background-image:linear-gradient(270deg,rgba(224,184,74,0.12),transparent 26%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='92' height='92' viewBox='0 0 92 92'%3E%3Cg fill='none' stroke='%23B8861A' stroke-width='1' opacity='.16'%3E%3Cellipse cx='46' cy='21' rx='12' ry='21'/%3E%3Cellipse cx='46' cy='71' rx='12' ry='21'/%3E%3Cellipse cx='21' cy='46' rx='21' ry='12'/%3E%3Cellipse cx='71' cy='46' rx='21' ry='12'/%3E%3C/g%3E%3C/svg%3E")}
 .gate.open .gate-left{transform:translateX(-100%)}
 .gate.open .gate-right{transform:translateX(100%)}
 .gate-center{position:relative;z-index:2;text-align:center;padding:0 24px;pointer-events:none}
 .gate-center.hide{opacity:0;transition:opacity 0.4s}
-.jawa-ornament{
-    width:80px;
-    height:80px;
-    margin:0 auto 20px auto;
-    position:relative;
-}
-.jawa-ornament::before,
-.jawa-ornament::after{
-    content:"";
-    position:absolute;
-    left:50%;
-    transform:translateX(-50%);
-    border-left:30px solid transparent;
-    border-right:30px solid transparent;
-    border-bottom:50px solid #D4AF37;
-}
-.jawa-ornament::after{
-    top:25px;
-    border-bottom:40px solid rgba(212,175,55,0.6);
-}
+.jawa-ornament{width:118px;height:138px;margin:0 auto 18px;position:relative;filter:drop-shadow(0 12px 18px rgba(0,0,0,0.35))}
+.jawa-ornament::before{content:"";position:absolute;inset:0;background:linear-gradient(160deg,var(--gold-xl),var(--gold) 42%,#7f4c0a 100%);clip-path:polygon(50% 0,67% 12%,78% 27%,86% 46%,82% 67%,69% 85%,50% 100%,31% 85%,18% 67%,14% 46%,22% 27%,33% 12%);border:1px solid rgba(242,215,133,0.7)}
+.jawa-ornament::after{content:"";position:absolute;inset:12px 18px 18px;background:var(--hitam);opacity:.86;clip-path:polygon(50% 0,62% 13%,70% 31%,76% 50%,70% 70%,58% 88%,50% 100%,42% 88%,30% 70%,24% 50%,30% 31%,38% 13%)}
+.jawa-ornament .kayon-line{position:absolute;left:50%;top:25px;width:2px;height:82px;background:linear-gradient(var(--gold-xl),var(--gold));transform:translateX(-50%);z-index:2;box-shadow:0 0 0 1px rgba(26,14,5,0.22)}
+.jawa-ornament .kayon-line::before,.jawa-ornament .kayon-line::after{content:"";position:absolute;top:24px;width:32px;height:32px;border:2px solid var(--gold-l);border-radius:50%;opacity:.9}
+.jawa-ornament .kayon-line::before{right:6px;border-right:0;border-bottom:0;transform:rotate(-25deg)}
+.jawa-ornament .kayon-line::after{left:6px;border-left:0;border-bottom:0;transform:rotate(25deg)}
 .gate-eyebrow{font-size:10px;letter-spacing:6px;text-transform:uppercase;color:var(--gold-l);margin-bottom:15px;opacity:0.9}
 .gate-names{font-family:'Cormorant Garamond',serif;font-size:3.2rem;font-weight:400;font-style:italic;color:var(--ivory);line-height:1.1;margin:18px 0}
 .gate-amp{color:var(--ivory);font-style:normal;font-weight:300;display:inline-block;margin:0 10px}
@@ -96,13 +89,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 
 /* ═══ SECTION TITLE ═══ */
 .sec-title{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;font-style:italic;color:var(--gold);text-align:center;margin-bottom:6px}
-.sec-ornament{text-align:center;color:var(--gold-l);opacity:0.5;font-size:1.1rem;letter-spacing:8px;margin-bottom:20px}
-.gold-line{width:60px;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);margin:10px auto}
+.sec-ornament{text-align:center;color:var(--gold-l);opacity:0.68;font-size:1.1rem;letter-spacing:8px;margin-bottom:20px}
+.sec-ornament::before,.sec-ornament::after{content:'ꦋ';font-size:.85rem;margin:0 8px;color:var(--gold)}
+.gold-line{width:72px;height:1px;background:linear-gradient(to right,transparent,var(--gold),var(--gold-xl),var(--gold),transparent);margin:10px auto}
 
 /* ═══ HOME PAGE ═══ */
 .home-hero{height:56vh;background-size:cover;background-position:center;position:relative}
-.home-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(61,31,13,0.3),var(--bg) 100%)}
-.home-card{background:var(--krem);border:1px solid var(--border);border-radius:2px;padding:24px 20px;margin:-20px 16px 20px;position:relative;z-index:5;text-align:center;box-shadow:0 8px 40px rgba(61,31,13,0.12)}
+.home-hero::before{content:"";position:absolute;left:18px;right:18px;top:18px;bottom:18px;border:1px solid rgba(242,215,133,0.55);z-index:1;pointer-events:none;box-shadow:0 0 0 6px rgba(61,31,13,0.12)}
+.home-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(61,31,13,0.28),var(--bg) 100%)}
+.home-card{background:var(--krem);border:1px solid var(--border);border-radius:2px;padding:28px 20px 24px;margin:-20px 16px 20px;position:relative;z-index:5;text-align:center;box-shadow:0 8px 40px rgba(61,31,13,0.12)}
+.home-card::before,.home-card::after{content:"";position:absolute;left:12px;right:12px;height:10px;background:repeating-linear-gradient(90deg,var(--gold) 0 10px,transparent 10px 20px);opacity:.42;pointer-events:none}.home-card::before{top:8px}.home-card::after{bottom:8px}
 .home-couple{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-style:italic;color:var(--sogan);line-height:1.2;margin-bottom:16px}
 .home-amp{color:var(--gold);font-style:normal}
 .cd-grid{display:flex;justify-content:center;gap:8px}
@@ -168,7 +164,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 /* ═══ RSVP & GIFT ═══ */
 .wishes-page{padding:40px 0 140px}
 .gift-strip{background:linear-gradient(135deg,var(--sogan),var(--sogan2));border:1px solid var(--border);margin:0 16px 16px;padding:20px;position:relative;overflow:hidden}
-.gift-strip::before{content:'✦ ✦ ✦';position:absolute;top:10px;right:14px;color:var(--gold-l);opacity:0.3;font-size:10px;letter-spacing:6px}
+.gift-strip::before{content:'ꦋ ꦋ ꦋ';position:absolute;top:10px;right:14px;color:var(--gold-l);opacity:0.35;font-size:12px;letter-spacing:6px}
 .gift-bank{font-size:9px;letter-spacing:3px;color:var(--gold-l);text-transform:uppercase;margin-bottom:4px;font-family:'Cinzel',serif}
 .gift-num{font-size:1.5rem;font-weight:600;letter-spacing:4px;color:var(--ivory);margin-bottom:2px}
 .gift-holder{font-size:11px;color:rgba(245,235,208,0.6)}
@@ -194,8 +190,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .particle{position:absolute;width:3px;height:3px;background:var(--gold-l);border-radius:50%;opacity:0;animation:float-up 8s infinite}
 @keyframes float-up{0%{opacity:0;transform:translateY(0) scale(1)}20%{opacity:0.6}80%{opacity:0.2}100%{opacity:0;transform:translateY(-60vh) scale(0.3)}}
-
-@media(max-width:380px){.gate-names{font-size:2.5rem}.home-couple{font-size:1.8rem}.couple-photo{width:90px;height:90px}}
+.wayang-shadow{position:absolute;bottom:88px;width:74px;height:128px;z-index:2;opacity:.18;pointer-events:none;background:var(--hitam);clip-path:polygon(50% 0,61% 13%,58% 27%,74% 38%,62% 50%,78% 72%,60% 67%,55% 100%,45% 100%,40% 67%,22% 72%,38% 50%,26% 38%,42% 27%,39% 13%)}
+.wayang-shadow.left{left:18px;transform:rotate(-8deg)}.wayang-shadow.right{right:18px;transform:scaleX(-1) rotate(-8deg)}
+@media(max-width:380px){.gate-names{font-size:2.5rem}.jawa-ornament{width:96px;height:112px}.home-couple{font-size:1.8rem}.couple-photo{width:90px;height:90px}.gate::before,.gate::after{width:14px}.wayang-shadow{width:54px;height:96px}}
 </style>
 </head>
 <body>
@@ -271,7 +268,8 @@ $target = \Carbon\Carbon::parse($akad['waktu'] ?? now()->addDays(90));
         <div class="gate-half gate-right"></div>
         <div class="gate-center" id="gateContent">
 
-            <p class="gate-eyebrow">UNDANGAN PERNIKAHAN</p>
+            <div class="jawa-ornament" aria-hidden="true"><span class="kayon-line"></span></div>
+            <p class="gate-eyebrow">PAWIWAHAN AGUNG</p>
 
             <div class="gate-divider-wrap" style="transform:translateY(-8px)">
                 <div class="gate-divider"></div>
@@ -289,6 +287,7 @@ $target = \Carbon\Carbon::parse($akad['waktu'] ?? now()->addDays(90));
                 <div class="gate-divider"></div>
             </div>
 
+            <p style="font-size:9px;letter-spacing:3px;color:var(--gold-l);opacity:.82;font-family:'Cinzel',serif;text-transform:uppercase">ꦱꦸꦒꦼꦁ ꦫꦮꦸꦃ</p>
             <br><br>
 
             <button class="btn-buka" onclick="openSurat()">Buka Surat</button>
@@ -297,9 +296,11 @@ $target = \Carbon\Carbon::parse($akad['waktu'] ?? now()->addDays(90));
 
     {{-- ▼▼▼ PAGE: HOME ▼▼▼ --}}
     <div class="page active batik-bg" id="pg-home">
+        <div class="wayang-shadow left" aria-hidden="true"></div>
+        <div class="wayang-shadow right" aria-hidden="true"></div>
         <div class="home-hero" style="background-image:url('{{ jwImg($invitation->content['media']['cover'] ?? '') }}')"></div>
         <div class="home-card">
-            <p style="font-size:9px;letter-spacing:5px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;font-family:'Cinzel',serif">✦ Wilujeng Rawuh ✦</p>
+            <p style="font-size:9px;letter-spacing:5px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;font-family:'Cinzel',serif">ꦋ Wilujeng Rawuh ꦋ</p>
             <h2 class="home-couple">{{ $pria['panggilan'] ?? 'Raka' }} <span class="home-amp">&amp;</span> {{ $wanita['panggilan'] ?? 'Sari' }}</h2>
             <div class="gold-line"></div>
             <div class="cd-grid" style="margin:12px 0">

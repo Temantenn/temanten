@@ -36,11 +36,30 @@
                         </div>
 
                         <div class="hidden md:block">
-                            <div class="flex flex-col gap-5 mb-8">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order ID</span>
-                                    <span class="text-sm font-black text-gray-700 dark:text-gray-300">#{{ substr($order->order_number, -8) }}</span>
+                            <div class="mb-6 rounded-2xl border border-indigo-100 dark:border-indigo-900/40 bg-gradient-to-br from-indigo-50 via-white to-pink-50 dark:from-indigo-950/30 dark:via-gray-900 dark:to-pink-950/20 p-4 shadow-sm">
+                                <div class="flex items-center justify-between gap-3 mb-4">
+                                    <div>
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status Pembayaran</span>
+                                        <p class="text-base font-black text-gray-900 dark:text-white mt-1">Menunggu Pembayaran</p>
+                                    </div>
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-gray-800 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse"></span>
+                                        QRIS Aktif
+                                    </span>
                                 </div>
+                                <div class="grid grid-cols-2 gap-2 text-xs">
+                                    <div class="rounded-xl bg-white/75 dark:bg-gray-800/70 border border-white dark:border-gray-700 p-3">
+                                        <span class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Order ID</span>
+                                        <span class="font-black text-gray-800 dark:text-gray-200">#{{ substr($order->order_number, -8) }}</span>
+                                    </div>
+                                    <div class="rounded-xl bg-white/75 dark:bg-gray-800/70 border border-white dark:border-gray-700 p-3">
+                                        <span class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Metode</span>
+                                        <span class="font-black text-gray-800 dark:text-gray-200">QRIS</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col gap-5 mb-6">
                                 <div class="flex justify-between items-center">
                                     <div class="flex flex-col">
                                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Detail Pesanan</span>
@@ -50,7 +69,7 @@
                                 </div>
                             </div>
 
-                            <div class="space-y-3 mb-8">
+                            <div class="space-y-3 mb-8 rounded-2xl bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 p-4">
                                 <div class="flex justify-between items-center text-xs font-bold uppercase tracking-tight">
                                     <span class="text-gray-400">Harga Layanan</span>
                                     <span class="text-gray-500 line-through">Rp {{ number_format($order->theme->effective_price, 0, ',', '.') }}</span>
@@ -114,6 +133,21 @@
                             <svg class="w-3.5 h-3.5 text-indigo-500 transform group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                             <span class="text-[10px] uppercase tracking-widest mt-0.5">Simpan QRIS</span>
                         </button>
+                    </div>
+
+                    <div class="w-full mb-4 grid grid-cols-3 gap-2 text-center">
+                        <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 p-2">
+                            <span class="block text-[8px] font-black uppercase tracking-widest text-gray-400">Step 1</span>
+                            <span class="text-[10px] font-bold text-gray-700 dark:text-gray-300">Scan</span>
+                        </div>
+                        <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 p-2">
+                            <span class="block text-[8px] font-black uppercase tracking-widest text-gray-400">Step 2</span>
+                            <span class="text-[10px] font-bold text-gray-700 dark:text-gray-300">Bayar Tepat</span>
+                        </div>
+                        <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 p-2">
+                            <span class="block text-[8px] font-black uppercase tracking-widest text-gray-400">Step 3</span>
+                            <span class="text-[10px] font-bold text-gray-700 dark:text-gray-300">Konfirmasi</span>
+                        </div>
                     </div>
 
                     <div class="text-center mt-auto w-full px-2 lg:px-6">

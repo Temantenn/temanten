@@ -342,17 +342,19 @@
         }
 
         .theme-card {
-            background: white;
-            border-radius: 24px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            border-radius: 28px;
             overflow: hidden;
             box-shadow: 0 10px 40px rgba(0,0,0,0.06);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            border: 1px solid rgba(148, 163, 184, 0.18);
         }
 
         .theme-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 25px 60px rgba(79, 70, 229, 0.15);
+            box-shadow: 0 28px 70px rgba(79, 70, 229, 0.18);
+            border-color: rgba(99, 102, 241, 0.22);
         }
 
         .theme-card-image {
@@ -464,12 +466,12 @@
         }
 
         .theme-price {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(14px);
             /* Membentuk seperti ribbon / hexagon cut di sebelah kiri */
             clip-path: polygon(15px 0%, 100% 0%, 100% 100%, 15px 100%, 0% 50%);
-            padding: 0.5rem 1rem 0.5rem 1.75rem;
-            min-width: 80px;
+            padding: 0.55rem 1.05rem 0.55rem 1.8rem;
+            min-width: 92px;
             font-family: inherit;
             display: flex;
             flex-direction: column;
@@ -480,6 +482,33 @@
 
         .theme-card-body {
             padding: 1.5rem;
+        }
+
+        .theme-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-100);
+        }
+
+        .theme-card-footnote {
+            font-size: 0.72rem;
+            color: var(--gray-500);
+            line-height: 1.35;
+        }
+
+        .theme-card-order-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+            color: var(--primary);
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-decoration: none;
         }
 
         .theme-card-category {
@@ -921,6 +950,7 @@
                     'jawa-keraton' => 'Tema sakral tradisional Jawa. Nuansa sogan, emas, dan batik kawung dengan animasi gunungan wayang yang megah.',
                     'sunda-asih' => 'Tema natural tradisional Sunda. Hijau daun, bambu, dan mega mendung dengan animasi tirai kain dan siluet rumah panggung.',
                     'sekar-jagad' => 'Tema elegan kontemporer. Dusty rose, navy, dan emas dengan navigasi top-tab, flip card acara, dan galeri masonry.',
+                    'pixel-adventure' => 'Tema undangan bergaya retro pixel art dengan pengalaman interaktif seperti game petualangan.',
                 ];
                 $description = $descriptions[$theme->slug] ?? 'Tema undangan digital dengan desain eksklusif dan responsif.';
 
@@ -937,6 +967,7 @@
                     'jawa-keraton' => 'Traditional',
                     'sunda-asih' => 'Traditional',
                     'sekar-jagad' => 'Wedding',
+                    'pixel-adventure' => 'Modern',
                 ];
                 $category = $categories[$theme->slug] ?? 'Wedding';
 
@@ -952,6 +983,7 @@
                     'jawa-keraton' => ['new', '🏛️ New'],
                     'sunda-asih' => ['new', '🌿 New'],
                     'sekar-jagad' => ['new', '🌸 New'],
+                    'pixel-adventure' => ['new', '🎮 New'],
                 ];
                 $badge = $badges[$theme->slug] ?? null;
 
@@ -968,6 +1000,7 @@
                     'jawa-keraton' => ['Gunungan Gate', 'Batik Motif', 'RSVP', 'Music'],
                     'sunda-asih' => ['Rumah Panggung', 'Mega Mendung', 'RSVP', 'Music'],
                     'sekar-jagad' => ['Flip Card', 'Snap Scroll', 'RSVP', 'Music'],
+                    'pixel-adventure' => ['Pixel Art', 'Game Quest', 'RSVP', 'Gallery'],
                 ];
                 $featureList = $features[$theme->slug] ?? ['Responsive', 'Gallery', 'RSVP'];
             @endphp
@@ -1017,6 +1050,13 @@
                         </span>
                         @endforeach
                     </div>
+                    <div class="theme-card-footer">
+                        <p class="theme-card-footnote">Cocok untuk undangan cepat, elegan, dan mudah dikelola.</p>
+                        <a href="{{ route('order.create', ['theme' => $theme->slug]) }}" class="theme-card-order-link">
+                            Order
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                        </a>
+                    </div>
                 </div>
             </div>
             @endforeach
@@ -1053,16 +1093,9 @@
                 <!-- Brand Column -->
                 <div class="space-y-6 md:col-span-2">
                     <div class="flex items-center gap-3">
-                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-12 h-12">
-                            <rect width="48" height="48" rx="12" fill="url(#footerGradient)" />
-                            <defs>
-                                <linearGradient id="footerGradient" x1="0" y1="0" x2="48" y2="48">
-                                    <stop offset="0%" stop-color="#667eea"/>
-                                    <stop offset="100%" stop-color="#764ba2"/>
-                                </linearGradient>
-                            </defs>
-                            <path d="M15 13h18v6h-6v17h-6v-17h-6v-6z" fill="white" /> 
-                        </svg>
+                        <div class="w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-white/10">
+                            <img src="{{ asset('assets/mini-logo.jpg') }}" alt="Logo Temanten" class="w-full h-full object-cover">
+                        </div>
                         <div>
                             <h2 class="font-extrabold text-2xl tracking-tight m-0 p-0 text-white">TEMANTEN</h2>
                             <p class="text-[0.65rem] text-indigo-300 font-bold tracking-[0.2em] uppercase m-0 p-0 text-left">Digital Invitation</p>

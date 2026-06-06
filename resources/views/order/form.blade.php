@@ -230,9 +230,9 @@
                                    required>
 
                             <label for="theme_{{ $theme->id }}"
-                                   class="theme-card-label flex items-center gap-4 border-2 border-gray-200 rounded-xl cursor-pointer p-4 transition-all hover:border-indigo-300 hover:shadow-md">
+                                   class="theme-card-label group flex items-center gap-4 border-2 border-gray-200 rounded-2xl cursor-pointer p-3.5 transition-all hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-100/70 bg-white hover:-translate-y-0.5">
                                 {{-- Thumbnail --}}
-                                <div class="h-20 w-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 shadow-md">
+                                <div class="relative h-24 w-20 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0 shadow-md ring-1 ring-gray-100">
                                     @php
                                         $thumbFile = $theme->thumbnail ?: ($theme->slug . '.png');
                                         $thumbExists = file_exists(public_path('assets/thumbnail/' . $thumbFile));
@@ -240,7 +240,7 @@
                                     @if($thumbExists)
                                         <img src="{{ asset('assets/thumbnail/' . $thumbFile) }}"
                                              alt="{{ $theme->name }}"
-                                             class="h-full w-full object-cover">
+                                             class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
                                     @else
                                         <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100 text-xs text-indigo-500 font-semibold text-center px-1">
                                             {{ $theme->name }}
@@ -249,16 +249,24 @@
                                 </div>
                                 {{-- Info --}}
                                 <div class="flex-1 min-w-0">
-                                    <h3 class="font-bold text-gray-900 text-base">{{ $theme->name }}</h3>
-                                    <p class="text-xs text-gray-500 mt-0.5">Premium Theme</p>
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="min-w-0">
+                                            <h3 class="font-extrabold text-gray-900 text-base truncate">{{ $theme->name }}</h3>
+                                            <p class="text-xs text-gray-500 mt-0.5">Premium Theme • Mobile ready</p>
+                                        </div>
+                                        @if($theme->has_promo)
+                                            <span class="shrink-0 rounded-full bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide">Promo</span>
+                                        @endif
+                                    </div>
                                     @if($theme->has_promo)
-                                        <div class="mt-1 flex items-center gap-2">
-                                            <p class="text-sm text-gray-400 line-through">Rp {{ $theme->short_original_price }}</p>
-                                            <p class="text-base text-amber-500 font-extrabold">Rp {{ $theme->short_price }}</p>
+                                        <div class="mt-2 inline-flex items-center gap-2 rounded-full bg-amber-50 border border-amber-100 px-3 py-1">
+                                            <p class="text-xs text-gray-400 line-through">{{ $theme->short_original_price }}</p>
+                                            <p class="text-sm text-amber-600 font-extrabold">{{ $theme->short_price }}</p>
                                         </div>
                                     @else
-                                        <p class="text-base text-indigo-600 font-extrabold mt-1">Rp {{ $theme->short_price }}</p>
+                                        <p class="mt-2 inline-flex rounded-full bg-indigo-50 border border-indigo-100 px-3 py-1 text-sm text-indigo-600 font-extrabold">{{ $theme->short_price }}</p>
                                     @endif
+                                    <p class="mt-2 text-[11px] font-semibold text-gray-400">Preview, RSVP, galeri, musik</p>
                                 </div>
                                 {{-- Radio indicator --}}
                                 <div class="flex-shrink-0">
@@ -423,14 +431,15 @@
 
             <!-- Submit Button -->
             <div class="sticky bottom-0 z-40 bg-gradient-to-t from-white via-white to-transparent pt-8 pb-6">
-                <div class="bg-white rounded-2xl shadow-2xl border-2 border-gray-100 p-6 md:p-8">
+                <div class="bg-white rounded-[1.75rem] shadow-2xl shadow-indigo-100 border-2 border-gray-100 p-5 md:p-7">
                     <div class="flex flex-col md:flex-row items-center justify-between gap-6">
                         <div class="text-center md:text-left">
-                            <h3 class="text-2xl font-bold text-gray-900 mb-2">Siap Membuat Undangan?</h3>
+                            <div class="inline-flex items-center gap-2 rounded-full bg-indigo-50 border border-indigo-100 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-indigo-600 mb-3">Ringkasan Order</div>
+                            <h3 class="text-2xl font-extrabold text-gray-900 mb-2">Siap Membuat Undangan?</h3>
                             <p class="text-gray-600">Total pembayaran: <span class="text-2xl font-extrabold text-indigo-600" id="totalHarga">Rp {{ number_format(config('app.default_price'), 0, ',', '.') }}</span></p>
-                            <p class="text-sm text-gray-500 mt-1">Akses mudah • Unlimited tamu • Edit kapan saja</p>
+                            <p class="text-sm text-gray-500 mt-1">Akses mudah • Unlimited tamu • Edit kapan saja • QRIS otomatis</p>
                         </div>
-                        <button id="btnSubmit" type="submit" class="group relative bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-5 px-10 rounded-xl shadow-2xl shadow-indigo-300 transition-all transform hover:scale-105 active:scale-95 w-full md:w-auto text-lg flex items-center justify-center gap-3 overflow-hidden">
+                        <button id="btnSubmit" type="submit" data-testid="order-submit" class="group relative bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-5 px-10 rounded-xl shadow-2xl shadow-indigo-300 transition-all transform hover:scale-105 active:scale-95 w-full md:w-auto text-lg flex items-center justify-center gap-3 overflow-hidden">
                             <span class="relative z-10 flex items-center gap-3">
                                 Buat Pesanan & Lanjut Pembayaran
                                 <svg class="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>

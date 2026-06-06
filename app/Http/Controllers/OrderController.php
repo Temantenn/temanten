@@ -37,13 +37,16 @@ class OrderController extends Controller
         $request->validate([
             'slug'            => 'required|alpha_dash|unique:invitations,slug',
             'theme_id'        => 'required|exists:themes,id',
-            'client_whatsapp' => 'required|numeric',
-            'groom_name'      => 'required|string',
-            'bride_name'      => 'required|string',
-            'event_date'      => 'required|date',
+            'client_whatsapp' => ['required', 'regex:/^\+?[0-9]{9,15}$/'],
+            'groom_name'      => 'required|string|max:255',
+            'bride_name'      => 'required|string|max:255',
+            'event_date'      => 'required|date|after_or_equal:today',
         ]);
 
         $whatsapp = $request->client_whatsapp;
+        if (str_starts_with($whatsapp, '+')) {
+            $whatsapp = substr($whatsapp, 1);
+        }
         if (str_starts_with($whatsapp, '0')) {
             $whatsapp = '62' . substr($whatsapp, 1);
         } elseif (str_starts_with($whatsapp, '8')) {
@@ -107,14 +110,14 @@ class OrderController extends Controller
                         'waktu'   => $request->event_date . ' 08:00:00',
                         'tempat'  => 'Lokasi Akad',
                         'alamat'  => 'Alamat lengkap lokasi akad...',
-                        'maps'    => '#'
+                        'maps'    => null
                     ],
                     'resepsi' => [
                         'judul'   => 'Resepsi Pernikahan',
                         'waktu'   => $request->event_date . ' 11:00:00',
                         'tempat'  => 'Lokasi Resepsi',
                         'alamat'  => 'Alamat lengkap lokasi resepsi...',
-                        'maps'    => '#'
+                        'maps'    => null
                     ]
                 ],
                 'media' => [
@@ -155,7 +158,7 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create order: ' . $e->getMessage());
-            return back()->withErrors(['msg' => 'Terjadi kesalahan sistem: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['msg' => 'Terjadi kesalahan sistem. Silakan coba lagi nanti.'])->withInput();
         }
     }
 
@@ -169,7 +172,7 @@ class OrderController extends Controller
 
         $order = Order::with(['theme', 'user'])->where('order_number', $orderNumber)->firstOrFail();
 
-        $masterQris = env('QRIS_MASTER_STRING', '00020101021226610014COM.GO-JEK.WWW01189360091431720318940210G1720318940303UMI51440014ID.CO.QRIS.WWW0215ID10254220360590303UMI520456915303360540410005802ID5908Temanten6008PEMALANG61055235262070703A016304B3D8');
+        $masterQris = config('temanten.qris_master_string', '00020101021226610014COM.GO-JEK.WWW01189360091431720318940210G1720318940303UMI51440014ID.CO.QRIS.WWW0215ID10254220360590303UMI520456915303360540410005802ID5908Temanten6008PEMALANG61055235262070703A016304B3D8');
         
         $order->dynamic_qris = $this->qrisService->generateDynamic($masterQris, $order->total_amount);
 

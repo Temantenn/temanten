@@ -499,6 +499,54 @@
       </div>
     </section>
 
+    <!-- How It Works Section -->
+    <section id="cara-kerja" class="py-24 bg-slate-50 relative overflow-hidden">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-14">
+                <div class="inline-flex items-center gap-2 bg-white border border-indigo-100 px-4 py-2 rounded-full text-indigo-700 text-sm font-semibold mb-4 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                    Cara Kerja
+                </div>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">Dari pilih tema sampai siap dibagikan dalam alur yang rapi</h2>
+                <p class="mt-4 text-lg text-gray-600">Alur sederhana ala automation: pilih, bayar, lengkapi konten, lalu kirim undangan ke semua tamu.</p>
+            </div>
+            <div class="grid md:grid-cols-4 gap-4">
+                @foreach([
+                    ['01', 'Pilih Tema', 'Bandingkan katalog, preview mobile/desktop, lalu pilih desain favorit.'],
+                    ['02', 'Buat Order', 'Isi data dasar dan lanjutkan pembayaran QRIS dengan nominal unik.'],
+                    ['03', 'Lengkapi Konten', 'Masuk dashboard untuk upload foto, galeri, cerita, lokasi, dan amplop digital.'],
+                    ['04', 'Bagikan Link', 'Kelola tamu, copy link personal, dan kirim via WhatsApp.'],
+                ] as $step)
+                <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xl shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-11 h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black mb-5">{{ $step[0] }}</div>
+                    <h3 class="text-lg font-extrabold text-gray-900 mb-2">{{ $step[1] }}</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">{{ $step[2] }}</p>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Benefit Section -->
+    <section class="py-20 bg-white">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="rounded-[2rem] border border-gray-100 bg-gradient-to-br from-gray-950 via-indigo-950 to-gray-900 p-8 md:p-10 text-white shadow-2xl overflow-hidden relative">
+                <div class="absolute -right-16 -top-16 w-56 h-56 bg-indigo-500/30 rounded-full blur-3xl"></div>
+                <div class="relative grid lg:grid-cols-[1.2fr_.8fr] gap-8 items-center">
+                    <div>
+                        <p class="text-indigo-200 text-sm font-bold uppercase tracking-[0.2em] mb-3">Dipercaya untuk momen penting</p>
+                        <h2 class="text-3xl md:text-4xl font-extrabold leading-tight">Undangan digital yang cepat dibuat, mudah dirawat, dan nyaman dibuka tamu.</h2>
+                    </div>
+                    <div class="grid sm:grid-cols-3 lg:grid-cols-1 gap-3">
+                        <div class="bg-white/10 border border-white/10 rounded-2xl p-4"><strong class="block text-lg">Responsive</strong><span class="text-sm text-white/70">Rapi di HP dan desktop.</span></div>
+                        <div class="bg-white/10 border border-white/10 rounded-2xl p-4"><strong class="block text-lg">Dashboard</strong><span class="text-sm text-white/70">Edit konten dan tamu mandiri.</span></div>
+                        <div class="bg-white/10 border border-white/10 rounded-2xl p-4"><strong class="block text-lg">QRIS</strong><span class="text-sm text-white/70">Pembayaran praktis dan jelas.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA Section - New -->
     <section class="py-28 bg-indigo-600 relative overflow-hidden">
         <!-- Decorative Elements -->

@@ -14,7 +14,7 @@
         </div>
     </x-slot>
 
-    <div class="py-8 bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 min-h-screen pb-32">
+    <div class="py-8 bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 min-h-screen pb-32" data-testid="client-settings">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
             {{-- Toast kanan-atas (otomatis hilang 4 detik) --}}
@@ -55,9 +55,28 @@
             </div>
             @endif
 
+            @php
+                $mapValue = fn ($value) => $value === '#' ? '' : ($value ?? '');
+            @endphp
+
             <form id="settingsForm" action="{{ route('client.updateSettings') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
                 @csrf
                 @method('PUT')
+
+                <div class="settings-guide-card">
+                    <div>
+                        <span class="settings-eyebrow">Panduan Edit</span>
+                        <h3 class="text-xl font-extrabold text-gray-900 dark:text-white mt-1">Lengkapi konten undangan bertahap</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mt-2 leading-relaxed">Mulai dari data mempelai, acara, media, lalu amplop digital. Setiap section disimpan melalui tombol tetap di bawah layar.</p>
+                    </div>
+                    <div class="settings-guide-steps">
+                        <span>01 Profil</span>
+                        <span>02 Acara</span>
+                        <span>03 Media</span>
+                        <span>04 Cerita</span>
+                        <span>05 Amplop</span>
+                    </div>
+                </div>
 
                 <!-- Section 1: Profile Mempelai -->
                 <div class="settings-card">
@@ -246,7 +265,7 @@
                                 </div>
                                 <div class="input-group">
                                     <label class="input-label">Link Maps</label>
-                                    <input type="text" name="akad_map_link" value="{{ $invitation->content['acara']['akad']['maps'] ?? '' }}" class="input-field" placeholder="https://maps.google.com/...">
+                                    <input type="text" name="akad_map_link" value="{{ old('akad_map_link', $mapValue($invitation->content['acara']['akad']['maps'] ?? null)) }}" class="input-field" placeholder="https://maps.google.com/...">
                                 </div>
                             </div>
                         </div>
@@ -309,7 +328,7 @@
                                 </div>
                                 <div class="input-group">
                                     <label class="input-label">Link Maps</label>
-                                    <input type="text" name="resepsi_map_link" value="{{ $invitation->content['acara']['resepsi']['maps'] ?? '' }}" class="input-field" placeholder="https://maps.google.com/...">
+                                    <input type="text" name="resepsi_map_link" value="{{ old('resepsi_map_link', $mapValue($invitation->content['acara']['resepsi']['maps'] ?? null)) }}" class="input-field" placeholder="https://maps.google.com/...">
                                 </div>
                             </div>
                         </div>
@@ -554,7 +573,7 @@
                             </div>
                             <div class="input-group">
                                 <label class="input-label">Link Maps Alamat Kado</label>
-                                <input type="text" name="gift_map_link" value="{{ $invitation->content['amplop']['maps_kado'] ?? '' }}" class="input-field" placeholder="https://maps.google.com/...">
+                                <input type="text" name="gift_map_link" value="{{ old('gift_map_link', $mapValue($invitation->content['amplop']['maps_kado'] ?? null)) }}" class="input-field" placeholder="https://maps.google.com/...">
                             </div>
                         </div>
                     </div>
@@ -564,9 +583,9 @@
                 <div class="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 p-4 z-50 shadow-2xl shadow-black/10">
                     <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
                         <p class="text-sm text-gray-500 dark:text-gray-400 hidden md:block">
-                            <span class="inline-flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Jangan lupa simpan perubahan</span>
+                            <span class="inline-flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Jangan lupa simpan perubahan sebelum membuka halaman lain</span>
                         </p>
-                        <button type="submit" class="px-8 py-2.5 leading-5 text-white transition-colors duration-300 transform bg-gray-700 rounded-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600 w-full md:w-auto flex items-center justify-center gap-2">
+                        <button type="submit" class="px-8 py-3 leading-5 text-white transition-all duration-300 transform bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 w-full md:w-auto flex items-center justify-center gap-2 font-bold shadow-xl shadow-indigo-500/20">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                             Simpan Perubahan
                         </button>
@@ -578,11 +597,52 @@
     </div>
 
     <style>
+        .settings-guide-card {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 1.5rem;
+            align-items: center;
+            padding: 1.5rem;
+            border-radius: 1.5rem;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(236, 72, 153, 0.08)), white;
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+        }
+        .dark .settings-guide-card {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.18), rgba(236, 72, 153, 0.12)), rgb(17 24 39);
+            border-color: rgba(99, 102, 241, 0.25);
+        }
+        .settings-eyebrow {
+            display: inline-flex;
+            font-size: 0.7rem;
+            font-weight: 900;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: #4f46e5;
+        }
+        .settings-guide-steps {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: .5rem;
+            max-width: 22rem;
+        }
+        .settings-guide-steps span {
+            border: 1px solid rgba(99, 102, 241, 0.18);
+            background: rgba(255,255,255,.72);
+            color: #4338ca;
+            border-radius: 999px;
+            padding: .45rem .7rem;
+            font-size: .72rem;
+            font-weight: 800;
+        }
+        .dark .settings-guide-steps span { background: rgba(31,41,55,.7); color: #c7d2fe; }
+
         /* Settings Card */
         .settings-card {
             background: white;
             border-radius: 1.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 12px 35px rgba(15, 23, 42, 0.06);
             overflow: hidden;
             border: 1px solid rgba(229, 231, 235, 0.5);
         }
@@ -720,12 +780,12 @@
         .input-field {
             display: block;
             width: 100%;
-            padding: 0.5rem 1rem; /* px-4 py-2 */
-            margin-top: 0.5rem; /* mt-2 */
-            color: #374151; /* text-gray-700 */
-            background-color: #ffffff; /* bg-white */
-            border: 1px solid #e5e7eb; /* border-gray-200 */
-            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.72rem 1rem;
+            margin-top: 0.5rem;
+            color: #374151;
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.875rem;
             transition: all 0.2s ease;
         }
         .input-field:focus {
@@ -781,6 +841,12 @@
         .settings-card:nth-child(3) { animation-delay: 0.2s; }
         .settings-card:nth-child(4) { animation-delay: 0.3s; }
         .settings-card:nth-child(5) { animation-delay: 0.4s; }
+
+        @media (max-width: 768px) {
+            .settings-guide-card { grid-template-columns: 1fr; }
+            .settings-guide-steps { justify-content: flex-start; max-width: none; }
+            .settings-header { align-items: flex-start; }
+        }
     </style>
 
     <script>

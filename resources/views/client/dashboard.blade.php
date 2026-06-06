@@ -1,12 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Dashboard Undangan') }}
-        </h2>
+        <div class="flex flex-col gap-1">
+            <p class="text-xs font-bold uppercase tracking-[0.24em]" style="color: var(--dashboard-accent);">Temanten Control Center</p>
+            <h2 class="text-2xl font-extrabold leading-tight" style="color: var(--dashboard-text);">
+                {{ __('Dashboard Undangan') }}
+            </h2>
+        </div>
     </x-slot>
 
-    <div class="py-8 bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950/30 min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="client-wv-dashboard py-8 min-h-screen" data-testid="client-dashboard">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
             {{-- ALERTS --}}
             @if(session('success'))
@@ -20,8 +23,8 @@
             @endif
 
             {{-- HEADER WELCOME --}}
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-3xl border border-gray-100 dark:border-gray-700">
-                <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
+            <div class="client-hero-card bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-3xl border border-gray-100 dark:border-gray-700">
+                <div class="client-hero-inner bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div class="space-y-3">
                             <div class="flex items-center gap-3">
@@ -50,11 +53,11 @@
                         </div>
                         <div class="flex flex-col sm:flex-row gap-3">
                             @if(isset($invitation))
-                                <a href="{{ route('invitation.show', $invitation->slug) }}" target="_blank" class="group px-5 py-3 bg-white/20 backdrop-blur-sm border-2 border-white/30 text-white font-bold rounded-xl hover:bg-white/30 transition flex items-center gap-2 text-sm">
+                                <a href="{{ route('invitation.show', $invitation->slug) }}" target="_blank" data-testid="client-invitation-link" class="group px-5 py-3 bg-white/20 backdrop-blur-sm border-2 border-white/30 text-white font-bold rounded-xl hover:bg-white/30 transition flex items-center gap-2 text-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     Lihat Undangan
                                 </a>
-                                <a href="{{ route('client.settings') }}" class="group px-5 py-3 bg-white text-indigo-600 font-bold rounded-xl hover:bg-gray-50 transition shadow flex items-center gap-2 text-sm">
+                                <a href="{{ route('client.settings') }}" data-testid="client-settings-link" class="group px-5 py-3 bg-white text-indigo-600 font-bold rounded-xl hover:bg-gray-50 transition shadow flex items-center gap-2 text-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     Edit Undangan
                                 </a>
@@ -140,7 +143,7 @@
                 $tidakHadir = $tamuCol->whereIn('rsvp_status',['tidak_hadir','ragu'])->count();
                 $pending   = $tamuCol->whereIn('rsvp_status',['pending',null])->count();
             @endphp
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="client-kpi-grid grid grid-cols-2 lg:grid-cols-4 gap-4">
                 @foreach([
                     ['Total Tamu','👥',$total,100,'indigo'],
                     ['Akan Hadir','✅',$hadir,$total > 0 ? round($hadir/$total*100) : 0,'green'],
@@ -167,7 +170,7 @@
                 {{-- LEFT: Forms --}}
                 <div class="space-y-5">
                     {{-- Form Tambah Tamu --}}
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+                    <div class="client-panel bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
                         <div class="flex items-center gap-3 mb-5">
                             <div class="p-2.5 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl shadow">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
@@ -225,7 +228,7 @@
                     </div>
 
                     {{-- Form Import Excel --}}
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+                    <div class="client-panel bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
                         <div class="flex items-center gap-3 mb-5">
                             <div class="p-2.5 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl shadow">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
@@ -268,7 +271,7 @@
                 </div>
 
                 {{-- RIGHT: Guest Table --}}
-                <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+                <div class="client-table-card lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
                     {{-- Table Header + Search --}}
                     <div class="p-5 border-b dark:border-gray-700">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -285,7 +288,7 @@
                                 {{-- Search --}}
                                 <div class="relative w-full sm:w-auto flex-1 sm:flex-initial">
                                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                                    <input type="text" id="guestSearch" onkeyup="filterGuests()" placeholder="Cari tamu..." class="pl-9 pr-4 py-2 w-full sm:w-40 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition">
+                                    <input type="text" id="guestSearch" onkeyup="filterGuests()" placeholder="Cari nama tamu..." class="pl-9 pr-4 py-2 w-full sm:w-48 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition">
                                 </div>
                                 {{-- Filter RSVP --}}
                                 <select id="rsvpFilter" onchange="filterGuests()" class="w-full sm:w-auto border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl text-sm px-3 py-2 flex-1 sm:flex-initial focus:border-indigo-400 outline-none transition">
@@ -295,6 +298,12 @@
                                     <option value="pending">Pending</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="guest-mini-board mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div><span>Total</span><strong>{{ $total }}</strong></div>
+                            <div><span>Hadir</span><strong>{{ $hadir }}</strong></div>
+                            <div><span>Belum Respon</span><strong>{{ $pending }}</strong></div>
+                            <div><span>Perlu Follow-up</span><strong>{{ $tidakHadir + $pending }}</strong></div>
                         </div>
                     </div>
 
@@ -423,6 +432,255 @@
     </div>
 
     <style>
+        .client-wv-dashboard {
+            background:
+                linear-gradient(var(--dashboard-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--dashboard-grid) 1px, transparent 1px),
+                radial-gradient(circle at 18% 8%, color-mix(in srgb, var(--dashboard-accent) 13%, transparent), transparent 24rem),
+                radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--dashboard-live) 8%, transparent), transparent 22rem),
+                var(--dashboard-bg);
+            background-size: 48px 48px, 48px 48px, auto, auto, auto;
+            color: var(--dashboard-text);
+        }
+        .client-wv-dashboard .bg-white,
+        .client-wv-dashboard .dark\:bg-gray-800,
+        .client-wv-dashboard .dark\:bg-gray-700,
+        .client-wv-dashboard .dark\:bg-gray-900 {
+            background: var(--dashboard-surface) !important;
+        }
+        .client-wv-dashboard .rounded-2xl,
+        .client-wv-dashboard .sm\:rounded-3xl {
+            border-radius: 16px !important;
+        }
+        .client-wv-dashboard .shadow,
+        .client-wv-dashboard .shadow-lg,
+        .client-wv-dashboard .shadow-xl {
+            box-shadow: 0 20px 44px rgba(0, 0, 0, 0.28) !important;
+        }
+        .client-wv-dashboard .border,
+        .client-wv-dashboard .border-b,
+        .client-wv-dashboard .border-t,
+        .client-wv-dashboard .dark\:border-gray-700,
+        .client-wv-dashboard .dark\:border-gray-600 {
+            border-color: var(--dashboard-border) !important;
+        }
+        .client-wv-dashboard > div > .bg-white:first-of-type > div {
+            background:
+                linear-gradient(135deg, color-mix(in srgb, var(--dashboard-accent) 16%, transparent), color-mix(in srgb, var(--dashboard-live) 8%, transparent)),
+                var(--dashboard-surface) !important;
+            border: 1px solid var(--dashboard-border);
+        }
+        .client-wv-dashboard h3,
+        .client-wv-dashboard h4,
+        .client-wv-dashboard .font-bold,
+        .client-wv-dashboard .font-extrabold,
+        .client-wv-dashboard .text-gray-800,
+        .client-wv-dashboard .text-gray-900,
+        .client-wv-dashboard .dark\:text-white {
+            color: var(--dashboard-text) !important;
+        }
+        .client-wv-dashboard p,
+        .client-wv-dashboard label,
+        .client-wv-dashboard .text-gray-500,
+        .client-wv-dashboard .text-gray-400,
+        .client-wv-dashboard .dark\:text-gray-400 {
+            color: var(--dashboard-muted) !important;
+        }
+        .client-wv-dashboard .text-3xl,
+        .client-wv-dashboard .text-5xl {
+            font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: var(--dashboard-accent) !important;
+            letter-spacing: -0.04em;
+        }
+        .client-hero-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid color-mix(in srgb, var(--dashboard-accent) 22%, var(--dashboard-border)) !important;
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.24) !important;
+        }
+        .client-hero-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--dashboard-accent) 28%, transparent), transparent 18rem),
+                radial-gradient(circle at 92% 8%, color-mix(in srgb, var(--dashboard-live) 16%, transparent), transparent 16rem);
+            opacity: .9;
+            z-index: 0;
+        }
+        .client-hero-inner {
+            position: relative;
+            z-index: 1;
+            min-height: 13rem;
+            display: flex;
+            align-items: center;
+        }
+        .client-hero-inner > div { width: 100%; }
+        .client-hero-inner .bg-white\/15,
+        .client-hero-inner .bg-white\/20 {
+            background: color-mix(in srgb, var(--dashboard-surface) 62%, transparent) !important;
+            border: 1px solid color-mix(in srgb, var(--dashboard-accent) 26%, transparent);
+        }
+        .client-hero-inner a,
+        .client-hero-inner button,
+        .client-hero-inner h3,
+        .client-hero-inner p,
+        .client-hero-inner svg,
+        .client-hero-inner span {
+            color: var(--dashboard-text) !important;
+        }
+        .client-hero-inner a[href*="settings"],
+        .client-hero-inner a[href*="order"] {
+            color: var(--dashboard-bg) !important;
+        }
+        .client-panel,
+        .client-table-card {
+            position: relative;
+            overflow: hidden;
+            background: color-mix(in srgb, var(--dashboard-surface) 96%, var(--dashboard-accent)) !important;
+            border: 1px solid color-mix(in srgb, var(--dashboard-border) 78%, var(--dashboard-accent)) !important;
+            box-shadow: 0 22px 54px rgba(0, 0, 0, 0.22) !important;
+        }
+        .client-panel::before,
+        .client-table-card::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--dashboard-accent), var(--dashboard-live));
+            opacity: .8;
+        }
+        .client-panel > *,
+        .client-table-card > * { position: relative; z-index: 1; }
+        .client-kpi-grid > div,
+        .client-wv-dashboard .grid.grid-cols-2.lg\:grid-cols-4 > div {
+            background: var(--dashboard-surface) !important;
+            border: 1px solid var(--dashboard-border) !important;
+            position: relative;
+            overflow: hidden;
+        }
+        .client-wv-dashboard .grid.grid-cols-2.lg\:grid-cols-4 > div::after {
+            content: '';
+            position: absolute;
+            inset: auto -20px -28px auto;
+            width: 92px;
+            height: 92px;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--dashboard-accent) 8%, transparent);
+        }
+        .client-wv-dashboard input,
+        .client-wv-dashboard select,
+        .client-wv-dashboard textarea {
+            background: var(--dashboard-bg) !important;
+            border-color: var(--dashboard-border) !important;
+            color: var(--dashboard-text) !important;
+            border-radius: 12px !important;
+        }
+        .client-wv-dashboard input:focus,
+        .client-wv-dashboard select:focus,
+        .client-wv-dashboard textarea:focus {
+            border-color: var(--dashboard-accent) !important;
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--dashboard-accent) 16%, transparent) !important;
+        }
+        .client-wv-dashboard button[type="submit"] {
+            min-height: 2.9rem;
+            border-radius: 999px !important;
+            font-weight: 800 !important;
+            letter-spacing: .01em;
+        }
+        .client-wv-dashboard button[type="submit"],
+        .client-wv-dashboard a[href*="settings"],
+        .client-wv-dashboard a[href*="order"] {
+            background: var(--dashboard-accent) !important;
+            color: var(--dashboard-bg) !important;
+            border-color: color-mix(in srgb, var(--dashboard-accent) 55%, transparent) !important;
+            box-shadow: 0 12px 26px color-mix(in srgb, var(--dashboard-accent) 18%, transparent) !important;
+        }
+        .client-wv-dashboard table thead,
+        .client-wv-dashboard .bg-gray-50,
+        .client-wv-dashboard .dark\:bg-gray-700\/50 {
+            background: var(--dashboard-surface-soft) !important;
+        }
+        .client-wv-dashboard tbody tr,
+        .client-wv-dashboard .guest-row {
+            background: var(--dashboard-surface) !important;
+            border-bottom: 1px solid var(--dashboard-border) !important;
+        }
+        .client-wv-dashboard tbody tr:hover,
+        .client-wv-dashboard .guest-row:hover {
+            background: color-mix(in srgb, var(--dashboard-surface) 86%, var(--dashboard-accent)) !important;
+        }
+        .client-wv-dashboard th {
+            color: var(--dashboard-muted) !important;
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+        }
+        .client-wv-dashboard td,
+        .client-wv-dashboard td p {
+            color: var(--dashboard-text) !important;
+        }
+        .client-wv-dashboard .bg-red-50,
+        .client-wv-dashboard .dark\:bg-red-900\/30 {
+            background: #3A1C1C !important;
+            color: #FF453A !important;
+            border-color: rgba(255, 69, 58, 0.4) !important;
+        }
+        .client-wv-dashboard .bg-green-50,
+        .client-wv-dashboard .dark\:bg-green-900\/30 {
+            background: rgba(50, 215, 75, 0.12) !important;
+            color: #32D74B !important;
+            border-color: rgba(50, 215, 75, 0.35) !important;
+        }
+        .client-wv-dashboard .bg-yellow-50,
+        .client-wv-dashboard .dark\:bg-yellow-900\/30 {
+            background: rgba(255, 204, 0, 0.12) !important;
+            color: #FFD60A !important;
+            border-color: rgba(255, 204, 0, 0.35) !important;
+        }
+        .client-wv-dashboard .welcome-modal-box {
+            background: var(--dashboard-surface) !important;
+            border: 1px solid var(--dashboard-border);
+        }
+        .client-wv-dashboard .welcome-close-btn {
+            background: var(--dashboard-accent) !important;
+            color: var(--dashboard-bg) !important;
+        }
+        .client-wv-dashboard .border-2.border-dashed {
+            background: color-mix(in srgb, var(--dashboard-bg) 70%, var(--dashboard-accent)) !important;
+            border-color: color-mix(in srgb, var(--dashboard-accent) 30%, var(--dashboard-border)) !important;
+            border-radius: 18px !important;
+        }
+        .client-wv-dashboard .border-2.border-dashed:hover {
+            background: color-mix(in srgb, var(--dashboard-bg) 58%, var(--dashboard-accent)) !important;
+        }
+        .client-table-card table { border-collapse: separate; border-spacing: 0; }
+        .client-table-card thead th:first-child { border-top-left-radius: 14px; }
+        .client-table-card thead th:last-child { border-top-right-radius: 14px; }
+        .client-table-card tbody tr:last-child td { border-bottom: 0 !important; }
+        .client-table-card .p-1\.5 {
+            width: 2.15rem;
+            height: 2.15rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--dashboard-border);
+            background: color-mix(in srgb, var(--dashboard-surface) 86%, var(--dashboard-bg));
+        }
+        .client-wv-dashboard #noGuestResult,
+        .client-wv-dashboard .p-10.text-center {
+            background: linear-gradient(135deg, color-mix(in srgb, var(--dashboard-accent) 8%, transparent), transparent);
+        }
+        @media (max-width: 640px) {
+            .client-wv-dashboard { padding-top: 1rem; }
+            .client-hero-inner { padding: 1.25rem !important; min-height: auto; }
+            .client-kpi-grid { gap: .75rem; }
+            .client-kpi-grid > div { padding: 1rem !important; }
+            .client-wv-dashboard .text-3xl { font-size: 1.55rem !important; }
+            .client-panel { padding: 1rem !important; }
+            .client-table-card th,
+            .client-table-card td { padding: .85rem .9rem !important; }
+        }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
         .animate-slideDown { animation: slideDown 0.4s ease-out; }
     </style>
