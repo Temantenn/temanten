@@ -72,11 +72,11 @@
                             <div class="space-y-3 mb-8 rounded-2xl bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 p-4">
                                 <div class="flex justify-between items-center text-xs font-bold uppercase tracking-tight">
                                     <span class="text-gray-400">Harga Layanan</span>
-                                    <span class="text-gray-500 line-through">Rp {{ number_format($order->theme->effective_price, 0, ',', '.') }}</span>
+                                    <span class="text-gray-500">Rp {{ number_format($order->theme->effective_price, 0, ',', '.') }}</span>
                                 </div>
                                 <div class="flex justify-between items-center text-xs font-bold uppercase tracking-tight">
-                                    <span class="text-indigo-600 dark:text-indigo-400">Promo Spesial</span>
-                                    <span class="text-pink-500 font-black">-Rp {{ number_format($order->unique_code, 0, ',', '.') }}</span>
+                                    <span class="text-indigo-600 dark:text-indigo-400">Kode Unik Pembayaran</span>
+                                    <span class="text-pink-500 font-black">+Rp {{ number_format($order->unique_code, 0, ',', '.') }}</span>
                                 </div>
                                 <div class="pt-3 flex justify-between items-end border-t border-dashed border-gray-200 dark:border-gray-700">
                                     <span class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5">Total Akhir</span>
@@ -90,8 +90,8 @@
 
                     <div class="hidden md:block space-y-3 mt-auto">
                         @php
-                            $waNumber = env('ADMIN_WHATSAPP', '628123456789');
-                            $waMessage = "Konfirmasi Pembayaran TEMANTEN\nOrder: {$order->order_number}\nNominal: Rp " . number_format($order->total_amount, 0, ',', '.') . "\nPromo Spesial: -Rp {$order->unique_code}\n\nTerima kasih!";
+                            $waNumber = env('ADMIN_WHATSAPP', '6282220312195');
+                            $waMessage = "Konfirmasi Pembayaran TEMANTEN\nOrder: {$order->order_number}\nNominal: Rp " . number_format($order->total_amount, 0, ',', '.') . "\nKode Unik Pembayaran: +Rp " . number_format($order->unique_code, 0, ',', '.') . "\n\nTerima kasih!";
                             $waLink = "https://wa.me/{$waNumber}?text=" . urlencode($waMessage);
                         @endphp
                         
@@ -165,7 +165,7 @@
                     <div class="max-w-md mx-auto space-y-3">
                         @php
                             $waNumber = env('ADMIN_WHATSAPP', '6282220312195');
-                            $waMessage = "Konfirmasi Pembayaran TEMANTEN\nOrder: {$order->order_number}\nNominal: Rp " . number_format($order->total_amount, 0, ',', '.') . "\nPromo Spesial: -Rp {$order->unique_code}\n\nTerima kasih!";
+                            $waMessage = "Konfirmasi Pembayaran TEMANTEN\nOrder: {$order->order_number}\nNominal: Rp " . number_format($order->total_amount, 0, ',', '.') . "\nKode Unik Pembayaran: +Rp " . number_format($order->unique_code, 0, ',', '.') . "\n\nTerima kasih!";
                             $waLink = "https://wa.me/{$waNumber}?text=" . urlencode($waMessage);
                         @endphp
                         

@@ -1,12 +1,34 @@
 <?php
 
-test('registration screen can be rendered', function () {
+test('public registration screen is disabled by default', function () {
+    $response = $this->get('/register');
+
+    $response->assertNotFound();
+});
+
+test('public registration post is disabled by default', function () {
+    $response = $this->post('/register', [
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ]);
+
+    $response->assertNotFound();
+    $this->assertGuest();
+});
+
+test('registration screen can be rendered when enabled', function () {
+    config()->set('temanten.public_registration_enabled', true);
+
     $response = $this->get('/register');
 
     $response->assertStatus(200);
 });
 
-test('new users can register', function () {
+test('new users can register when enabled', function () {
+    config()->set('temanten.public_registration_enabled', true);
+
     $response = $this->post('/register', [
         'name' => 'Test User',
         'email' => 'test@example.com',

@@ -119,7 +119,7 @@
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <a href="{{ route('home') }}" class="flex items-center gap-3 group">
                 <div class="w-10 h-10 rounded-xl overflow-hidden shadow-md group-hover:rotate-12 transition-all duration-300">
-                    <img src="{{ asset('assets/mini-logo.jpg') }}" alt="Logo Temanten" class="w-full h-full object-cover">
+                    <img src="{{ asset('assets/mini-logo.webp') }}" alt="Logo Temanten" class="w-full h-full object-cover">
                 </div>
                 <div class="flex flex-col">
                     <span class="font-extrabold text-lg text-gray-900 leading-none">TEMANTEN</span>
@@ -234,7 +234,7 @@
                                 {{-- Thumbnail --}}
                                 <div class="relative h-24 w-20 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0 shadow-md ring-1 ring-gray-100">
                                     @php
-                                        $thumbFile = $theme->thumbnail ?: ($theme->slug . '.png');
+                                        $thumbFile = $theme->thumbnail ?: ($theme->slug . '.webp');
                                         $thumbExists = file_exists(public_path('assets/thumbnail/' . $thumbFile));
                                     @endphp
                                     @if($thumbExists)

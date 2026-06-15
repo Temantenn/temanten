@@ -460,7 +460,7 @@
         <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; padding-bottom: 10rem;">
             <div style="text-align: center; position: relative; z-index: 5;">
                 {{-- Logo Illustration --}}
-                <img src="{{ asset('assets/logo.jpg') }}" alt="Logo Temanten" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin: 0 auto 1.5rem; border: 6px solid rgba(165,180,252,0.5); box-shadow: 0 12px 40px rgba(0,0,0,0.5);">
+                <img src="{{ asset('assets/logo.webp') }}" alt="Logo Temanten" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin: 0 auto 1.5rem; border: 6px solid rgba(165,180,252,0.5); box-shadow: 0 12px 40px rgba(0,0,0,0.5);">
             </div>
         </div>
 
@@ -498,7 +498,7 @@
             {{-- Brand Header --}}
             <div class="brand">
                 <div class="brand-logo">
-                    <img src="{{ asset('assets/logo.jpg') }}" alt="Logo Temanten" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <img src="{{ asset('assets/logo.webp') }}" alt="Logo Temanten" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                     <span class="brand-name">Temanten<span>.</span></span>
                 </div>
                 <p class="brand-sub">Portal Klien</p>

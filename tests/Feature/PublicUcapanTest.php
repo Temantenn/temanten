@@ -185,6 +185,7 @@ class PublicUcapanTest extends TestCase
             $table->dateTime('event_date');
             $table->json('content');
             $table->dateTime('expires_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
 

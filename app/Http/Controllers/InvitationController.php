@@ -19,8 +19,8 @@ class InvitationController extends Controller
         $cached = Cache::get($cacheKey);
 
         if ($cached) {
-            $invitation = $this->findViewableInvitationBySlug($slug);
-            $comments = $cached['comments'];
+            $invitation = $cached['invitation'];
+            $comments = $cached['comments'] ?? [];
         } else {
             $invitation = $this->findViewableInvitationBySlug($slug);
 
@@ -33,7 +33,7 @@ class InvitationController extends Controller
             Cache::put($cacheKey, [
                 'invitation' => $invitation,
                 'comments'   => $comments,
-            ], 3600);
+            ], config('temanten.invitation_cache_ttl', 3600));
         }
 
         $guest = null;
@@ -59,13 +59,38 @@ class InvitationController extends Controller
         $invitation = new \stdClass();
         $invitation->slug = 'demo-' . $themeSlug;
 
-        $unsplashKey = 'C9aJ-2k6P3AkE5YTnAuw3A46NRfA5q7nhhfFMP5bDOw';
+        $temaCovers = [
+            'barakah-love'    => 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=800&auto=format&fit=crop',
+            'boho-terracotta' => 'https://images.unsplash.com/photo-1502635385003-ee1e6a1a742d?q=80&w=800&auto=format&fit=crop',
+            'celestial-night' => 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?q=80&w=800&auto=format&fit=crop',
+            'cherry-blossom'  => 'https://images.unsplash.com/photo-1522383225653-ed111181a951?q=80&w=800&auto=format&fit=crop',
+            'emerald-garden'  => 'https://images.unsplash.com/photo-1469259943458-aa100ab27594?q=80&w=800&auto=format&fit=crop',
+            'floral-pastel'   => 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?q=80&w=800&auto=format&fit=crop',
+            'golden-sunrise'  => 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=800&auto=format&fit=crop',
+            'jawa-keraton'    => 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?q=80&w=800&auto=format&fit=crop',
+            'midnight-garden' => 'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?q=80&w=800&auto=format&fit=crop',
+            'ocean-breeze'    => 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop',
+            'pixel-adventure' => 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=800&auto=format&fit=crop',
+            'royal-glass'     => 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop',
+            'rustic-green'    => 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?q=80&w=800&auto=format&fit=crop',
+            'sekar-jagad'     => 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?q=80&w=800&auto=format&fit=crop',
+            'sunda-asih'      => 'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?q=80&w=800&auto=format&fit=crop',
+            'watercolor-flow' => 'https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?q=80&w=800&auto=format&fit=crop',
+        ];
+        $selectedCover = $temaCovers[$theme->slug ?? $slug ?? ''] ?? 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop';
+
+        $unsplashKey = config('temanten.unsplash.key', '');
+
         $getDummyImg = function($keyword, $orientation = 'portrait') use ($unsplashKey) {
+            // P0-3: Use Placehold.co fallback if no key configured (avoid leaking real key / 403)
+            if (empty($unsplashKey)) {
+                return 'https://placehold.co/800x600/DDDDDD/666666/png?text=' . urlencode(substr($keyword, 0, 15));
+            }
             return \Illuminate\Support\Facades\Cache::remember("unsplash_dummy_" . md5($keyword . $orientation), 86400, function() use ($unsplashKey, $keyword, $orientation) {
                 try {
                     $response = \Illuminate\Support\Facades\Http::timeout(5)->get("https://api.unsplash.com/photos/random", [
                         'query' => $keyword,
-                        'client_id' => $unsplashKey,
+                    'client_id' => $unsplashKey,
                         'orientation' => $orientation
                     ]);
                     if ($response->successful()) {
@@ -115,8 +140,10 @@ class InvitationController extends Controller
             ],
             'quote' => 'Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu isteri-isteri dari jenismu sendiri...',
             'media' => [
-                'cover' => $getDummyImg('luxury wedding venue decoration', 'landscape'),
-                'music' => 'assets/music/' . $themeSlug . '.mp3',
+                'cover' => $selectedCover,
+                'music' => !empty($theme->default_music) && file_exists(storage_path('app/public/themes/music/' . $theme->default_music))
+                    ? asset('storage/themes/music/' . $theme->default_music)
+                    : 'assets/music/' . $themeSlug . '.mp3',
                 'video_link' => 'https://www.youtube.com/embed/dQw4w9WgXcQ',
                 'gallery' => [
                     $getDummyImg('wedding rings', 'landscape'),
@@ -342,7 +369,7 @@ class InvitationController extends Controller
         } else {
             $guest = $invitation->guests()->create(array_merge([
                 'name'     => $name,
-                'slug'     => Str::slug($name) . '-' . Str::random(4),
+                'slug'     => Str::slug($name) . '-' . Str::random(8),
                 'category' => 'Umum',
             ], $payload));
         }

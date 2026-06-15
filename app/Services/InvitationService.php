@@ -8,9 +8,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class InvitationService
 {
@@ -156,13 +153,36 @@ class InvitationService
     }
 
     /**
-     * Handle gallery photo deletions and uploads.
+     * Handle gallery photo soft-deletions, restores, and uploads.
      */
     protected function handleGallery(Invitation $invitation, Request $request, array $content, $folderName): array
     {
         $galleryPaths = array_values($content['media']['gallery'] ?? []);
+        $trashPaths = array_values($content['media']['gallery_trash'] ?? []);
 
-        // Deletions
+        // Restores from trash back to active gallery
+        if ($request->has('restore_gallery')) {
+            $toRestore = array_map('intval', (array) $request->restore_gallery);
+            $toRestore = array_unique($toRestore);
+
+            foreach ($toRestore as $idx) {
+                if (!array_key_exists($idx, $trashPaths)) {
+                    continue;
+                }
+
+                $path = $trashPaths[$idx];
+
+                if (is_string($path) && $path !== '' && !in_array($path, $galleryPaths, true)) {
+                    $galleryPaths[] = $path;
+                }
+
+                unset($trashPaths[$idx]);
+            }
+
+            $trashPaths = array_values($trashPaths);
+        }
+
+        // Soft-deletions: move to trash, do not delete physical files
         if ($request->has('delete_gallery')) {
             $toDelete = array_map('intval', (array) $request->delete_gallery);
             $toDelete = array_unique($toDelete);
@@ -173,23 +193,8 @@ class InvitationService
                 }
                 $path = $galleryPaths[$idx];
 
-                if (is_string($path) && $path !== '' && !preg_match('#^https?://#i', $path)) {
-                    $storagePath = Str::startsWith($path, 'storage/')
-                        ? 'public/' . Str::after($path, 'storage/')
-                        : (Str::startsWith($path, 'public/') ? $path : null);
-
-                    if ($storagePath) {
-                        try {
-                            if (Storage::exists($storagePath)) {
-                                Storage::delete($storagePath);
-                            }
-                        } catch (\Throwable $e) {
-                            Log::warning('Gagal menghapus file gallery', [
-                                'path'  => $storagePath,
-                                'error' => $e->getMessage(),
-                            ]);
-                        }
-                    }
+                if (is_string($path) && $path !== '' && !in_array($path, $trashPaths, true)) {
+                    $trashPaths[] = $path;
                 }
 
                 unset($galleryPaths[$idx]);
@@ -207,6 +212,7 @@ class InvitationService
         }
 
         $content['media']['gallery'] = array_values($galleryPaths);
+        $content['media']['gallery_trash'] = array_values($trashPaths);
         return $content;
     }
 

@@ -8,11 +8,14 @@ use App\Models\Theme;
 use App\Models\Order;
 use App\Services\OrderService;
 use App\Services\QrisService;
+use App\Support\WhatsAppNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\QueryException;
 use Carbon\Carbon;
 
 class OrderController extends Controller
@@ -35,22 +38,25 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'slug'            => 'required|alpha_dash|unique:invitations,slug',
+            'slug'            => ['required', 'alpha_dash', 'not_regex:/^demo(?:-|$)/i', 'unique:invitations,slug'],
             'theme_id'        => 'required|exists:themes,id',
-            'client_whatsapp' => ['required', 'regex:/^\+?[0-9]{9,15}$/'],
+            'client_whatsapp' => [
+                'required',
+                'string',
+                'max:30',
+                WhatsAppNumber::validationRule('Nomor WhatsApp pemesan tidak valid. Gunakan nomor Indonesia aktif, contoh: 081234567890.'),
+            ],
             'groom_name'      => 'required|string|max:255',
             'bride_name'      => 'required|string|max:255',
             'event_date'      => 'required|date|after_or_equal:today',
         ]);
 
-        $whatsapp = $request->client_whatsapp;
-        if (str_starts_with($whatsapp, '+')) {
-            $whatsapp = substr($whatsapp, 1);
-        }
-        if (str_starts_with($whatsapp, '0')) {
-            $whatsapp = '62' . substr($whatsapp, 1);
-        } elseif (str_starts_with($whatsapp, '8')) {
-            $whatsapp = '62' . $whatsapp;
+        $whatsapp = WhatsAppNumber::normalize($request->client_whatsapp);
+
+        if ($whatsapp === null) {
+            return back()->withErrors([
+                'client_whatsapp' => 'Nomor WhatsApp pemesan tidak valid. Gunakan nomor Indonesia aktif, contoh: 081234567890.',
+            ])->withInput();
         }
 
         $generatedEmail = $request->slug . '@temanten.biz.id';
@@ -69,23 +75,16 @@ class OrderController extends Controller
                 'role'     => 'client',
             ]);
 
-            // User created, wait for admin to approve and send the real credentials.
-            // \Illuminate\Support\Facades\Auth::login($user); // Auto-login removed.
-
             $theme = Theme::findOrFail($request->theme_id);
             $basePrice = $this->orderService->calculatePrice($theme);
-            $uniqueCode = $this->orderService->generateUniqueCode();
-            $totalAmount = $basePrice - $uniqueCode;
 
-            $order = Order::create([
+            $order = $this->orderService->createOrderWithUniqueCode([
                 'order_number' => $this->orderService->generateOrderNumber(),
                 'theme_id'     => $theme->id,
                 'user_id'      => $user->id,
-                'unique_code'  => $uniqueCode,
-                'total_amount' => $totalAmount,
                 'status'       => 'pending',
                 'expired_at'   => Carbon::now()->addHours(2),
-            ]);
+            ], $basePrice);
 
             $content = [
                 'mempelai' => [
@@ -155,11 +154,40 @@ class OrderController extends Controller
                 'order_number' => $order->order_number,
             ]);
 
+        } catch (QueryException $e) {
+            DB::rollBack();
+
+            if ($this->isDuplicateSlugOrLogin($e)) {
+                return back()->withErrors(['slug' => 'Link undangan atau ID Login sudah terdaftar. Mohon ganti link undangan.'])->withInput();
+            }
+
+            Log::error('Failed to create order: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->withErrors(['msg' => 'Terjadi kesalahan sistem. Silakan coba lagi nanti.'])->withInput();
+
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to create order: ' . $e->getMessage());
+            Log::error('Failed to create order: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
             return back()->withErrors(['msg' => 'Terjadi kesalahan sistem. Silakan coba lagi nanti.'])->withInput();
         }
+    }
+
+    private function isDuplicateSlugOrLogin(QueryException $e): bool
+    {
+        $message = $e->getMessage();
+        $sqlState = (string) ($e->errorInfo[0] ?? '');
+
+        if (!in_array($sqlState, ['23000', '23505'], true) && !str_contains($message, 'UNIQUE constraint failed')) {
+            return false;
+        }
+
+        return str_contains($message, 'users_email_unique')
+            || str_contains($message, 'users.email')
+            || str_contains($message, 'invitations_slug_unique')
+            || str_contains($message, 'invitations.slug');
     }
 
     public function payment()
@@ -172,10 +200,36 @@ class OrderController extends Controller
 
         $order = Order::with(['theme', 'user'])->where('order_number', $orderNumber)->firstOrFail();
 
-        $masterQris = config('temanten.qris_master_string', '00020101021226610014COM.GO-JEK.WWW01189360091431720318940210G1720318940303UMI51440014ID.CO.QRIS.WWW0215ID10254220360590303UMI520456915303360540410005802ID5908Temanten6008PEMALANG61055235262070703A016304B3D8');
-        
+        $masterQris = config('temanten.qris_master_string');
+
+        if (!$masterQris) {
+            Log::warning('QRIS master string not configured');
+            return back()->withErrors(['msg' => 'Konfigurasi pembayaran belum tersedia. Silakan hubungi admin.']);
+        }
+
         $order->dynamic_qris = $this->qrisService->generateDynamic($masterQris, $order->total_amount);
 
         return view('order.payment', compact('order'));
+    }
+
+    /**
+     * Menampilkan halaman sukses setelah pembayaran
+     * Akses diizinkan jika:
+     *  - User terautentikasi adalah pemilik order, ATAU
+     *  - Session order_number cocok dengan order yang diminta (alur guest checkout)
+     */
+    public function success($orderNumber)
+    {
+        $order = Order::with('theme')->where('order_number', $orderNumber)->firstOrFail();
+
+        $sessionOrder = session('order_number');
+        $isOwner = Auth::check() && $order->user_id === Auth::id();
+        $isSessionMatch = $sessionOrder && hash_equals((string) $sessionOrder, (string) $orderNumber);
+
+        if (!$isOwner && !$isSessionMatch) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
+        return view('order.success', compact('order'));
     }
 }

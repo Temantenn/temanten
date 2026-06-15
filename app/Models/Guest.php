@@ -10,20 +10,26 @@ class Guest extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'name',
+        'whatsapp',
+        'category',
+        'address',
+        'slug',
+        'rsvp_status',
+        'jumlah_tamu',
+        'comment',
+    ];
 
-    // Auto-generate Slug Unik untuk Tamu (biar nama di cover undangan otomatis)
-    // Contoh: Budi Santoso -> budi-santoso-x7z9
     protected static function booted()
     {
         static::creating(function ($model) {
             if (empty($model->slug)) {
-                $model->slug = Str::slug($model->name) . '-' . Str::random(5);
+                $model->slug = Str::slug($model->name) . '-' . Str::random(8);
             }
         });
     }
 
-    // Relasi kebalikan: Tamu milik sebuah Undangan
     public function invitation()
     {
         return $this->belongsTo(Invitation::class);

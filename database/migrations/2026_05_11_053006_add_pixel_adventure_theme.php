@@ -16,6 +16,7 @@ return new class extends Migration
             ['slug' => 'pixel-adventure'],
             [
                 'name' => 'Pixel Adventure',
+                'thumbnail' => 'pixel-adventure.webp',
                 'view_path' => 'themes.pixel-adventure.index',
                 'description' => 'Retro pixel art game-style wedding invitation',
                 'is_active' => true,

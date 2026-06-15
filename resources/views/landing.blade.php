@@ -170,13 +170,9 @@
                 <p class="text-white/60 text-sm font-medium">Memuat preview...</p>
             </div>
 
-            <!-- Frame Wrapper - Enhanced -->
-            <div id="frameWrapper" class="relative bg-white shadow-2xl transition-all duration-700 ease-in-out z-10 rounded-3xl" onclick="event.stopPropagation()">
-                
-                <div id="phoneNotch" class="absolute top-0 left-1/2 transform -translate-x-1/2 w-[140px] h-[32px] bg-gray-900 rounded-b-3xl z-30 pointer-events-none transition-opacity duration-300"></div>
-
-                <iframe id="previewFrame" src="" class="w-full h-full bg-white rounded-3xl" frameborder="0" onload="if(window.onFrameLoad) window.onFrameLoad()"></iframe>
-
+            <!-- Frame Wrapper - Rounded Clean (katalog-style, no phone bezel) -->
+            <div id="preview-container" class="relative w-full max-w-[400px] mx-auto h-[80vh] md:h-[90vh] bg-white overflow-hidden transition-all duration-500 ease-in-out" onclick="event.stopPropagation()" style="border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,0.55);">
+                <iframe id="previewFrame" src="" class="w-full h-full border-0" frameborder="0" onload="if(window.onFrameLoad) window.onFrameLoad()" style="border-radius:16px;"></iframe>
             </div>
         </div>
     </div>
@@ -188,7 +184,7 @@
             <!-- Logo - Enhanced -->
             <a href="#" class="flex items-center gap-3 group">
                 <div class="w-11 h-11 rounded-xl overflow-hidden shadow-md group-hover:rotate-12 group-hover:scale-110 transition-all duration-300 drop-shadow-lg">
-                    <img src="{{ asset('assets/mini-logo.jpg') }}" alt="Logo Temanten" class="w-full h-full object-cover">
+                    <img src="{{ asset('assets/mini-logo.webp') }}" alt="Logo Temanten" class="w-full h-full object-cover">
                 </div>
                 <div class="flex flex-col">
                     <span class="font-extrabold text-xl text-gray-900 tracking-tight leading-none">TEMANTEN</span>
@@ -310,11 +306,20 @@
                         <div class="h-[64px] w-[3px] bg-gray-800 absolute -right-[17px] top-[142px] rounded-r-lg"></div>
                         
                     <!-- Screen Content -->
-                    @php $heroTheme = \App\Models\Theme::where('is_active', true)->first(); @endphp
+                    @php
+                        $fallbackThumbnail = asset('assets/thumbnail/floral-pastel.webp');
+                        $heroTheme = \App\Models\Theme::where('is_active', true)->first();
+                        $heroThumbFile = $heroTheme?->thumbnail ?: (($heroTheme?->slug ?? 'floral-pastel') . '.webp');
+                        $heroThumbPath = public_path('assets/thumbnail/' . $heroThumbFile);
+                        $heroThumbnail = file_exists($heroThumbPath)
+                            ? asset('assets/thumbnail/' . $heroThumbFile)
+                            : $fallbackThumbnail;
+                    @endphp
                     <div class="rounded-[2.5rem] overflow-hidden w-full h-full bg-white relative">
-                        <img src="{{ asset('assets/thumbnail/' . ($heroTheme->slug ?? 'floral-pastel') . '.png') }}" 
+                        <img src="{{ $heroThumbnail }}"
                             alt="Preview {{ $heroTheme->name ?? 'Tema' }}" 
-                            class="w-full h-full object-cover">
+                            class="w-full h-full object-cover"
+                            onerror="this.onerror=null;this.src='{{ $fallbackThumbnail }}'">
 
                         <!-- Overlay on Hover -->
                         <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-end p-8">
@@ -362,7 +367,12 @@
                     $rotation = $rotations[$i] ?? '';
                     $delay    = $delays[$i] ?? '';
                     $isFeatured = $featured[$i] ?? false;
-                    $thumbnail = asset('assets/thumbnail/' . $theme->slug . '.png');
+                    $thumbFile = $theme->thumbnail ?: ($theme->slug . '.webp');
+                    $thumbPath = public_path('assets/thumbnail/' . $thumbFile);
+                    $fallbackThumbnail = asset('assets/thumbnail/floral-pastel.webp');
+                    $thumbnail = file_exists($thumbPath)
+                        ? asset('assets/thumbnail/' . $thumbFile)
+                        : $fallbackThumbnail;
                 @endphp
                 <div class="flex flex-col items-center group w-full max-w-sm {{ $isFeatured ? 'relative md:-top-16' : '' }} animate-fadeInUp {{ $delay }}">
                     <div class="relative card-hover w-full">
@@ -374,7 +384,7 @@
 
                             <!-- Screen -->
                             <div class="rounded-[2.5rem] overflow-hidden w-full h-full bg-white relative">
-                                <img src="{{ $thumbnail }}" alt="{{ $theme->name }}" class="w-full h-full object-cover">
+                                <img src="{{ $thumbnail }}" alt="{{ $theme->name }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ $fallbackThumbnail }}'">
 
                                 <!-- Hover Overlay -->
                                 <div class="absolute inset-0 bg-indigo-900/80 backdrop-blur-[2px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 gap-4 p-6">
@@ -681,7 +691,7 @@
                 <div class="space-y-6 md:col-span-2">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-white/10">
-                            <img src="{{ asset('assets/mini-logo.jpg') }}" alt="Logo Temanten" class="w-full h-full object-cover">
+                            <img src="{{ asset('assets/mini-logo.webp') }}" alt="Logo Temanten" class="w-full h-full object-cover">
                         </div>
                         <div>
                             <h2 class="font-extrabold text-2xl tracking-tight">TEMANTEN</h2>
@@ -773,8 +783,7 @@
     const modal = document.getElementById('previewModal');
     const frame = document.getElementById('previewFrame');
     const loader = document.getElementById('loader');
-    const frameWrapper = document.getElementById('frameWrapper');
-    const phoneNotch = document.getElementById('phoneNotch');
+    const previewContainer = document.getElementById('preview-container');
     const btnMobile = document.getElementById('btnMobile');
     const btnDesktop = document.getElementById('btnDesktop');
     const btnOrder = document.getElementById('btnOrderTheme');
@@ -872,25 +881,22 @@
     };
 
     window.setDevice = function (type) {
-        if (!frameWrapper || !frame) return;
+        if (!previewContainer || !frame) return;
+
+        // Reset inline styles
+        previewContainer.style.width = '';
+        previewContainer.style.height = '';
+        previewContainer.style.maxWidth = '';
 
         if (type === 'mobile') {
-            frameWrapper.className =
-                "relative transition-all duration-700 ease-in-out shadow-2xl bg-gray-800 border-[8px] sm:border-[14px] border-gray-900 rounded-[2rem] sm:rounded-[3rem] overflow-hidden flex flex-col";
-            frameWrapper.style.width = "min(375px, 95vw)";
-            frameWrapper.style.height = "min(812px, calc(100vh - 130px))";
-            frameWrapper.style.maxWidth = "none";
-            frame.className = "w-full h-full bg-white rounded-[1.5rem] sm:rounded-[2rem] flex-grow";
-            if (phoneNotch) phoneNotch.classList.remove('hidden');
+            previewContainer.classList.remove('max-w-5xl', 'max-w-full');
+            previewContainer.classList.add('max-w-[400px]');
+            frame.className = "w-full h-full border-0";
             highlightBtn(btnMobile, btnDesktop);
         } else {
-            frameWrapper.className =
-                "relative transition-all duration-700 ease-in-out shadow-2xl bg-white border-0 rounded-2xl overflow-hidden flex flex-col";
-            frameWrapper.style.width = "90%";
-            frameWrapper.style.height = "calc(100vh - 130px)";
-            frameWrapper.style.maxWidth = "1400px";
-            frame.className = "w-full h-full bg-white flex-grow";
-            if (phoneNotch) phoneNotch.classList.add('hidden');
+            previewContainer.classList.remove('max-w-[375px]');
+            previewContainer.classList.add('max-w-5xl');
+            frame.className = "w-full h-full border-none";
             highlightBtn(btnDesktop, btnMobile);
         }
     };

@@ -46,9 +46,15 @@ class AdminController extends Controller
 
         try {
             DB::transaction(function () use ($invitation, &$credentials, $user) {
-                
+
+                // Lock the user row to prevent concurrent email generation race
+                $lockedUser = User::lockForUpdate()->find($user->id);
+
+                // Simpan original email SEBELUM diubah, untuk dicek apakah perlu kirim notif
+                $originalEmail = $lockedUser->email;
+
                 // Cek jika email masih dummy bawaan order
-                $email = $user->email;
+                $email = $originalEmail;
                 if (str_ends_with($email, '@temanten.biz.id')) {
                     $content  = $invitation->content;
                     $namaPria = $content['mempelai']['pria']['nama'] ?? 'Mempelai Pria';
@@ -61,7 +67,7 @@ class AdminController extends Controller
                     $newEmail  = $baseEmail . '@temanten.inv';
 
                     $counter = 1;
-                    while (User::where('email', $newEmail)->where('id', '!=', $user->id)->exists()) {
+                    while (User::where('email', $newEmail)->where('id', '!=', $lockedUser->id)->exists()) {
                         $newEmail = $baseEmail . $counter . '@temanten.inv';
                         $counter++;
                     }
@@ -70,7 +76,7 @@ class AdminController extends Controller
 
                 $rawPassword = Str::random(8);
 
-                $user->update([
+                $lockedUser->update([
                     'email'    => $email,
                     'password' => Hash::make($rawPassword),
                 ]);
@@ -83,9 +89,10 @@ class AdminController extends Controller
                 $invitation->setDefaultExpiry();
 
                 $credentials = [
-                    'name'     => $user->name,
+                    'name'     => $lockedUser->name,
                     'email'    => $email,
                     'password' => $rawPassword,
+                    'original_email' => $originalEmail,
                 ];
             });
 
@@ -101,10 +108,11 @@ class AdminController extends Controller
                 'invitation_slug' => $invitation->slug,
             ]);
 
-            // Jangan kirim email jika email dummy .inv atau .biz.id
-            if (!str_ends_with($user->email, '.inv') && !str_ends_with($user->email, '.biz.id')) {
+            // Jangan kirim email jika original email adalah dummy .biz.id / .inv
+            $originalEmail = $credentials['original_email'] ?? $user->email;
+            if (!str_ends_with($originalEmail, '.inv') && !str_ends_with($originalEmail, '.biz.id')) {
                 try {
-                    Mail::to($user->email)->send(new InvitationApprovedMail($invitation, $credentials['password']));
+                    Mail::to($originalEmail)->send(new InvitationApprovedMail($invitation, $credentials['password']));
                 } catch (\Throwable $e) {
                     Log::channel('daily')->warning('Failed to send approval email', [
                         'invitation_id' => $invitation->id,
@@ -124,7 +132,7 @@ class AdminController extends Controller
                 'trace'         => $e->getTraceAsString(),
             ]);
 
-            return redirect()->back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage() . ' di baris ' . $e->getLine());
+            return redirect()->back()->with('error', 'Terjadi kesalahan sistem. Silakan coba lagi.');
         }
     }
 
@@ -203,17 +211,37 @@ class AdminController extends Controller
 
         $newPrice = (int)$request->default_price;
 
-        // Update nilai APP_DEFAULT_PRICE di .env
-        $envPath = base_path('.env');
-        $envContent = file_get_contents($envPath);
+        // Lock seluruh proses read-modify-write agar update .env tidak saling overwrite.
+        $lock = \Illuminate\Support\Facades\Cache::lock('env:write:default_price', 10);
+        try {
+            $lock->block(10);
 
-        if (str_contains($envContent, 'APP_DEFAULT_PRICE=')) {
-            $envContent = preg_replace('/APP_DEFAULT_PRICE=\d+/', "APP_DEFAULT_PRICE={$newPrice}", $envContent);
-        } else {
-            $envContent .= "\nAPP_DEFAULT_PRICE={$newPrice}";
+            $envPath = base_path('.env');
+            $envContent = file_get_contents($envPath);
+            if ($envContent === false) {
+                throw new \RuntimeException('Tidak dapat membaca file .env');
+            }
+
+            if (preg_match('/^APP_DEFAULT_PRICE=/m', $envContent)) {
+                $envContent = preg_replace('/^APP_DEFAULT_PRICE=.*/m', "APP_DEFAULT_PRICE={$newPrice}", $envContent);
+            } else {
+                $envContent = rtrim($envContent) . "\nAPP_DEFAULT_PRICE={$newPrice}\n";
+            }
+
+            $tmpPath = $envPath . '.' . getmypid() . '.' . bin2hex(random_bytes(6)) . '.tmp';
+            if (file_put_contents($tmpPath, $envContent, LOCK_EX) === false) {
+                throw new \RuntimeException('Tidak dapat menulis file .env sementara');
+            }
+
+            @chmod($tmpPath, fileperms($envPath) & 0777);
+
+            if (!rename($tmpPath, $envPath)) {
+                @unlink($tmpPath);
+                throw new \RuntimeException('Tidak dapat mengganti file .env secara atomik');
+            }
+        } finally {
+            optional($lock)->release();
         }
-
-        file_put_contents($envPath, $envContent);
 
         // Refresh cache config agar langsung berlaku
         \Illuminate\Support\Facades\Artisan::call('config:clear');

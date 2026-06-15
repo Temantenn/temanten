@@ -103,6 +103,8 @@ class UpdateSettingsRequest extends FormRequest
             'gallery_photos.*' => 'image|mimes:jpg,jpeg,png,webp|max:5120',
             'delete_gallery'   => 'nullable|array',
             'delete_gallery.*' => 'integer',
+            'restore_gallery'   => 'nullable|array',
+            'restore_gallery.*' => 'integer',
 
             // Video
             'video_link'       => 'nullable|url|max:500',

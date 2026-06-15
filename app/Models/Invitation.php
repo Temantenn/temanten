@@ -5,17 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class Invitation extends Model
 {
+    use SoftDeletes;
+
     protected $guarded = ['id'];
 
     protected $casts = [
         'content' => 'array',
         'event_date' => 'datetime',
         'expires_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public function getGroomNameAttribute()

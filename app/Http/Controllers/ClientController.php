@@ -9,14 +9,19 @@ use App\Http\Requests\UpdateSettingsRequest;
 use App\Http\Requests\StoreGuestRequest;
 use App\Http\Requests\ImportGuestsRequest;
 use App\Services\InvitationService;
+use App\Support\WhatsAppNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\ToArray;
+use RuntimeException;
+use Throwable;
 
 class ClientController extends Controller
 {
@@ -52,7 +57,14 @@ class ClientController extends Controller
     public function settings()
     {
         $user = Auth::user();
-        $invitation = Invitation::where('user_id', $user->id)->firstOrFail();
+        $invitation = Invitation::where('user_id', $user->id)->first();
+
+        if (!$invitation) {
+            return redirect()->route('client.dashboard')
+                ->with('warning', 'Anda belum memiliki undangan. Silakan buat pesanan terlebih dahulu.');
+        }
+
+        Gate::authorize('view', $invitation);
 
         return view('client.settings', compact('invitation'));
     }
@@ -60,7 +72,14 @@ class ClientController extends Controller
     public function updateSettings(UpdateSettingsRequest $request, InvitationService $invitationService)
     {
         $user = auth()->user();
-        $invitation = $user->invitations()->firstOrFail();
+        $invitation = $user->invitations()->first();
+
+        if (!$invitation) {
+            return redirect()->route('client.dashboard')
+                ->with('warning', 'Anda belum memiliki undangan. Silakan buat pesanan terlebih dahulu.');
+        }
+
+        Gate::authorize('update', $invitation);
 
         $invitationService->updateSettings($invitation, $request);
 
@@ -69,31 +88,35 @@ class ClientController extends Controller
 
     public function downloadTemplate()
     {
-        $headers = [
-            "Content-type" => "text/csv",
-            "Content-Disposition" => "attachment; filename=template_tamu.csv",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
+        $columns = ['Nama Tamu', 'Nomor WA', 'Kategori', 'Alamat'];
+        $rows = [
+            ['Budi Santoso', '081234567890', 'Teman Kerja', 'Jakarta'],
+            ['Siti Aminah', '089876543210', 'Keluarga', 'Bandung'],
         ];
 
-        $columns = ['Nama Tamu', 'Nomor WA', 'Kategori', 'Alamat'];
+        try {
+            $csv = $this->buildCsv($columns, $rows);
+        } catch (Throwable $e) {
+            Log::error('Failed to generate guest template CSV.', ['exception' => $e]);
 
-        $callback = function () use ($columns) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
-            fputcsv($file, ['Budi Santoso', '081234567890', 'Teman Kerja', 'Jakarta']);
-            fputcsv($file, ['Siti Aminah', '089876543210', 'Keluarga', 'Bandung']);
-            fclose($file);
-        };
+            return redirect()->route('client.dashboard')
+                ->with('error', 'Gagal mengunduh template tamu. Silakan coba lagi.');
+        }
 
-        return response()->stream($callback, 200, $headers);
+        return response($csv, 200, $this->csvDownloadHeaders('template_tamu.csv'));
     }
 
     public function importGuests(ImportGuestsRequest $request)
     {
         $user = auth()->user();
-        $invitation = $user->invitations()->firstOrFail();
+        $invitation = $user->invitations()->first();
+
+        if (!$invitation) {
+            return redirect()->route('client.dashboard')
+                ->with('warning', 'Anda belum memiliki undangan.');
+        }
+
+        Gate::authorize('importGuests', $invitation);
 
         $file = $request->file('file');
         $extension = strtolower($file->getClientOriginalExtension());
@@ -101,6 +124,7 @@ class ClientController extends Controller
 
         if (in_array($extension, ['csv', 'txt'])) {
             $handle = fopen($file->getPathname(), 'r');
+            // Skip header
             fgetcsv($handle);
             while (($data = fgetcsv($handle, 1000, ',')) !== false) {
                 if (array_filter($data)) {
@@ -131,26 +155,54 @@ class ClientController extends Controller
             }
         }
 
-        $count = 0;
+        $normalizedRows = [];
 
-        foreach ($rows as $row) {
-            $name = $row[0] ?? null;
+        foreach ($rows as $index => $row) {
+            $name = is_scalar($row[0] ?? null) ? trim((string) $row[0]) : '';
 
-            if ($name && trim($name) !== '') {
-                $slug = Str::slug($name) . '-' . Str::random(4);
-
-                $invitation->guests()->create([
-                    'name' => $name,
-                    'whatsapp' => $row[1] ?? null,
-                    'category' => $row[2] ?? 'Umum',
-                    'address' => $row[3] ?? null,
-                    'slug' => $slug,
-                    'rsvp_status' => 'pending'
-                ]);
-
-                $count++;
+            if ($name === '') {
+                continue;
             }
+
+            $rawWhatsapp = $row[1] ?? null;
+            $normalizedWhatsapp = WhatsAppNumber::normalize($rawWhatsapp);
+
+            if (WhatsAppNumber::isFilled($rawWhatsapp) && $normalizedWhatsapp === null) {
+                return back()->withErrors([
+                    'file' => 'Nomor WhatsApp tidak valid pada baris ' . ($index + 2) . '.',
+                ])->withInput();
+            }
+
+            $category = is_scalar($row[2] ?? null) && trim((string) $row[2]) !== ''
+                ? trim((string) $row[2])
+                : 'Umum';
+
+            $address = is_scalar($row[3] ?? null) && trim((string) $row[3]) !== ''
+                ? trim((string) $row[3])
+                : null;
+
+            $normalizedRows[] = [
+                'name'     => $name,
+                'whatsapp' => $normalizedWhatsapp,
+                'category' => $category,
+                'address'  => $address,
+            ];
         }
+
+        $count = count($normalizedRows);
+
+        DB::transaction(function () use ($normalizedRows, $invitation) {
+            foreach ($normalizedRows as $row) {
+                $invitation->guests()->create([
+                    'name'        => $row['name'],
+                    'whatsapp'    => $row['whatsapp'],
+                    'category'    => $row['category'],
+                    'address'     => $row['address'],
+                    'rsvp_status' => 'pending',
+                    // slug auto-generated by Guest model boot hook (Str::random(8))
+                ]);
+            }
+        });
 
         return back()->with('success', "Berhasil mengimpor {$count} data tamu!");
     }
@@ -158,30 +210,30 @@ class ClientController extends Controller
     public function storeGuest(StoreGuestRequest $request)
     {
         $user = auth()->user();
-        $invitation = $user->invitations()->firstOrFail();
+        $invitation = $user->invitations()->first();
 
-        $slug = \Illuminate\Support\Str::slug($request->name) . '-' . \Illuminate\Support\Str::random(4);
+        if (!$invitation) {
+            return redirect()->route('client.dashboard')
+                ->with('warning', 'Anda belum memiliki undangan.');
+        }
+
+        Gate::authorize('addGuest', $invitation);
 
         $invitation->guests()->create([
-            'name' => $request->name,
-            'whatsapp' => $request->whatsapp,
-            'category' => $request->category ?? 'Umum',
-            'address' => $request->address,
-            'slug' => $slug,
-            'rsvp_status' => 'pending'
+            'name'        => $request->name,
+            'whatsapp'    => WhatsAppNumber::normalize($request->whatsapp),
+            'category'    => $request->category ?? 'Umum',
+            'address'     => $request->address,
+            'rsvp_status' => 'pending',
+            // slug auto-generated by Guest model boot hook (Str::random(8))
         ]);
 
         return back()->with('success', 'Berhasil menambahkan tamu: ' . $request->name);
     }
+
     public function deleteGuest(Guest $guest)
     {
-        $user = auth()->user();
-        $invitation = $user->invitations()->firstOrFail();
-
-        // Pastikan tamu memang milik undangan user ini
-        if ($guest->invitation_id !== $invitation->id) {
-            abort(403, 'Akses ditolak.');
-        }
+        Gate::authorize('delete', $guest);
 
         $name = $guest->name;
         $guest->delete();
@@ -191,50 +243,114 @@ class ClientController extends Controller
 
     public function exportGuests(Invitation $invitation)
     {
-        if ($invitation->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
+        Gate::authorize('export', $invitation);
+
+        try {
+            $columns = ['Nama', 'Kategori', 'WhatsApp', 'Status Kehadiran', 'Ucapan', 'Jumlah Tamu', 'Tanggal Input'];
+
+            $rows = $invitation->guests()
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function (Guest $guest): array {
+                    $status = match ($guest->rsvp_status) {
+                        'hadir' => 'Hadir',
+                        'tidak_hadir' => 'Tidak Hadir',
+                        'ragu' => 'Ragu-ragu',
+                        default => 'Pending',
+                    };
+
+                    return [
+                        $guest->name,
+                        $guest->category ?? '-',
+                        $guest->whatsapp ?? '-',
+                        $status,
+                        $guest->comment ?? '-',
+                        $guest->jumlah_tamu ?? 1,
+                        optional($guest->created_at)->format('Y-m-d H:i:s') ?? '-',
+                    ];
+                })
+                ->all();
+
+            $csv = $this->buildCsv($columns, $rows);
+            $filename = "daftar_tamu_{$invitation->slug}_" . now()->format('Y-m-d_H-i-s') . '.csv';
+        } catch (Throwable $e) {
+            Log::error('Failed to export guest CSV.', [
+                'invitation_id' => $invitation->id,
+                'exception' => $e,
+            ]);
+
+            return redirect()->route('client.dashboard')
+                ->with('error', 'Gagal mengekspor daftar tamu. Silakan coba lagi.');
         }
 
-        $guests = $invitation->guests()->orderBy('created_at', 'desc')->get();
+        return response($csv, 200, $this->csvDownloadHeaders($filename));
+    }
 
-        $filename = "daftar_tamu_{$invitation->slug}_" . date('Y-m-d_H-i-s') . ".csv";
+    protected function buildCsv(array $columns, iterable $rows): string
+    {
+        $handle = fopen('php://temp', 'w+b');
 
-        $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=$filename",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
-        ];
+        if ($handle === false) {
+            throw new RuntimeException('Unable to open temporary CSV stream.');
+        }
 
-        $columns = ['Nama', 'Kategori', 'WhatsApp', 'Status Kehadiran', 'Ucapan', 'Tanggal Input'];
-
-        $callback = function() use($guests, $columns) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
-
-            foreach ($guests as $guest) {
-                // Formatting the RSVP status to be more readable
-                $status = 'Pending';
-                if ($guest->rsvp_status == 'hadir') $status = 'Hadir';
-                if ($guest->rsvp_status == 'tidak_hadir') $status = 'Tidak Hadir';
-                if ($guest->rsvp_status == 'ragu') $status = 'Ragu-ragu';
-
-                $row = [
-                    $guest->name,
-                    $guest->category ?? '-',
-                    $guest->whatsapp ?? '-',
-                    $status,
-                    $guest->comment ?? '-',
-                    $guest->created_at->format('Y-m-d H:i:s')
-                ];
-
-                fputcsv($file, $row);
+        try {
+            if (fwrite($handle, "\xEF\xBB\xBF") === false) {
+                throw new RuntimeException('Unable to write UTF-8 BOM.');
             }
 
-            fclose($file);
-        };
+            $this->writeCsvRow($handle, $columns);
 
-        return response()->stream($callback, 200, $headers);
+            foreach ($rows as $row) {
+                $this->writeCsvRow($handle, $row);
+            }
+
+            if (!rewind($handle)) {
+                throw new RuntimeException('Unable to rewind CSV stream.');
+            }
+
+            $contents = stream_get_contents($handle);
+
+            if ($contents === false) {
+                throw new RuntimeException('Unable to read CSV stream.');
+            }
+
+            return $contents;
+        } finally {
+            fclose($handle);
+        }
+    }
+
+    private function writeCsvRow($handle, array $row): void
+    {
+        if (fputcsv($handle, $row) === false) {
+            throw new RuntimeException('Unable to write CSV row.');
+        }
+    }
+
+    private function csvDownloadHeaders(string $filename): array
+    {
+        $safeFilename = $this->safeCsvFilename($filename);
+
+        return [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $safeFilename . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+    }
+
+    private function safeCsvFilename(string $filename): string
+    {
+        $filename = basename(str_replace('\\', '/', $filename));
+        $filename = preg_replace('/[^A-Za-z0-9._-]+/', '_', $filename) ?: 'download.csv';
+        $filename = trim($filename, '._-') ?: 'download';
+
+        if (!Str::endsWith(strtolower($filename), '.csv')) {
+            $filename .= '.csv';
+        }
+
+        return $filename;
     }
 }

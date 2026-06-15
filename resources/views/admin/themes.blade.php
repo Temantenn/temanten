@@ -121,7 +121,7 @@
             @foreach($themes as $theme)
             @php
                 $hasCustom = !is_null($theme->price);
-                $thumbFile = $theme->thumbnail ?: ($theme->slug . '.png');
+                $thumbFile = $theme->thumbnail ?: ($theme->slug . '.webp');
                 $thumbExists = file_exists(public_path('assets/thumbnail/' . $thumbFile));
             @endphp
             <div class="px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:bg-gray-50/60 dark:hover:bg-slate-700/30 transition-colors group">

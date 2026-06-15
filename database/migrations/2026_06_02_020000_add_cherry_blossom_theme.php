@@ -11,6 +11,7 @@ return new class extends Migration
             ['slug' => 'cherry-blossom'],
             [
                 'name' => 'Cherry Blossom',
+                'thumbnail' => 'cherry-blossom.webp',
                 'view_path' => 'themes.cherry-blossom.index',
                 'description' => 'Sakura-inspired romantic wedding invitation with falling petal animations',
                 'is_active' => true,

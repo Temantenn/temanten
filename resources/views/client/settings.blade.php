@@ -397,6 +397,7 @@
                         
                         @php
                             $gallery = array_values($invitation->content['media']['gallery'] ?? []);
+                            $galleryTrash = array_values($invitation->content['media']['gallery_trash'] ?? []);
                         @endphp
                         @if(count($gallery) > 0)
                             <div class="mt-4">
@@ -421,6 +422,37 @@
                                                 title="Tandai foto ini untuk dihapus saat Simpan Perubahan">
                                                 <svg class="w-4 h-4 gallery-delete-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                 <svg class="w-4 h-4 gallery-undo-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        @if(count($galleryTrash) > 0)
+                            <div class="mt-6 rounded-2xl border border-amber-200 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-950/20 p-4">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                                    <div>
+                                        <p class="text-sm font-bold text-amber-700 dark:text-amber-300">Sampah Galeri ({{ count($galleryTrash) }})</p>
+                                        <p class="text-xs text-amber-700/80 dark:text-amber-300/80">Foto yang dihapus tidak langsung hilang. Klik pulihkan lalu Simpan Perubahan.</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 md:grid-cols-6 gap-3" id="gallery-trash-container">
+                                    @foreach($galleryTrash as $index => $photo)
+                                        <div class="relative aspect-square rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all group gallery-trash-item" data-index="{{ $index }}">
+                                            <img src="{{ asset($photo) }}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-300" alt="Foto terhapus {{ $index + 1 }}">
+                                            <div class="gallery-restore-overlay absolute inset-0 bg-emerald-600/75 flex items-center justify-center text-white text-xs font-bold hidden z-10">
+                                                <div class="text-center">
+                                                    <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                                    AKAN DIPULIHKAN
+                                                </div>
+                                            </div>
+                                            <button type="button" onclick="toggleRestoreGallery(this, {{ $index }})"
+                                                class="gallery-restore-btn absolute top-1.5 right-1.5 bg-emerald-500 hover:bg-emerald-600 text-white p-1.5 rounded-lg md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-all backdrop-blur-sm z-20 shadow-lg"
+                                                aria-label="Pulihkan foto galeri"
+                                                title="Pulihkan foto ini saat Simpan Perubahan">
+                                                <svg class="w-4 h-4 gallery-restore-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                                <svg class="w-4 h-4 gallery-restore-undo-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                             </button>
                                         </div>
                                     @endforeach
@@ -866,12 +898,13 @@
          * Toggle penanda hapus foto gallery.
          * - Klik pertama: tandai foto untuk dihapus (overlay merah + hidden input delete_gallery[] ditambahkan).
          * - Klik kedua: batalkan penandaan (overlay & hidden input dihilangkan).
-         * Penghapusan aktual dan hapus file storage dilakukan oleh controller saat Simpan.
+         * Saat Simpan, server memindahkan foto ke sampah galeri tanpa menghapus file fisik.
          */
         function toggleDeleteGallery(btn, index) {
             const item = btn.closest('.gallery-item');
             if (!item) return;
             const container = document.getElementById('gallery-preview-container');
+            if (!container) return;
             const overlay = item.querySelector('.gallery-delete-overlay');
             const delIcon = btn.querySelector('.gallery-delete-icon');
             const undoIcon = btn.querySelector('.gallery-undo-icon');
@@ -907,6 +940,41 @@
         // Backward compatibility (bila masih ada script lama yang memanggil)
         function deleteGalleryPhoto(btn, index) {
             toggleDeleteGallery(btn, index);
+        }
+
+        function toggleRestoreGallery(btn, index) {
+            const item = btn.closest('.gallery-trash-item');
+            if (!item) return;
+            const container = document.getElementById('gallery-trash-container');
+            if (!container) return;
+            const overlay = item.querySelector('.gallery-restore-overlay');
+            const restoreIcon = btn.querySelector('.gallery-restore-icon');
+            const undoIcon = btn.querySelector('.gallery-restore-undo-icon');
+            const hiddenInputId = 'restore_gallery_input_' + index;
+            const existing = document.getElementById(hiddenInputId);
+
+            if (existing) {
+                existing.remove();
+                if (overlay) overlay.classList.add('hidden');
+                if (restoreIcon) restoreIcon.classList.remove('hidden');
+                if (undoIcon) undoIcon.classList.add('hidden');
+                btn.setAttribute('title', 'Pulihkan foto ini saat Simpan Perubahan');
+                btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+                btn.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
+            } else {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'restore_gallery[]';
+                input.value = index;
+                input.id = hiddenInputId;
+                container.appendChild(input);
+                if (overlay) overlay.classList.remove('hidden');
+                if (restoreIcon) restoreIcon.classList.add('hidden');
+                if (undoIcon) undoIcon.classList.remove('hidden');
+                btn.setAttribute('title', 'Batalkan - Foto tidak jadi dipulihkan');
+                btn.classList.remove('bg-emerald-500', 'hover:bg-emerald-600');
+                btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+            }
         }
 
         function addStory() {

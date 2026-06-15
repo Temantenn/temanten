@@ -5,7 +5,7 @@
             <div class="flex items-center gap-8">
                 <a href="{{ route('dashboard') }}" class="nav-logo group">
                     <div class="logo-icon" style="overflow: hidden; padding: 0; background: transparent;">
-                        <img src="{{ asset('assets/mini-logo.jpg') }}" alt="Logo Temanten" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="{{ asset('assets/mini-logo.webp') }}" alt="Logo Temanten" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
                     <span class="logo-text">Temanten</span>
                 </a>

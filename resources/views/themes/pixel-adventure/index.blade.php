@@ -1322,9 +1322,6 @@
 <!-- Gate Screen -->
 <div id="gate">
     <div style="text-align: center; padding: 2rem;">
-        @if($coverImage)
-        <img src="{{ getFileUrl($coverImage) }}" alt="Cover Wedding" class="cover-preview">
-        @endif
         <p style="font-size: 0.6rem; color: #00ffff; margin-bottom: 1rem;">THE WEDDING OF</p>
         
         <h1 class="pixel-title">
@@ -2229,4 +2226,6 @@
 
 </body>
 </html>
+
+
 

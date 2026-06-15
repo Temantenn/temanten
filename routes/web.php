@@ -11,6 +11,16 @@ use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\WilayahController;
 
 Route::get('/storage/invitations/{uuid}/{filename}', function ($uuid, $filename) {
+    // Validate uuid format to prevent path traversal
+    if (!preg_match('/^[a-f0-9\-]{36}$/i', $uuid)) {
+        abort(404);
+    }
+
+    // Sanitize filename to prevent path traversal
+    if (basename($filename) !== $filename || str_contains($filename, '/') || str_contains($filename, '\\')) {
+        abort(404);
+    }
+
     $path = "public/invitations/{$uuid}/{$filename}";
 
     if (!Storage::exists($path)) {
@@ -22,9 +32,10 @@ Route::get('/storage/invitations/{uuid}/{filename}', function ($uuid, $filename)
 
     $response = Response::make($file, 200);
     $response->header("Content-Type", $type);
+    $response->header("Cache-Control", "public, max-age=3600");
 
     return $response;
-})->name('storage.images');
+})->middleware(['signed', 'throttle:signed-images'])->name('storage.images');
 
 Route::get('/', function () {
     return view('landing');
@@ -34,9 +45,9 @@ Route::get('/themes', [ThemeController::class, 'index'])->name('themes.index');
 Route::get('/themes/{slug}', [ThemeController::class, 'show'])->name('themes.show');
 
 Route::get('/buat-undangan', [OrderController::class, 'create'])->name('order.create');
-Route::post('/buat-undangan', [OrderController::class, 'store'])->name('order.store');
+Route::post('/buat-undangan', [OrderController::class, 'store'])->middleware('throttle:5,1')->name('order.store');
 Route::get('/pembayaran', [OrderController::class, 'payment'])->name('order.payment');
-Route::get('/order-success/{id}', [OrderController::class, 'success'])->name('order.success');
+Route::get('/order-success/{order_number}', [OrderController::class, 'success'])->name('order.success');
 
 Route::get('/demo/{theme}', [InvitationController::class, 'demo'])->name('demo.show');
 Route::get('/undangan/{slug}', [InvitationController::class, 'show'])->name('invitation.show');
@@ -71,9 +82,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/approve/{id}', [AdminController::class, 'approve'])->name('admin.approve');
     Route::post('/reset-password/{user_id}', [AdminController::class, 'resetPassword'])->name('admin.resetPassword');
 
-    Route::get('/themes', [AdminController::class, 'themes'])->name('admin.themes');
+    // Harga: dipindah ke /themes-pricing agar tidak konflik dengan resource 'themes' di bawah
+    Route::get('/themes-pricing', [AdminController::class, 'themes'])->name('admin.themes.pricing');
     Route::post('/themes/{id}/price', [AdminController::class, 'updateThemePrice'])->name('admin.themes.price');
     Route::post('/themes/default-price', [AdminController::class, 'updateDefaultPrice'])->name('admin.themes.defaultPrice');
+
+    // Manajemen Thumbnail + Default Music (CRUD)
+    Route::resource('themes', App\Http\Controllers\Admin\ThemeController::class)->only(['index', 'update']);
 
     Route::get('/admins', [AdminController::class, 'admins'])->name('admin.admins');
     Route::post('/admins', [AdminController::class, 'storeAdmin'])->name('admin.storeAdmin');

@@ -3,15 +3,17 @@
 namespace App\Imports;
 
 use App\Models\Guest;
+use App\Support\WhatsAppNumber;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithHeadingRow; // Agar baris 1 dianggap Header
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class GuestsImport implements ToModel, WithHeadingRow
+class GuestsImport implements ToModel, WithHeadingRow, WithChunkReading
 {
     private $invitation_id;
+    private $totalRows = 0;
 
-    // Kita terima ID undangan dari Controller
     public function __construct($invitation_id)
     {
         $this->invitation_id = $invitation_id;
@@ -19,17 +21,28 @@ class GuestsImport implements ToModel, WithHeadingRow
 
     public function model(array $row)
     {
-        // Pastikan kolom 'nama' di excel ada isinya
-        if (!isset($row['nama'])) {
+        if (!isset($row['nama']) || trim($row['nama']) === '') {
             return null;
         }
 
+        $this->totalRows++;
+
         return new Guest([
-            'invitation_id' => $this->invitation_id, // Masukkan ID undangan otomatis
-            'name'     => $row['nama'],
-            'category' => $row['kategori'] ?? 'Reguler', // Kalau kosong, set Reguler
-            'slug'     => Str::slug($row['nama']) . '-' . Str::random(4), // Generate Slug
-            'phone_number' => $row['whatsapp'] ?? null,
+            'invitation_id' => $this->invitation_id,
+            'name'          => $row['nama'],
+            'category'      => $row['kategori'] ?? 'Reguler',
+            'slug'          => Str::slug($row['nama']) . '-' . Str::random(4),
+            'whatsapp'      => WhatsAppNumber::normalize($row['whatsapp'] ?? null),
         ]);
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
+    }
+
+    public function getRowCount(): int
+    {
+        return $this->totalRows;
     }
 }

@@ -343,8 +343,7 @@
 
         .theme-card {
             background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-            border-radius: 28px;
-            overflow: hidden;
+            border-radius: 16px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.06);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -359,8 +358,11 @@
 
         .theme-card-image {
             position: relative;
-            aspect-ratio: 3/4;
+            aspect-ratio: 9/16;
             overflow: hidden;
+            border-radius: 1rem;
+            margin: 14px;
+            box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);
             background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
         }
 
@@ -694,7 +696,7 @@
             .custom-dropdown .dropdown-trigger { width: 100%; justify-content: space-between; }
 
             .themes-grid { grid-template-columns: 1fr; gap: 1.5rem; }
-            .theme-card-image { aspect-ratio: 4/5; }
+            .theme-card-image { aspect-ratio: 9/16; }
 
             .cta-title { font-size: 1.5rem; }
         }
@@ -747,20 +749,12 @@
                 <p class="text-white/50 text-sm">Memuat tema...</p>
             </div>
 
-            {{-- Phone Frame (Mobile) --}}
-            <div id="frameWrapper" onclick="event.stopPropagation()" class="relative transition-all duration-500 flex-shrink-0 shadow-2xl">
-                {{-- Phone chrome --}}
-                <div id="phoneChromeTop" class="absolute top-0 inset-x-0 z-30 pointer-events-none">
-                    <div class="mx-auto w-[120px] h-[28px] bg-gray-900 rounded-b-2xl"></div>
-                </div>
-                {{-- Home indicator --}}
-                <div id="phoneChromeBottom" class="absolute bottom-0 inset-x-0 z-30 pointer-events-none flex justify-center pb-2">
-                    <div class="w-20 h-1 bg-white/30 rounded-full"></div>
-                </div>
+            {{-- Clean Live Preview Container (no phone bezel) --}}
+            <div id="frameWrapper" onclick="event.stopPropagation()" class="relative transition-all duration-500 flex-shrink-0 overflow-hidden bg-white" style="border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,0.55);">
                 <iframe id="previewFrame" src="" frameborder="0" scrolling="yes"
                     class="block bg-white"
-                    style="width:375px;height:calc(100vh - 110px);border-radius:44px;display:block;"
-                    onload="onFrameLoad()"></iframe>
+                    style="width:100%;height:100%;display:block;border:0;border-radius:16px;"
+                    onload="if (window.onFrameLoad) window.onFrameLoad()"></iframe>
             </div>
         </div>
     </div>
@@ -770,7 +764,7 @@
 
             <a href="{{ route('home') }}" class="flex items-center gap-3 group">
                 <div class="w-11 h-11 rounded-xl overflow-hidden shadow-md group-hover:rotate-12 group-hover:scale-110 transition-all duration-300 drop-shadow-lg">
-                    <img src="{{ asset('assets/mini-logo.jpg') }}" alt="Logo Temanten" class="w-full h-full object-cover">
+                    <img src="{{ asset('assets/mini-logo.webp') }}" alt="Logo Temanten" class="w-full h-full object-cover">
                 </div>
                 <div class="flex flex-col">
                     <span class="font-extrabold text-xl text-gray-900 tracking-tight leading-none">TEMANTEN</span>
@@ -951,6 +945,8 @@
                     'sunda-asih' => 'Tema natural tradisional Sunda. Hijau daun, bambu, dan mega mendung dengan animasi tirai kain dan siluet rumah panggung.',
                     'sekar-jagad' => 'Tema elegan kontemporer. Dusty rose, navy, dan emas dengan navigasi top-tab, flip card acara, dan galeri masonry.',
                     'pixel-adventure' => 'Tema undangan bergaya retro pixel art dengan pengalaman interaktif seperti game petualangan.',
+                    'cherry-blossom' => 'Tema romantis bernuansa sakura dengan animasi kelopak bunga yang lembut.',
+                    'celestial-night' => 'Tema malam berbintang romantis dengan aksen bulan, bintang jatuh, dan nuansa emas.',
                 ];
                 $description = $descriptions[$theme->slug] ?? 'Tema undangan digital dengan desain eksklusif dan responsif.';
 
@@ -968,6 +964,8 @@
                     'sunda-asih' => 'Traditional',
                     'sekar-jagad' => 'Wedding',
                     'pixel-adventure' => 'Modern',
+                    'cherry-blossom' => 'Floral',
+                    'celestial-night' => 'Dark',
                 ];
                 $category = $categories[$theme->slug] ?? 'Wedding';
 
@@ -984,6 +982,8 @@
                     'sunda-asih' => ['new', '🌿 New'],
                     'sekar-jagad' => ['new', '🌸 New'],
                     'pixel-adventure' => ['new', '🎮 New'],
+                    'cherry-blossom' => ['new', '🌸 New'],
+                    'celestial-night' => ['new', '🌙 New'],
                 ];
                 $badge = $badges[$theme->slug] ?? null;
 
@@ -1001,8 +1001,21 @@
                     'sunda-asih' => ['Rumah Panggung', 'Mega Mendung', 'RSVP', 'Music'],
                     'sekar-jagad' => ['Flip Card', 'Snap Scroll', 'RSVP', 'Music'],
                     'pixel-adventure' => ['Pixel Art', 'Game Quest', 'RSVP', 'Gallery'],
+                    'cherry-blossom' => ['Sakura', 'Petal Animations', 'RSVP', 'Music'],
+                    'celestial-night' => ['Starry Night', 'Moon Accent', 'RSVP', 'Music'],
                 ];
                 $featureList = $features[$theme->slug] ?? ['Responsive', 'Gallery', 'RSVP'];
+                $fallbackThumbnail = asset('assets/thumbnail/floral-pastel.webp');
+                // Prioritas: $theme->thumbnail dari storage (admin upload) → fallback ke public/assets/thumbnail/{slug}.webp
+                if (!empty($theme->thumbnail) && file_exists(storage_path('app/public/themes/thumbnails/' . $theme->thumbnail))) {
+                    $thumbnail = asset('storage/themes/thumbnails/' . $theme->thumbnail);
+                } else {
+                    $thumbFile = ($theme->slug ?? 'floral-pastel') . '.webp';
+                    $thumbPath = public_path('assets/thumbnail/' . $thumbFile);
+                    $thumbnail = file_exists($thumbPath)
+                        ? asset('assets/thumbnail/' . $thumbFile)
+                        : $fallbackThumbnail;
+                }
             @endphp
             <div class="theme-card" data-category="{{ strtolower($category) }}" data-name="{{ strtolower($theme->name) }}" data-price="{{ $theme->effective_price }}">
                 <div class="theme-card-image">
@@ -1023,8 +1036,7 @@
                             </div>
                         </div>
                     @endif
-                    {{-- Selalu gunakan slug sebagai nama file thumbnail, bukan kolom thumbnail dari DB --}}
-                    <img src="{{ asset('assets/thumbnail/' . $theme->slug . '.png') }}" alt="{{ $theme->name }}" onerror="this.src='https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=600&fit=crop'">
+                    <img src="{{ $thumbnail }}" alt="{{ $theme->name }}" onerror="this.onerror=null;this.src='{{ $fallbackThumbnail }}'">
                     <div class="theme-card-overlay">
                         <div class="theme-card-actions">
                             <button onclick="openPreview('{{ route('demo.show', $theme->slug) }}', '{{ addslashes($theme->name) }}')" class="btn-preview">
@@ -1094,7 +1106,7 @@
                 <div class="space-y-6 md:col-span-2">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-white/10">
-                            <img src="{{ asset('assets/mini-logo.jpg') }}" alt="Logo Temanten" class="w-full h-full object-cover">
+                            <img src="{{ asset('assets/mini-logo.webp') }}" alt="Logo Temanten" class="w-full h-full object-cover">
                         </div>
                         <div>
                             <h2 class="font-extrabold text-2xl tracking-tight m-0 p-0 text-white">TEMANTEN</h2>
@@ -1247,17 +1259,20 @@
 
             if (type === 'mobile') {
                 frameWrapper.style.cssText = `
-                    border-radius: 44px;
-                    border: 8px solid #111;
-                    box-shadow: 0 0 0 1px #333, 0 40px 80px rgba(0,0,0,0.6);
+                    border-radius: 16px;
+                    border: none;
+                    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
                     overflow: hidden;
                     transition: all 0.4s ease;
-                    width: min(375px, 95vw);
+                    width: min(400px, calc((100vh - 120px) * 9 / 16));
+                    aspect-ratio: 9 / 16;
+                    max-height: calc(100vh - 120px);
                     margin: 0 auto;
+                    background: #fff;
                 `;
-                frame.style.cssText = `width: 100%; height:${vhFrame}; border-radius:32px; display:block;`;
-                if (chromeTop) chromeTop.style.display = 'block';
-                if (chromeBot) chromeBot.style.display = 'flex';
+                frame.style.cssText = `width: 100%; height: 100%; border:0; border-radius:0; display:block;`;
+                if (chromeTop) chromeTop.style.display = 'none';
+                if (chromeBot) chromeBot.style.display = 'none';
                 // Highlight buttons
                 btnMobile.className = 'px-3 py-2 rounded-lg text-xs font-semibold text-indigo-300 bg-indigo-600/30 border border-indigo-500/40 transition-all flex items-center gap-1.5';
                 btnDesktop.className = 'px-3 py-2 rounded-lg text-xs font-semibold text-white/50 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5';

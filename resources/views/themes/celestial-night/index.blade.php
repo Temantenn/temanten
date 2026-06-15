@@ -41,7 +41,7 @@
 
         html {
             scroll-behavior: smooth;
-            scroll-snap-type: y mandatory;
+            scroll-snap-type: none;
             overflow-y: auto;
         }
 
@@ -51,8 +51,15 @@
             color: var(--text);
             line-height: 1.7;
             min-height: 100dvh;
+            height: auto;
+            width: auto;
             overflow-x: hidden;
+            overflow-y: auto;
         }
+        /* ===== LOCK COVER (gaya buka undangan) ===== */
+        body.cover-locked { overflow: hidden; height: 100dvh; touch-action: none; overscroll-behavior: none; }
+        body.cover-locked .celestial-page > .section:not(.section-cover) { visibility: hidden; }
+        body.cover-locked .scroll-indicator { display: none; }
 
         /* ===== STAR CANVAS ===== */
         .stars-canvas {
@@ -74,7 +81,7 @@
 
         .section {
             min-height: 100dvh;
-            scroll-snap-align: start;
+            scroll-snap-align: none;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -901,9 +908,64 @@
             30% { transform: translateX(200px) translateY(120px) rotate(-35deg); opacity: 0; }
             100% { opacity: 0; }
         }
+        /* ===== OPEN INVITATION BUTTON (celestial glass) ===== */
+        /* ===== OPEN GUEST (nama tamu di atas tombol buka) ===== */
+        .open-guest {
+            margin: 1.5rem auto 0;
+            text-align: center;
+        }
+        .open-guest-eyebrow {
+            font-size: .7rem;
+            letter-spacing: .35em;
+            text-transform: uppercase;
+            color: var(--gold);
+            opacity: .85;
+            margin-bottom: .35rem;
+            font-weight: 300;
+        }
+        .open-guest-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.25rem;
+            color: var(--gold-light);
+            letter-spacing: .05em;
+            text-shadow: 0 0 16px rgba(201, 168, 76, .25);
+        }
+        .open-invitation-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+            margin: 1.75rem auto 0;
+            padding: .85rem 1.75rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.05rem;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: #f5e9c9;
+            background: linear-gradient(135deg, rgba(255,255,255,.14) 0%, rgba(245,233,201,.18) 100%);
+            border: 1px solid rgba(245,233,201,.45);
+            border-radius: 999px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 0 24px rgba(245,233,201,.18), inset 0 0 12px rgba(245,233,201,.08);
+            cursor: pointer;
+            transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+            animation: openBtnPulse 2.8s ease-in-out infinite;
+        }
+        .open-invitation-btn:hover,
+        .open-invitation-btn:focus-visible {
+            transform: translateY(-2px) scale(1.02);
+            background: linear-gradient(135deg, rgba(245,233,201,.28) 0%, rgba(255,255,255,.22) 100%);
+            box-shadow: 0 0 36px rgba(245,233,201,.45), inset 0 0 14px rgba(245,233,201,.18);
+            outline: none;
+        }
+        .open-invitation-btn i { font-size: 1.1rem; }
+        @keyframes openBtnPulse {
+            0%, 100% { box-shadow: 0 0 24px rgba(245,233,201,.18), inset 0 0 12px rgba(245,233,201,.08); }
+            50%      { box-shadow: 0 0 32px rgba(245,233,201,.35), inset 0 0 14px rgba(245,233,201,.15); }
+        }
     </style>
 </head>
-<body>
+<body class="cover-locked">
     {{-- Shooting Stars --}}
     <div class="shooting-star"></div>
     <div class="shooting-star"></div>
@@ -942,6 +1004,16 @@
                         Tanggal Pernikahan
                     @endif
                 </p>
+                <div class="open-guest">
+                    <p class="open-guest-eyebrow">Kepada Yth.</p>
+                    <p class="open-guest-name">{{ $guest->name ?? ($invitation->content['guest_name'] ?? 'Tamu Undangan') }}</p>
+                </div>
+                <div class="open-cta-wrap">
+                    <button type="button" class="open-invitation-btn" onclick="openInvitation()" aria-label="Buka Undangan">
+                        <i class="ph ph-envelope-open"></i>
+                        <span>Buka Undangan</span>
+                    </button>
+                </div>
             </div>
             <div class="scroll-indicator">
                 <i class="ph ph-caret-double-down"></i>
@@ -1339,8 +1411,11 @@
         </footer>
     </div>
 
-    {{-- Music Toggle --}}
-    @php $musicFile = $invitation->music_file; @endphp
+{{-- Music Toggle --}}
+@php
+    $musicFile = data_get($invitation, 'music_file') ?? data_get($invitation, 'content.media.music');
+    $musicFile = $musicFile && file_exists(public_path($musicFile)) ? $musicFile : null;
+@endphp
     @if($musicFile)
     <button class="music-toggle" id="musicToggle" onclick="toggleMusic()" title="Toggle Music">
         <i class="ph ph-speaker-simple-high" id="musicIcon"></i>
@@ -1468,6 +1543,31 @@
             }
             document.removeEventListener('click', firstClick);
         }, { once: true });
+
+        // ===== OPEN INVITATION HANDLER =====
+        function openInvitation() {
+            // Lepaskan kunci cover (boleh scroll lagi)
+            document.body.classList.remove('cover-locked');
+            // Tutup nav-dots sampai cover dibuka
+            const navDots = document.getElementById('navDots');
+            if (navDots) navDots.style.display = '';
+
+            const audio = document.getElementById('bgMusic');
+            const icon  = document.getElementById('musicIcon');
+            const btn   = document.getElementById('musicToggle');
+            if (audio && !musicPlaying) {
+                audio.play().then(() => {
+                    musicPlaying = true;
+                    if (icon) icon.className = 'ph ph-speaker-simple-high';
+                    if (btn)  btn.classList.remove('muted');
+                }).catch(() => {});
+            }
+            // Smooth scroll ke section berikutnya setelah unlock
+            setTimeout(() => {
+                const next = document.getElementById('section-1') || document.querySelector('.section:not(.section-cover)');
+                if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 60);
+        }
     </script>
 
     <script>

@@ -10,7 +10,7 @@ export default defineConfig({
   retries: 0,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://temanten.test',
+  baseURL: 'http://127.0.0.1:8000',
     headless: false,
     viewport: { width: 1366, height: 768 },
     actionTimeout: 15_000,

@@ -11,6 +11,7 @@ return new class extends Migration
             ['slug' => 'celestial-night'],
             [
                 'name' => 'Celestial Night',
+                'thumbnail' => 'celestial-night.webp',
                 'view_path' => 'themes.celestial-night.index',
                 'description' => 'Romantic starry night theme with moon, shooting stars, and golden celestial accents',
                 'is_active' => true,

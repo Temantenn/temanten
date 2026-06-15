@@ -17,7 +17,7 @@ return new class extends Migration
 
             $table->string('slug')->unique();
             $table->string('client_whatsapp');
-            $table->enum('status', ['pending', 'active', 'completed'])->default('pending');
+            $table->enum('status', ['pending', 'active', 'completed', 'cancelled'])->default('pending');
 
             $table->dateTime('event_date');
             $table->json('content');

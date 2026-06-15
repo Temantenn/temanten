@@ -67,6 +67,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 .btn-buka{background:linear-gradient(135deg,#B8861A, #F2D785, #B8861A);color:var(--hitam);border:none;padding:14px 44px;font-family:'Cinzel',serif;font-weight:700;font-size:12px;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;transition:0.4s;border-radius:50px;pointer-events:all;box-shadow:0 10px 30px rgba(184,134,26,0.25);display:inline-flex;align-items:center;gap:10px}
 .btn-buka:hover{box-shadow:0 12px 35px rgba(184,134,26,0.45);transform:translateY(-3px);filter:brightness(1.05)}
 
+/* ═══ GATE GUEST (nama tamu di atas tombol buka) ═══ */
+.gate-guest{margin:6px auto 18px;padding:10px 16px;border-top:1px solid rgba(184,134,26,0.35);border-bottom:1px solid rgba(184,134,26,0.35);max-width:340px;pointer-events:all}
+.gate-guest-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--gold-l);opacity:.85;margin-bottom:4px;font-family:'Cinzel',serif}
+.gate-guest-name{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.2rem;color:var(--ivory);line-height:1.2;margin:0}
+
 /* ═══ PAGES ═══ */
 .page{position:absolute;inset:0;overflow-y:auto;display:none;padding-bottom:130px}
 .page.active{display:block}
@@ -289,6 +294,11 @@ $target = \Carbon\Carbon::parse($akad['waktu'] ?? now()->addDays(90));
 
             <p style="font-size:9px;letter-spacing:3px;color:var(--gold-l);opacity:.82;font-family:'Cinzel',serif;text-transform:uppercase">ꦱꦸꦒꦼꦁ ꦫꦮꦸꦃ</p>
             <br><br>
+
+            <div class="gate-guest">
+                <p class="gate-guest-eyebrow">ꦏꦼꦥꦝꦻ ꦪꦁ ꦠꦲꦸ</p>
+                <p class="gate-guest-name">{{ $guest->name ?? 'Tamu Undangan' }}</p>
+            </div>
 
             <button class="btn-buka" onclick="openSurat()">Buka Surat</button>
         </div>
