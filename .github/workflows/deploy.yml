@@ -1,0 +1,27 @@
+name: Deploy ke cPanel Otomatis
+
+on:
+  push:
+    branches:
+      - main  # Ganti jadi 'master' kalau branch utama lo namanya master
+
+jobs:
+  web-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Mengambil kode terbaru
+      uses: actions/checkout@v4
+
+    - name: 🚀 Upload ke cPanel via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        server-dir: /
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          .env
+          storage/**

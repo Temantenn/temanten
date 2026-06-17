@@ -189,6 +189,15 @@ class Invitation extends Model
         return $this->content['media']['gallery'] ?? [];
     }
 
+    /**
+     * Public invitation URL (absolute, scheme + host).
+     * Used by the client dashboard Share Kit and any deep link.
+     */
+    public function getPublicUrlAttribute(): string
+    {
+        return route('invitation.show', ['slug' => $this->slug], absolute: true);
+    }
+
     public function getBankNameAttribute()
     {
         return $this->content['amplop']['bank_name'] ?? '';
