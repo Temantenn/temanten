@@ -14,17 +14,13 @@ jobs:
     - name: 🚚 Mengambil kode terbaru
       uses: actions/checkout@v4
 
-    - name: 🚀 Upload ke cPanel via SFTP
+    - name: 🚀 Upload ke cPanel via FTPS
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         server-dir: /home/polkppfc/temanten.polka.biz.id/public/
-        protocol: sftp
-        port: 22
-        exclude: |
-          **/.git*
-          **/node_modules/**
-          .env
-          storage/**
+        protocol: ftps
+        security: loose # Penting untuk hosting yang sertifikat SSL-nya tidak standar
+        port: 21
