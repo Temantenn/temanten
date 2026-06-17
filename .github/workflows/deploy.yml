@@ -21,9 +21,9 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         server-dir: /home/polkppfc/temanten.polka.biz.id/public/
-        protocol: ftp
+        protocol: ftps
+        security: loose
         port: 21
-        passive: true
         exclude: |
           **/.git*
           **/node_modules/**
