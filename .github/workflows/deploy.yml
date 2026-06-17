@@ -20,7 +20,7 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        server-dir: /public_html/temanten.polka.biz.id/  # SESUAIKAN PATH INI
+        server-dir: /home/polkppfc/temanten.polka.biz.id/public/
         protocol: sftp
         port: 22
         exclude: |
