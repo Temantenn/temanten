@@ -8,6 +8,7 @@ on:
 jobs:
   web-deploy:
     runs-on: ubuntu-latest
+    environment: kavera
     env:
       ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     steps:
