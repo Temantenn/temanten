@@ -8,8 +8,6 @@ on:
 jobs:
   web-deploy:
     runs-on: ubuntu-latest
-    environment: 
-      name: kavera
     env:
       ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     steps:
@@ -25,3 +23,9 @@ jobs:
         server-dir: /
         protocol: ftp
         port: 21
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          .env
+          storage/**
