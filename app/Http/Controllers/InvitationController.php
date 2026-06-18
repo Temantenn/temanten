@@ -141,9 +141,9 @@ class InvitationController extends Controller
             'quote' => 'Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu isteri-isteri dari jenismu sendiri...',
             'media' => [
                 'cover' => $selectedCover,
-                'music' => !empty($theme->default_music) && file_exists(storage_path('app/public/themes/music/' . $theme->default_music))
-                    ? asset('storage/themes/music/' . $theme->default_music)
-                    : 'assets/music/' . $themeSlug . '.mp3',
+                'music' => theme_music_url($theme) ?? (file_exists(public_path('assets/music/' . $themeSlug . '.mp3'))
+                    ? asset('assets/music/' . $themeSlug . '.mp3')
+                    : asset('assets/music/floral-pastel.mp3')),
                 'video_link' => 'https://www.youtube.com/embed/dQw4w9WgXcQ',
                 'gallery' => [
                     $getDummyImg('wedding rings', 'landscape'),
@@ -208,6 +208,15 @@ class InvitationController extends Controller
 
     public function listUcapan($slug)
     {
+        // Demo pages use synthetic slug like 'demo-celestial-night' — return empty wishes
+        if (str_starts_with($slug, 'demo-')) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+                'demo' => true,
+            ]);
+        }
+
         $invitation = $this->findViewableInvitationBySlug($slug);
 
         $guests = $invitation->guests()

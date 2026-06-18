@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-CsF71jU5.css",
+    "file": "assets/app-BcbaUkFy.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -9,7 +9,7 @@
     ]
   },
   "resources/css/boho.css": {
-    "file": "assets/boho-ByEBThOr.css",
+    "file": "assets/boho-BzcHg-XD.css",
     "src": "resources/css/boho.css",
     "isEntry": true,
     "name": "boho",
@@ -36,7 +36,7 @@
     ]
   },
   "resources/css/ocean.css": {
-    "file": "assets/ocean-De5FKsS2.css",
+    "file": "assets/ocean-DDLOhh1M.css",
     "src": "resources/css/ocean.css",
     "isEntry": true,
     "name": "ocean",
@@ -45,7 +45,7 @@
     ]
   },
   "resources/css/rustic.css": {
-    "file": "assets/rustic-CmcjA3oD.css",
+    "file": "assets/rustic-H_p8dHzx.css",
     "src": "resources/css/rustic.css",
     "isEntry": true,
     "name": "rustic",
@@ -54,7 +54,7 @@
     ]
   },
   "resources/css/watercolor.css": {
-    "file": "assets/watercolor-X_79ZrPD.css",
+    "file": "assets/watercolor-B187igFC.css",
     "src": "resources/css/watercolor.css",
     "isEntry": true,
     "name": "watercolor",
@@ -63,7 +63,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CiZ6hk-B.js",
+    "file": "assets/app-DEEa_Eh0.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true

@@ -93,7 +93,5 @@
                 {{ $slot }}
             </main>
         </div>
-        
-        <x-theme-toggle />
     </body>
 </html>

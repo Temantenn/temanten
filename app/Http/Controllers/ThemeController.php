@@ -23,11 +23,8 @@ class ThemeController extends Controller
             ->where('is_active', true)
             ->firstOrFail();
 
-        $themes = Theme::where('is_active', true)
-            ->where('id', '!=', $theme->id)
-            ->take(3)
-            ->get();
-
-        return view('themes.detail', compact('theme', 'themes'));
+        // Theme detail pages render full invitation templates which need $invitation data.
+        // Redirect to the working demo route instead.
+        return redirect()->route('demo.show', ['theme' => $theme->slug]);
     }
 }

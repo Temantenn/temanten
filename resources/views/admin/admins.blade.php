@@ -39,7 +39,7 @@
                         </div>
                         <div>
                             <h3 class="card-title">Daftar Admin Aktif</h3>
-                            <p class="card-subtitle">Total {{ $admins->count() }} administrator terdaftar</p>
+                            <p class="card-subtitle">Total {{ $admins->total() }} administrator terdaftar</p>
                         </div>
                     </div>
                 </div>
@@ -98,6 +98,13 @@
                         </tbody>
                     </table>
                 </div>
+
+                {{-- Pagination --}}
+                @if($admins->hasPages())
+                    <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700/50">
+                        {{ $admins->links('vendor.pagination.admin-tailwind') }}
+                    </div>
+                @endif
             </div>
             
         </div>

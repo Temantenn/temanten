@@ -1622,8 +1622,9 @@
                 },
 
                 async loadWishes() {
+                    const slug = '{{ $invitation->slug ?? "" }}';
+                    if (!slug || slug.startsWith('demo-')) return; // Demo pages: no real wishes
                     try {
-                        const slug = '{{ $invitation->slug ?? "" }}';
                         const response = await fetch(`/undangan/${slug}/ucapan`, {
                             headers: { 'Accept': 'application/json' }
                         });

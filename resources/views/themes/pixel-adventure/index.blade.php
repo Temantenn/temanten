@@ -1963,7 +1963,7 @@
             <div class="modal-close" onclick="closeModal('modalPhotoViewer')">✕</div>
         </div>
         <div class="modal-body" style="padding: 0;">
-        <img id="photoViewerImg" src="" style="width: 100%; border: 3px solid #ffd700;">
+        <img id="photoViewerImg" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InRyYW5zcGFyZW50Ii8+PC9zdmc+" style="width: 100%; border: 3px solid #ffd700; display: none;">
         </div>
     </div>
 </div>
@@ -2165,7 +2165,9 @@
     
     // View Photo
     function viewPhoto(url) {
-        document.getElementById('photoViewerImg').src = url;
+        const img = document.getElementById('photoViewerImg');
+        img.src = url;
+        img.style.display = 'block';
         openModal('modalPhotoViewer');
     }
     

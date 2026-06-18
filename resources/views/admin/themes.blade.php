@@ -224,18 +224,19 @@
             <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
             <p class="text-[0.7rem] sm:text-xs text-amber-700 dark:text-amber-400 font-medium">Kosongkan field harga normal dan klik Simpan untuk menghapus harga khusus (tema akan kembali menggunakan harga default global).</p>
         </div>
+
+        {{-- Pagination --}}
+        @if($themes->hasPages())
+            <div class="px-8 py-4 border-t border-gray-100 dark:border-slate-700/50 bg-gray-50/30 dark:bg-slate-800/30">
+                {{ $themes->links('vendor.pagination.admin-tailwind') }}
+            </div>
+        @endif
     </div>
 
     {{-- ── RINGKASAN ─────────────────────────────────────── --}}
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 animate-in" style="animation-delay:0.2s">
-        @php
-            $customCount = $themes->whereNotNull('price')->count();
-            $defaultCount = $themes->whereNull('price')->count();
-            $minPrice = $themes->min('effective_price');
-            $maxPrice = $themes->max('effective_price');
-        @endphp
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700/50 shadow-sm px-4 sm:px-5 py-4 text-center transition-colors duration-300 flex flex-col justify-center">
-            <div class="text-xl sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">{{ $themes->count() }}</div>
+            <div class="text-xl sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">{{ $totalCount }}</div>
             <div class="text-[0.65rem] sm:text-xs font-bold tracking-wider uppercase text-gray-500 dark:text-slate-400 mt-1">Total Tema</div>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700/50 shadow-sm px-4 sm:px-5 py-4 text-center transition-colors duration-300 flex flex-col justify-center">

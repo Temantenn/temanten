@@ -207,7 +207,10 @@ class OrderController extends Controller
             return back()->withErrors(['msg' => 'Konfigurasi pembayaran belum tersedia. Silakan hubungi admin.']);
         }
 
-        $order->dynamic_qris = $this->qrisService->generateDynamic($masterQris, $order->total_amount);
+        // Nominal di QR = total_amount (harga flat) + unique_code (suffix verifikasi).
+        // User melihat harga flat; unique_code otomatis ditambahkan saat generate QR.
+        $qrisAmount = $order->total_amount + $order->unique_code;
+        $order->dynamic_qris = $this->qrisService->generateDynamic($masterQris, $qrisAmount);
 
         return view('order.payment', compact('order'));
     }

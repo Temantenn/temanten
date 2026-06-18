@@ -49,6 +49,8 @@
 
                 <div class="nav-divider"></div>
 
+                <x-theme-toggle />
+
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" data-testid="logout-button" class="logout-btn group">
@@ -107,6 +109,10 @@
         </div>
 
         <div class="mobile-logout">
+            <div class="mobile-theme-row">
+                <span class="mobile-theme-label">Tema</span>
+                <x-theme-toggle />
+            </div>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" data-testid="logout-button" class="mobile-logout-btn">
@@ -392,5 +398,20 @@
         }
         .dark .mobile-logout-btn { color: #f87171; }
         .dark .mobile-logout-btn:hover { background: rgba(239, 68, 68, 0.15); }
+
+        .mobile-theme-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0.625rem;
+            background: color-mix(in srgb, var(--dashboard-accent) 6%, transparent);
+        }
+        .mobile-theme-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--dashboard-muted);
+        }
     </style>
 </nav>

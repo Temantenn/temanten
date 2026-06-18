@@ -13,10 +13,28 @@ class ThemeController extends Controller
     /**
      * Daftar tema (Thumbnail + Default Music management).
      */
-    public function index()
+    public function index(Request $request)
     {
-        $themes = Theme::orderBy('id')->get();
-        return view('admin.themes.index', compact('themes'));
+        $q = trim((string) $request->get('q', ''));
+        $filter = $request->get('filter', 'all');
+
+        $query = Theme::query();
+        if ($q !== '') {
+            $query->where(function ($w) use ($q) {
+                $w->where('name', 'like', "%{$q}%")
+                  ->orWhere('slug', 'like', "%{$q}%");
+            });
+        }
+        if ($filter === 'with') {
+            $query->whereNotNull('thumbnail')->where('thumbnail', '!=', '');
+        } elseif ($filter === 'without') {
+            $query->where(function ($w) {
+                $w->whereNull('thumbnail')->orWhere('thumbnail', '');
+            });
+        }
+
+        $themes = $query->orderBy('id')->paginate(15)->withQueryString();
+        return view('admin.themes.index', compact('themes', 'q', 'filter'));
     }
 
     /**

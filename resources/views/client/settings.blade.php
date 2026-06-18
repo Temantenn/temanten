@@ -14,7 +14,7 @@
         </div>
     </x-slot>
 
-    <div class="py-8 bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 min-h-screen pb-32" data-testid="client-settings">
+    <div class="py-8 bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 min-h-screen pb-40 sm:pb-36" data-testid="client-settings">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
             {{-- Toast kanan-atas (otomatis hilang 4 detik) --}}
@@ -63,31 +63,94 @@
                 @csrf
                 @method('PUT')
 
-                <div class="settings-guide-card">
-                    <div>
-                        <span class="settings-eyebrow">Panduan Edit</span>
-                        <h3 class="text-xl font-extrabold text-gray-900 dark:text-white mt-1">Lengkapi konten undangan bertahap</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-300 mt-2 leading-relaxed">Mulai dari data mempelai, acara, media, lalu amplop digital. Setiap section disimpan melalui tombol tetap di bawah layar.</p>
+                <div class="settings-guide-card" x-data="{ guideOpen: window.matchMedia('(min-width: 768px)').matches }">
+                    <div class="flex items-start gap-3 flex-1">
+                        <div class="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 text-white flex items-center justify-center shadow-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <span class="settings-eyebrow">Panduan Edit</span>
+                            <h3 class="text-base sm:text-lg font-extrabold text-gray-900 dark:text-white mt-0.5">Lengkapi konten undangan bertahap</h3>
+                            <div x-show="guideOpen" x-cloak x-transition.duration.200ms>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-2 leading-relaxed">Mulai dari data mempelai, acara, media, lalu amplop digital. Klik tab untuk loncat ke bagian, lalu simpan sekali di akhir.</p>
+                                <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-600 dark:text-gray-400">
+                                    <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>5 bagian</span>
+                                    <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>2 field wajib</span>
+                                    <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Simpan di akhir</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="settings-guide-steps">
-                        <span>01 Profil</span>
-                        <span>02 Acara</span>
-                        <span>03 Media</span>
-                        <span>04 Cerita</span>
-                        <span>05 Amplop</span>
-                    </div>
+                    <button type="button" @click="guideOpen = !guideOpen" :aria-expanded="guideOpen" aria-label="Toggle panduan"
+                        class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 transition">
+                        <span x-text="guideOpen ? 'Sembunyikan' : 'Tampilkan'"></span>
+                        <svg :class="guideOpen ? 'rotate-180' : ''" class="w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
                 </div>
 
-                <!-- Section 1: Profile Mempelai -->
-                <div class="settings-card">
+                <!-- Field Legend -->
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-1 text-[11px] text-gray-500 dark:text-gray-400">
+                    <span class="inline-flex items-center gap-1.5"><span class="text-red-500 font-bold text-sm leading-none">*</span> Wajib diisi</span>
+                    <span class="inline-flex items-center gap-1.5"><svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Sisanya opsional</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Simpan di akhir</span>
+                </div>
+
+                <!-- Sticky Tab Navigation -->
+                <nav id="section-tabs" class="sticky top-16 z-30 -mx-4 sm:mx-0 px-4 sm:px-0">
+                    <div class="bg-white/85 dark:bg-gray-900/85 backdrop-blur-xl backdrop-saturate-150 border border-gray-200/70 dark:border-gray-700/70 shadow-lg shadow-black/5 rounded-2xl p-1.5">
+                        <ul class="flex items-stretch gap-1 overflow-x-auto scrollbar-hide" role="tablist">
+                            <li class="flex-1 min-w-[88px] sm:min-w-[110px]">
+                                <a href="#section-profil" data-tab="profil" class="section-tab group flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all">
+                                    <span class="tab-num shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-extrabold">01</span>
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                                    <span class="hidden sm:inline">Profil</span>
+                                </a>
+                            </li>
+                            <li class="flex-1 min-w-[88px] sm:min-w-[110px]">
+                                <a href="#section-acara" data-tab="acara" class="section-tab group flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all">
+                                    <span class="tab-num shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-extrabold">02</span>
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    <span class="hidden sm:inline">Acara</span>
+                                </a>
+                            </li>
+                            <li class="flex-1 min-w-[88px] sm:min-w-[110px]">
+                                <a href="#section-media" data-tab="media" class="section-tab group flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all">
+                                    <span class="tab-num shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-extrabold">03</span>
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    <span class="hidden sm:inline">Media</span>
+                                </a>
+                            </li>
+                            <li class="flex-1 min-w-[88px] sm:min-w-[110px]">
+                                <a href="#section-cerita" data-tab="cerita" class="section-tab group flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all">
+                                    <span class="tab-num shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-extrabold">04</span>
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                                    <span class="hidden sm:inline">Cerita</span>
+                                </a>
+                            </li>
+                            <li class="flex-1 min-w-[88px] sm:min-w-[110px]">
+                                <a href="#section-amplop" data-tab="amplop" class="section-tab group flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all">
+                                    <span class="tab-num shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-extrabold">05</span>
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                    <span class="hidden sm:inline">Amplop</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <!-- Section 1: Profil Mempelai -->
+                <div id="section-profil" class="settings-card scroll-mt-32">
                     <div class="settings-header">
                         <div class="settings-icon bg-gradient-to-br from-pink-500 to-rose-500">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                         </div>
-                        <div>
-                            <h3 class="settings-title">Profile Mempelai</h3>
+                        <div class="flex-1">
+                            <h3 class="settings-title">Profil Mempelai</h3>
                             <p class="settings-subtitle">Informasi lengkap kedua mempelai</p>
                         </div>
+                        <span class="text-[11px] text-gray-500 dark:text-gray-400 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800">
+                            <span class="text-red-500 font-bold">*</span> Wajib diisi
+                        </span>
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
@@ -114,8 +177,8 @@
 
                             <div class="space-y-4">
                                 <div class="input-group">
-                                    <label class="input-label">Nama Lengkap</label>
-                                    <input type="text" name="groom_name" value="{{ $invitation->content['mempelai']['pria']['nama'] ?? '' }}" class="input-field" placeholder="Nama Lengkap Pria">
+                                    <label class="input-label">Nama Lengkap <span class="text-red-500" aria-label="wajib diisi">*</span></label>
+                                    <input type="text" name="groom_name" required value="{{ $invitation->content['mempelai']['pria']['nama'] ?? '' }}" class="input-field" placeholder="Nama Lengkap Pria">
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="input-group">
@@ -161,8 +224,8 @@
 
                             <div class="space-y-4">
                                 <div class="input-group">
-                                    <label class="input-label">Nama Lengkap</label>
-                                    <input type="text" name="bride_name" value="{{ $invitation->content['mempelai']['wanita']['nama'] ?? '' }}" class="input-field" placeholder="Nama Lengkap Wanita">
+                                    <label class="input-label">Nama Lengkap <span class="text-red-500" aria-label="wajib diisi">*</span></label>
+                                    <input type="text" name="bride_name" required value="{{ $invitation->content['mempelai']['wanita']['nama'] ?? '' }}" class="input-field" placeholder="Nama Lengkap Wanita">
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="input-group">
@@ -195,7 +258,7 @@
                 </div>
 
                 <!-- Section 2: Rangkaian Acara -->
-                <div class="settings-card">
+                <div id="section-acara" class="settings-card scroll-mt-32">
                     <div class="settings-header">
                         <div class="settings-icon bg-gradient-to-br from-amber-500 to-orange-500">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -336,7 +399,7 @@
                 </div>
 
                 <!-- Section 3: Media & Galeri -->
-                <div class="settings-card">
+                <div id="section-media" class="settings-card scroll-mt-32">
                     <div class="settings-header">
                         <div class="settings-icon bg-gradient-to-br from-violet-500 to-purple-600">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -463,7 +526,7 @@
                 </div>
 
                 <!-- Section 4: Love Story -->
-                <div class="settings-card">
+                <div id="section-cerita" class="settings-card scroll-mt-32">
                     <div class="settings-header">
                         <div class="settings-icon bg-gradient-to-br from-rose-500 to-pink-600">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
@@ -518,7 +581,7 @@
                 </div>
 
                 <!-- Section 5: Amplop Digital -->
-                <div class="settings-card">
+                <div id="section-amplop" class="settings-card scroll-mt-32">
                     <div class="settings-header">
                         <div class="settings-icon bg-gradient-to-br from-emerald-500 to-teal-600">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
@@ -612,14 +675,61 @@
                 </div>
 
                 <!-- Fixed Save Button -->
-                <div class="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 p-4 z-50 shadow-2xl shadow-black/10">
-                    <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 hidden md:block">
-                            <span class="inline-flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Jangan lupa simpan perubahan sebelum membuka halaman lain</span>
-                        </p>
-                        <button type="submit" class="px-8 py-3 leading-5 text-white transition-all duration-300 transform bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 w-full md:w-auto flex items-center justify-center gap-2 font-bold shadow-xl shadow-indigo-500/20">
-                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Simpan Perubahan
+                <div class="fixed bottom-0 left-0 right-0 bg-white/85 dark:bg-gray-900/85 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-50 shadow-2xl shadow-black/10"
+                    x-data="{
+                        dirty: false,
+                        saving: false,
+                        savedAt: {{ $invitation->updated_at?->toIso8601String() ? "'".$invitation->updated_at->toIso8601String()."'" : 'null' }},
+                        init() {
+                            // Watch all form fields for dirty state
+                            this.$el.closest('form').addEventListener('input', () => this.dirty = true);
+                            this.$el.closest('form').addEventListener('change', () => this.dirty = true);
+                            this.$el.closest('form').addEventListener('submit', () => { this.saving = true; this.dirty = false; });
+                        },
+                        formatTime(iso) {
+                            if (!iso) return '';
+                            const d = new Date(iso);
+                            const now = new Date();
+                            const diff = Math.floor((now - d) / 1000);
+                            if (diff < 60) return 'baru saja';
+                            if (diff < 3600) return Math.floor(diff/60) + ' menit lalu';
+                            if (diff < 86400) return Math.floor(diff/3600) + ' jam lalu';
+                            return d.toLocaleDateString('id-ID', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+                        }
+                    }"
+                    x-init="setInterval(() => { if (savedAt) $el.querySelector('[data-saved-time]')?.textContent = formatTime(savedAt); }, 30000)">
+                    <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2 text-sm min-w-0">
+                            <template x-if="saving">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-semibold">
+                                    <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"></path></svg>
+                                    <span class="hidden sm:inline">Menyimpan...</span>
+                                </span>
+                            </template>
+                            <template x-if="!saving && dirty">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-semibold">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                    <span class="hidden sm:inline">Belum disimpan</span>
+                                </span>
+                            </template>
+                            <template x-if="!saving && !dirty && savedAt">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-semibold">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                    <span class="hidden sm:inline">Tersimpan <span data-saved-time x-text="formatTime(savedAt)"></span></span>
+                                    <span class="sm:hidden">OK</span>
+                                </span>
+                            </template>
+                            <template x-if="!saving && !dirty && !savedAt">
+                                <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-semibold">
+                                    <span class="w-2 h-2 rounded-full bg-gray-400"></span>Belum pernah disimpan
+                                </span>
+                            </template>
+                        </div>
+                        <button type="submit" :disabled="saving"
+                            class="px-5 sm:px-8 py-2.5 sm:py-3 text-white transition-all duration-200 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 disabled:opacity-60 disabled:cursor-wait flex items-center justify-center gap-2 font-bold shadow-xl shadow-indigo-500/20 text-sm sm:text-base">
+                            <svg x-show="!saving" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <svg x-show="saving" x-cloak class="w-5 h-5 flex-shrink-0 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"></path></svg>
+                            <span x-text="saving ? 'Menyimpan...' : 'Simpan Semua Perubahan'">Simpan Semua Perubahan</span>
                         </button>
                     </div>
                 </div>
@@ -652,23 +762,39 @@
             text-transform: uppercase;
             color: #4f46e5;
         }
-        .settings-guide-steps {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            gap: .5rem;
-            max-width: 22rem;
+        .section-tab {
+            color: #6b7280;
+            background: transparent;
+            border: 1px solid transparent;
         }
-        .settings-guide-steps span {
-            border: 1px solid rgba(99, 102, 241, 0.18);
-            background: rgba(255,255,255,.72);
+        .section-tab:hover {
             color: #4338ca;
-            border-radius: 999px;
-            padding: .45rem .7rem;
-            font-size: .72rem;
-            font-weight: 800;
+            background: rgba(99, 102, 241, 0.08);
         }
-        .dark .settings-guide-steps span { background: rgba(31,41,55,.7); color: #c7d2fe; }
+        .section-tab .tab-num {
+            background: rgba(99, 102, 241, 0.1);
+            color: #4f46e5;
+            transition: all .2s ease;
+        }
+        .section-tab:hover .tab-num {
+            background: rgba(99, 102, 241, 0.2);
+            transform: scale(1.05);
+        }
+        .section-tab.is-active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+        }
+        .section-tab.is-active .tab-num {
+            background: rgba(255,255,255,.22);
+            color: #ffffff;
+        }
+        .dark .section-tab { color: #9ca3af; }
+        .dark .section-tab:hover { color: #c7d2fe; background: rgba(99, 102, 241, 0.15); }
+        .dark .section-tab .tab-num { background: rgba(165,180,252,.15); color: #a5b4fc; }
+        .dark .section-tab:hover .tab-num { background: rgba(165,180,252,.25); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { scrollbar-width: none; }
 
         /* Settings Card */
         .settings-card {
@@ -1277,5 +1403,54 @@
                 reader.onerror = error => reject(error);
             });
         }
+
+        // Scroll-spy: highlight tab matching currently visible section
+        (function(){
+            var tabs = document.querySelectorAll('.section-tab');
+            if(!tabs.length) return;
+            var sections = ['profil','acara','media','cerita','amplop'].map(function(k){
+                return { key: k, el: document.getElementById('section-' + k) };
+            }).filter(function(s){ return !!s.el; });
+
+            function setActive(key){
+                tabs.forEach(function(t){
+                    if(t.dataset.tab === key) t.classList.add('is-active');
+                    else t.classList.remove('is-active');
+                });
+            }
+
+            function pickActive(){
+                // Active = section whose top is closest to (but past) nav bottom (~140px)
+                var navBottom = (document.getElementById('section-tabs').getBoundingClientRect().bottom || 140);
+                var threshold = navBottom + 60; // account for ~60px into section content
+                var current = sections[0].key; // default first
+                for(var i=0;i<sections.length;i++){
+                    if(sections[i].el.getBoundingClientRect().top <= threshold) current = sections[i].key;
+                }
+                setActive(current);
+            }
+
+            // Initial active = first section
+            setActive('profil');
+
+            // Use scroll listener (more reliable than IO for our case)
+            var ticking = false;
+            window.addEventListener('scroll', function(){
+                if(!ticking){
+                    window.requestAnimationFrame(function(){ pickActive(); ticking = false; });
+                    ticking = true;
+                }
+            }, { passive: true });
+            window.addEventListener('resize', pickActive);
+            // Run once after load to handle restored scroll positions
+            setTimeout(pickActive, 100);
+
+            // Smooth scroll on tab click + set active immediately
+            tabs.forEach(function(t){
+                t.addEventListener('click', function(){
+                    setActive(t.dataset.tab);
+                });
+            });
+        })();
     </script>
 </x-app-layout>

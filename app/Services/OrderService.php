@@ -56,7 +56,10 @@ class OrderService
             $base['unique_code'] = $this->generateUniqueCode();
 
             if ($basePrice !== null) {
-                $base['total_amount'] = $basePrice + $base['unique_code'];
+                // Total tagihan = harga flat (ditampilkan ke user).
+                // unique_code disimpan terpisah & hanya di-inject ke nominal QRIS
+                // untuk kebutuhan auto-verify. UI tidak menampilkan unique_code.
+                $base['total_amount'] = $basePrice;
             }
 
             try {

@@ -80,6 +80,7 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::post('/approve/{id}', [AdminController::class, 'approve'])->name('admin.approve');
+    Route::post('/reject/{id}', [AdminController::class, 'reject'])->name('admin.reject');
     Route::post('/reset-password/{user_id}', [AdminController::class, 'resetPassword'])->name('admin.resetPassword');
 
     // Harga: dipindah ke /themes-pricing agar tidak konflik dengan resource 'themes' di bawah
@@ -88,7 +89,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/themes/default-price', [AdminController::class, 'updateDefaultPrice'])->name('admin.themes.defaultPrice');
 
     // Manajemen Thumbnail + Default Music (CRUD)
-    Route::resource('themes', App\Http\Controllers\Admin\ThemeController::class)->only(['index', 'update']);
+    Route::resource('themes', App\Http\Controllers\Admin\ThemeController::class)->only(['index', 'update'])->names('admin.themes');
 
     Route::get('/admins', [AdminController::class, 'admins'])->name('admin.admins');
     Route::post('/admins', [AdminController::class, 'storeAdmin'])->name('admin.storeAdmin');
@@ -108,3 +109,29 @@ Route::middleware(['auth'])->prefix('client')->group(function () {
     Route::get('/settings', [ClientController::class, 'settings'])->name('client.settings');
     Route::put('/settings', [ClientController::class, 'updateSettings'])->name('client.updateSettings');
 });
+
+// DEV ONLY — auto-login for testing
+Route::get("/dev-login/{email}", function ($email) {
+    if (!app()->environment("local")) abort(403);
+    $u = \App\Models\User::where("email", $email)->firstOrFail();
+    \Illuminate\Support\Facades\Auth::login($u, true);
+    return redirect("/client/settings");
+});
+
+// DEV ONLY — set order session for payment preview
+Route::get("/dev-payment/{orderNumber}", function ($orderNumber) {
+    if (!app()->environment("local")) abort(403);
+    session(["order_number" => $orderNumber]);
+    return redirect("/pembayaran");
+});
+
+// DEV ONLY — render payment view directly with dummy QRIS for visual audit
+Route::get("/dev-payment-audit/{orderNumber}", function ($orderNumber) {
+    if (!app()->environment("local")) abort(403);
+
+    $order = \App\Models\Order::with(['theme', 'user'])->where('order_number', $orderNumber)->firstOrFail();
+    // Inject dummy QRIS for visual preview only
+    $order->dynamic_qris = '00000000000000000000';
+    return view('order.payment', ['order' => $order, '__dev_audit' => true]);
+});
+

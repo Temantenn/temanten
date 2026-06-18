@@ -3,95 +3,76 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Invitation;
+use App\Models\User;
 use App\Models\Theme;
+use App\Models\Invitation;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 class InvitationSeeder extends Seeder
 {
     public function run(): void
     {
-        $royalGlass   = Theme::where('slug', 'royal-glass')->firstOrFail();
-        $rusticGreen  = Theme::where('slug', 'rustic-green')->firstOrFail();
-        $floralPastel = Theme::where('slug', 'floral-pastel')->firstOrFail();
+        $themes = Theme::take(6)->get();
+        if ($themes->isEmpty()) {
+            $this->command->warn('No themes found, run ThemeSeeder first.');
+            return;
+        }
 
-        Invitation::create([
-            'uuid' => Str::uuid(),
-            'theme_id' => $royalGlass->id,
-            'slug' => 'romeo-juliet',
-            'client_whatsapp' => '6281234567890',
-            'status' => 'active',
-            'event_date' => Carbon::parse('2026-02-20 08:00:00'),
+        $pairs = [
+            ['pria' => 'Andi Wijaya', 'wanita' => 'Sari Dewi', 'wa' => '6281234567890', 'tema' => 'floral-pastel', 'status' => 'pending', 'date' => '2026-07-15'],
+            ['pria' => 'Budi Santoso', 'wanita' => 'Lestari Putri', 'wa' => '6281234567891', 'tema' => 'royal-glass', 'status' => 'pending', 'date' => '2026-08-22'],
+            ['pria' => 'Candra Kusuma', 'wanita' => 'Maya Anggraini', 'wa' => '6281234567892', 'tema' => 'rustic-green', 'status' => 'pending', 'date' => '2026-09-10'],
+            ['pria' => 'Doni Pratama', 'wanita' => 'Putri Maharani', 'wa' => '6281234567893', 'tema' => 'golden-sunrise', 'status' => 'active', 'date' => '2026-06-05'],
+            ['pria' => 'Eko Saputra', 'wanita' => 'Rina Wulandari', 'wa' => '6281234567894', 'tema' => 'boho-terracotta', 'status' => 'active', 'date' => '2026-05-20'],
+            ['pria' => 'Fajar Nugroho', 'wanita' => 'Sinta Bella', 'wa' => '6281234567895', 'tema' => 'celestial-night', 'status' => 'active', 'date' => '2026-04-18'],
+            ['pria' => 'Galih Pranata', 'wanita' => 'Tari Kusumadewi', 'wa' => '6281234567896', 'tema' => 'cherry-blossom', 'status' => 'active', 'date' => '2026-03-12'],
+            ['pria' => 'Hadi Wibowo', 'wanita' => 'Yuni Safitri', 'wa' => '6281234567897', 'tema' => 'emerald-garden', 'status' => 'active', 'date' => '2026-02-28'],
+        ];
 
-            'content' => [
-                'mempelai' => [
-                    'pria' => [
-                        'nama' => 'Romeo Pratama, S.Kom',
-                        'panggilan' => 'Romeo',
-                        'ayah' => 'Bpk. Adam',
-                        'ibu' => 'Ibu Hawa',
-                        'instagram' => 'romeo_pratama',
-                        'foto' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000',
-                    ],
-                    'wanita' => [
-                        'nama' => 'Juliet Kusuma, S.Ak',
-                        'panggilan' => 'Juliet',
-                        'ayah' => 'Bpk. Capulet',
-                        'ibu' => 'Ibu Lady',
-                        'instagram' => 'juliet_kusuma',
-                        'foto' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1000',
-                    ],
-                ],
+        foreach ($pairs as $p) {
+            $pria   = strtolower(explode(' ', $p['pria'])[0]);
+            $wanita = strtolower(explode(' ', $p['wanita'])[0]);
+            $email  = "{$pria}.{$wanita}@temanten.inv";
+            $slug   = Str::slug($p['pria'].'-'.$p['wanita']);
 
-                'acara' => [
-                    'akad' => [
-                        'judul' => 'Akad Nikah',
-                        'waktu' => '2026-02-20 08:00:00',
-                        'tempat' => 'Masjid Al-Ikhlas',
-                        'alamat' => 'Jl. Merpati No. 10, Jakarta Selatan',
-                        'maps' => 'https://goo.gl/maps/contoh1',
-                    ],
-                    'resepsi' => [
-                        'judul' => 'Resepsi Pernikahan',
-                        'waktu' => '2026-02-20 11:00:00',
-                        'tempat' => 'Grand Ballroom Hotel',
-                        'alamat' => 'Jl. Sudirman Kav. 50, Jakarta Pusat',
-                        'maps' => 'https://goo.gl/maps/contoh2',
-                    ],
-                ],
+            $theme = $themes->firstWhere('slug', $p['tema']) ?? $themes->random();
 
-                'quote' => 'Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu pasangan hidup...',
+            $user = User::firstOrCreate(
+                ['email' => $email],
+                [
+                    'name'     => $p['pria'].' & '.$p['wanita'],
+                    'password' => Hash::make('temanten123'),
+                    'role'     => 'client',
+                    'email_verified_at' => now(),
+                ]
+            );
 
-                'love_stories' => [
-                    [
-                        'year' => '2018',
-                        'title' => 'First Meet',
-                        'story' => 'Kami bertemu di perpustakaan kota.',
+            Invitation::firstOrCreate(
+                ['slug' => $slug],
+                [
+                    'uuid'             => Str::uuid(),
+                    'theme_id'         => $theme->id,
+                    'user_id'          => $user->id,
+                    'slug'             => $slug,
+                    'client_whatsapp'  => $p['wa'],
+                    'status'           => $p['status'],
+                    'event_date'       => Carbon::parse($p['date'].' 08:00:00'),
+                    'content'          => [
+                        'mempelai' => [
+                            'pria'   => ['nama' => $p['pria'], 'panggilan' => explode(' ', $p['pria'])[0]],
+                            'wanita' => ['nama' => $p['wanita'], 'panggilan' => explode(' ', $p['wanita'])[0]],
+                        ],
+                        'acara' => [
+                            'akad'    => ['waktu' => $p['date'].' 08:00:00', 'tempat' => 'Masjid Al-Ikhlas'],
+                            'resepsi' => ['waktu' => $p['date'].' 11:00:00', 'tempat' => 'Grand Ballroom'],
+                        ],
                     ],
-                    [
-                        'year' => '2023',
-                        'title' => 'She Said Yes',
-                        'story' => 'Lamaran romantis di kaki gunung.',
-                    ],
-                ],
+                ]
+            );
+        }
 
-                'media' => [
-                    'cover' => 'https://images.unsplash.com/photo-1621621667797-e06afc217fb0',
-                    'gallery' => [
-                        'https://images.unsplash.com/photo-1511285560982-1351cdeb9821',
-                        'https://images.unsplash.com/photo-1583939003579-730e3918a45a',
-                    ],
-                ],
-
-                'amplop' => [
-                    'bank_name' => 'BCA',
-                    'account_number' => '1234567890',
-                    'account_holder' => 'Romeo Pratama',
-                    'alamat_kado' => 'Jl. Kebahagiaan No. 10',
-                    'maps_kado' => 'https://goo.gl/maps/contoh3',
-                ],
-            ],
-        ]);
+        $this->command->info('8 invitations seeded (3 pending + 5 active with users).');
     }
 }

@@ -136,6 +136,49 @@ class AdminController extends Controller
         }
     }
 
+    public function reject(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $invitation = Invitation::findOrFail($id);
+
+        if ($invitation->status !== 'pending') {
+            return redirect()->back()->with('error', 'Hanya pesanan dengan status menunggu yang dapat ditolak.');
+        }
+
+        try {
+            DB::transaction(function () use ($invitation, $request) {
+                $invitation->update([
+                    'status' => 'cancelled',
+                ]);
+
+                ActivityLog::record('admin_action', 'invitation.rejected', $invitation, [
+                    'invitation_slug' => $invitation->slug,
+                    'rejected_by'     => Auth::user()->email,
+                    'reason'          => $request->input('reason'),
+                ]);
+
+                Log::channel('daily')->info('Admin rejected invitation', [
+                    'admin'           => Auth::user()->email,
+                    'invitation_id'   => $invitation->id,
+                    'invitation_slug' => $invitation->slug,
+                    'reason'          => $request->input('reason'),
+                ]);
+            });
+
+            return redirect()->back()->with('success', 'Pesanan berhasil ditolak.');
+        } catch (\Exception $e) {
+            Log::channel('daily')->error('Failed to reject invitation', [
+                'admin'         => Auth::user()->email,
+                'invitation_id' => $id,
+                'error'         => $e->getMessage(),
+            ]);
+            return redirect()->back()->with('error', 'Terjadi kesalahan sistem saat menolak pesanan.');
+        }
+    }
+
     public function resetPassword($user_id)
     {
         $user = User::findOrFail($user_id);
@@ -168,9 +211,22 @@ class AdminController extends Controller
 
     public function themes()
     {
-        $themes      = \App\Models\Theme::orderBy('name')->get();
+        $themes       = \App\Models\Theme::orderBy('name')->paginate(20)->withQueryString();
         $defaultPrice = config('app.default_price', 99000);
-        return view('admin.themes', compact('themes', 'defaultPrice'));
+
+        // Stats for the "Ringkasan" section (must reflect ALL themes, not just the paginated page).
+        // Load a full collection to use Eloquent accessors (e.g. effective_price).
+        $allThemes     = \App\Models\Theme::orderBy('id')->get();
+        $totalCount    = $allThemes->count();
+        $customCount   = $allThemes->whereNotNull('price')->count();
+        $defaultCount  = $allThemes->whereNull('price')->count();
+        $minPrice      = $allThemes->min('effective_price');
+        $maxPrice      = $allThemes->max('effective_price');
+
+        return view('admin.themes', compact(
+            'themes', 'defaultPrice',
+            'totalCount', 'customCount', 'defaultCount', 'minPrice', 'maxPrice'
+        ));
     }
 
     public function updateThemePrice(Request $request, $id)
@@ -258,8 +314,7 @@ class AdminController extends Controller
 
     public function admins()
     {
-        // Fetch all admins excluding current active session if needed, but for now fetch all
-        $admins = User::where('role', 'admin')->orderBy('created_at', 'desc')->get();
+        $admins = User::where('role', 'admin')->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
         return view('admin.admins', compact('admins'));
     }
 
