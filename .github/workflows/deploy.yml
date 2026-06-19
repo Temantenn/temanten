@@ -47,7 +47,14 @@ jobs:
           set -e
           APP=/home/polkppfc/temanten.polka.biz.id
           cd $APP
-          pwd
+          echo "=== Ensure public/storage is symlink (recreate if dir/stub) ==="
+          if [ ! -L public/storage ]; then
+            rm -rf public/storage
+            php artisan storage:link
+            echo "[OK] symlink created"
+          else
+            echo "[SKIP] public/storage already a symlink"
+          fi
           echo "=== Fix phantom path (dari deploy lama) ==="
           PHANTOM="$APP/home/polkppfc/temanten.polka.biz.id"
           if [ -d "$PHANTOM" ]; then
