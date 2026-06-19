@@ -32,6 +32,7 @@ jobs:
           chmod -R 775 /home/polkppfc/temanten.polka.biz.id/storage
         SCRIPT_AFTER: |
           cd /home/polkppfc/temanten.polka.biz.id/
+          composer dump-autoload --no-dev -o || true
           php artisan view:clear || true
           php artisan cache:clear || true
           php artisan config:clear || true
