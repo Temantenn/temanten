@@ -8,38 +8,35 @@ on:
 jobs:
   web-deploy:
     runs-on: ubuntu-latest
-    env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     steps:
-    - name: 🚚 Mengambil kode terbaru
+    - name: 🚚 Checkout kode terbaru
       uses: actions/checkout@v4
 
-    - name: 🚀 Upload ke cPanel (via SSH rsync)
-      uses: easingthemes/ssh-deploy@v4.1.7
-      with:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-        REMOTE_HOST: ${{ secrets.SSH_HOST }}
-        REMOTE_USER: ${{ secrets.SSH_USERNAME }}
-        REMOTE_PORT: ${{ secrets.SSH_PORT }}
-        SOURCE: .
-        TARGET: /home/polkppfc/temanten.polka.biz.id/
-        EXCLUDE: "/.git, /node_modules, /storage/framework/cache, /storage/framework/sessions, /storage/framework/views, /storage/logs, /storage/app/private, /.env"
-        SCRIPT_BEFORE: |
-          mkdir -p /home/polkppfc/temanten.polka.biz.id/bootstrap/cache
-          chmod 775 /home/polkppfc/temanten.polka.biz.id/bootstrap/cache
-          mkdir -p /home/polkppfc/temanten.polka.biz.id/storage/framework/{cache,sessions,views}
-          mkdir -p /home/polkppfc/temanten.polka.biz.id/storage/logs
-          chmod -R 775 /home/polkppfc/temanten.polka.biz.id/storage
-        SCRIPT_AFTER: |
-          cd /home/polkppfc/temanten.polka.biz.id/
-          composer dump-autoload --no-dev -o || true
-          php artisan view:clear || true
-          php artisan cache:clear || true
-          php artisan config:clear || true
-          php artisan route:clear || true
-          php artisan optimize || true
+    - name: 🚀 Upload via rsync (direct on runner)
+      env:
+        SSH_KEY: ${{ secrets.SSH_KEY }}
+        SSH_HOST: ${{ secrets.SSH_HOST }}
+        SSH_USER: ${{ secrets.SSH_USERNAME }}
+        SSH_PORT: ${{ secrets.SSH_PORT }}
+      run: |
+        mkdir -p ~/.ssh
+        printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" 2>/dev/null >> ~/.ssh/known_hosts
+        rsync -rlgoDzvc -i \
+          --exclude='.git' \
+          --exclude='node_modules' \
+          --exclude='/storage/framework/cache' \
+          --exclude='/storage/framework/sessions' \
+          --exclude='/storage/framework/views' \
+          --exclude='/storage/logs' \
+          --exclude='/storage/app/private' \
+          --exclude='/.env' \
+          -e "ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=no" \
+          ./ "$SSH_USER@$SSH_HOST:/home/polkppfc/temanten.polka.biz.id/"
+        echo "[OK] rsync upload done"
 
-    - name: 🔧 Fix phantom path (cPanel SSH chroot bug workaround)
+    - name: 🔧 Fix deploy + composer install + cache clear
       uses: appleboy/ssh-action@v1
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -48,27 +45,28 @@ jobs:
         port: ${{ secrets.SSH_PORT || 22 }}
         script: |
           set -e
-          PHANTOM="/home/polkppfc/temanten.polka.biz.id/home/polkppfc/temanten.polka.biz.id"
+          APP=/home/polkppfc/temanten.polka.biz.id
+          cd $APP
+          pwd
+          echo "=== Fix phantom path (dari deploy lama) ==="
+          PHANTOM="$APP/home/polkppfc/temanten.polka.biz.id"
           if [ -d "$PHANTOM" ]; then
-            rsync -a "$PHANTOM/" /home/polkppfc/temanten.polka.biz.id/
-            rm -rf /home/polkppfc/temanten.polka.biz.id/home
-            echo "[OK] Moved phantom path content to addon root"
+            rsync -a "$PHANTOM/" $APP/
+            rm -rf $APP/home
+            echo "[OK] Phantom path moved to addon root"
           else
-            echo "[SKIP] No phantom path found"
+            echo "[SKIP] No phantom path"
           fi
-
-    - name: 🧹 Clear Laravel caches via SSH
-      uses: appleboy/ssh-action@v1
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
-        port: ${{ secrets.SSH_PORT || 22 }}
-        script: |
-          cd /home/polkppfc/temanten.polka.biz.id/
-          php artisan view:clear
-          php artisan cache:clear
-          php artisan config:clear
-          php artisan route:clear
-          php artisan optimize
-      if: always() && hashFiles('.github/workflows/deploy.yml') != ''
+          echo "=== Composer install (fix Landmine 10: stale dev-pkg autoload) ==="
+          if [ ! -f composer.phar ]; then
+            curl -sO https://getcomposer.org/download/latest-stable/composer.phar
+          fi
+          php composer.phar install --no-dev --no-scripts --no-progress
+          php artisan package:discover
+          rm -f bootstrap/cache/packages.php
+          echo "=== Laravel cache clear ==="
+          php artisan view:clear || true
+          php artisan cache:clear || true
+          php artisan config:clear || true
+          php artisan route:clear || true
+          php artisan optimize || true
