@@ -700,7 +700,6 @@
 
         {{-- Hero header --}}
         <div class="text-center mb-8 anim-in">
-            <span class="vol-ribbon inline-flex">Proses · 4 Langkah</span>
             <h1 class="font-display text-3xl md:text-5xl font-semibold italic text-[color:var(--ink)] mt-3 leading-[1.05] tracking-tight">
                 <span x-text="['Langkah Pertama','Lengkapi Data','Info Acara','Langkah Terakhir'][step - 1] || 'Menuju'"></span> Menuju<br>
                 <span class="text-[color:var(--brown-light)]">Undangan Impianmu</span>
