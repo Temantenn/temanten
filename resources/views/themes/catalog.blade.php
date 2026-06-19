@@ -434,6 +434,47 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
         .preview-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+        .preview-loader {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 1.25rem;
+            background: linear-gradient(135deg, #f5ede0 0%, #ebe0c8 100%);
+            z-index: 5;
+            transition: opacity 300ms ease;
+        }
+        .preview-loader.hidden { opacity: 0; pointer-events: none; }
+        .preview-spinner {
+            width: 3rem; height: 3rem;
+            border: 3px solid rgba(184, 149, 106, 0.2);
+            border-top-color: #b8956a;
+            border-radius: 50%;
+            animation: preview-spin 800ms linear infinite;
+        }
+        @keyframes preview-spin {
+            to { transform: rotate(360deg); }
+        }
+        .preview-loader-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 1rem;
+            color: #5c4a30;
+            letter-spacing: 0.02em;
+        }
+        .preview-loader-dots::after {
+            content: '';
+            display: inline-block;
+            width: 1.2em;
+            text-align: left;
+            animation: preview-dots 1.4s steps(4, end) infinite;
+        }
+        @keyframes preview-dots {
+            0%   { content: ''; }
+            25%  { content: '.'; }
+            50%  { content: '..'; }
+            75%  { content: '...'; }
+            100% { content: ''; }
+        }
         .preview-close {
             position: absolute; top: 0.5rem; right: 0.5rem;
             background: rgba(244, 237, 224, 0.95);
@@ -595,7 +636,11 @@
 <div class="preview-modal" id="previewModal">
     <div class="preview-frame">
         <button class="preview-close" type="button" onclick="closePreview()">Tutup ✕</button>
-        <iframe id="previewFrame" src="" title="Preview" loading="lazy"></iframe>
+        <div class="preview-loader" id="previewLoader">
+            <div class="preview-spinner" aria-hidden="true"></div>
+            <div class="preview-loader-text">Memuat preview<span class="preview-loader-dots"></span></div>
+        </div>
+        <iframe id="previewFrame" src="" title="Preview" loading="lazy" onload="hidePreviewLoader()"></iframe>
     </div>
 </div>
 
@@ -667,10 +712,16 @@
 })();
 
 // Preview modal (consistent with landing #tema section)
+function hidePreviewLoader() {
+    const loader = document.getElementById('previewLoader');
+    if (loader) loader.classList.add('hidden');
+}
 window.openPreview = function(url) {
     const modal = document.getElementById('previewModal');
     const frame = document.getElementById('previewFrame');
+    const loader = document.getElementById('previewLoader');
     if (!modal || !frame) return;
+    if (loader) loader.classList.remove('hidden');
     frame.src = url;
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -681,6 +732,8 @@ window.closePreview = function() {
     modal.classList.remove('open');
     const frame = document.getElementById('previewFrame');
     if (frame) frame.src = '';
+    const loader = document.getElementById('previewLoader');
+    if (loader) loader.classList.remove('hidden');
     document.body.style.overflow = '';
 };
 document.getElementById('previewModal').addEventListener('click', (e) => {
