@@ -31,16 +31,31 @@ jobs:
           mkdir -p /home/polkppfc/temanten.polka.biz.id/storage/logs
           chmod -R 775 /home/polkppfc/temanten.polka.biz.id/storage
         SCRIPT_AFTER: |
-          if [ -d home/polkppfc/temanten.polka.biz.id ]; then
-            rsync -a home/polkppfc/temanten.polka.biz.id/ ./ && rm -rf home
-            echo "[OK] Fixed phantom path from prior deploy"
-          fi
+          cd /home/polkppfc/temanten.polka.biz.id/
           composer dump-autoload --no-dev -o || true
           php artisan view:clear || true
           php artisan cache:clear || true
           php artisan config:clear || true
           php artisan route:clear || true
           php artisan optimize || true
+
+    - name: 🔧 Fix phantom path (cPanel SSH chroot bug workaround)
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SSH_PORT || 22 }}
+        script: |
+          set -e
+          PHANTOM="/home/polkppfc/temanten.polka.biz.id/home/polkppfc/temanten.polka.biz.id"
+          if [ -d "$PHANTOM" ]; then
+            rsync -a "$PHANTOM/" /home/polkppfc/temanten.polka.biz.id/
+            rm -rf /home/polkppfc/temanten.polka.biz.id/home
+            echo "[OK] Moved phantom path content to addon root"
+          else
+            echo "[SKIP] No phantom path found"
+          fi
 
     - name: 🧹 Clear Laravel caches via SSH
       uses: appleboy/ssh-action@v1
@@ -50,9 +65,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SSH_PORT || 22 }}
         script: |
-          if [ -d home/polkppfc/temanten.polka.biz.id ]; then
-            rsync -a home/polkppfc/temanten.polka.biz.id/ ./ && rm -rf home
-          fi
+          cd /home/polkppfc/temanten.polka.biz.id/
           php artisan view:clear
           php artisan cache:clear
           php artisan config:clear
