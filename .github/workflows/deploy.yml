@@ -14,26 +14,23 @@ jobs:
     - name: 🚚 Mengambil kode terbaru
       uses: actions/checkout@v4
 
-    - name: 🚀 Upload ke cPanel
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+    - name: 🚀 Upload ke cPanel (via SSH rsync)
+      uses: easingthemes/ssh-deploy@v4.1.7
       with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        server-dir: /home/polkppfc/temanten.polka.biz.id/
-        protocol: ftps
-        security: loose
-        port: 21
-        exclude: |
-          **/.git*
-          **/node_modules/**
-          .env
-          storage/framework/cache/**
-          storage/framework/sessions/**
-          storage/framework/views/**
-          storage/logs/**
-          storage/app/private/**
-          bootstrap/cache/**
+        SSH_HOST: ${{ secrets.SSH_HOST }}
+        SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+        SSH_KEY: ${{ secrets.SSH_KEY }}
+        SSH_PORT: ${{ secrets.SSH_PORT }}
+        SOURCE: .
+        TARGET: /home/polkppfc/temanten.polka.biz.id/
+        EXCLUDE: "/.git, /node_modules, /storage/framework/cache, /storage/framework/sessions, /storage/framework/views, /storage/logs, /storage/app/private, /bootstrap/cache, /.env"
+        SCRIPT_AFTER: |
+          cd /home/polkppfc/temanten.polka.biz.id/
+          php artisan view:clear || true
+          php artisan cache:clear || true
+          php artisan config:clear || true
+          php artisan route:clear || true
+          php artisan optimize || true
 
     - name: 🧹 Clear Laravel caches via SSH
       uses: appleboy/ssh-action@v1
