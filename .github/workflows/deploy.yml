@@ -22,16 +22,15 @@ jobs:
         REMOTE_USER: ${{ secrets.SSH_USERNAME }}
         REMOTE_PORT: ${{ secrets.SSH_PORT }}
         SOURCE: .
-        TARGET: /home/polkppfc/temanten.polka.biz.id/
+        TARGET: ./
         EXCLUDE: "/.git, /node_modules, /storage/framework/cache, /storage/framework/sessions, /storage/framework/views, /storage/logs, /storage/app/private, /.env"
         SCRIPT_BEFORE: |
-          mkdir -p /home/polkppfc/temanten.polka.biz.id/bootstrap/cache
-          chmod 775 /home/polkppfc/temanten.polka.biz.id/bootstrap/cache
-          mkdir -p /home/polkppfc/temanten.polka.biz.id/storage/framework/{cache,sessions,views}
-          mkdir -p /home/polkppfc/temanten.polka.biz.id/storage/logs
-          chmod -R 775 /home/polkppfc/temanten.polka.biz.id/storage
+          mkdir -p bootstrap/cache
+          chmod 775 bootstrap/cache
+          mkdir -p storage/framework/{cache,sessions,views}
+          mkdir -p storage/logs
+          chmod -R 775 storage
         SCRIPT_AFTER: |
-          cd /home/polkppfc/temanten.polka.biz.id/
           composer dump-autoload --no-dev -o || true
           php artisan view:clear || true
           php artisan cache:clear || true
@@ -47,7 +46,6 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SSH_PORT || 22 }}
         script: |
-          cd /home/polkppfc/temanten.polka.biz.id/
           php artisan view:clear
           php artisan cache:clear
           php artisan config:clear
