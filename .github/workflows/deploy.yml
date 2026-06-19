@@ -17,10 +17,10 @@ jobs:
     - name: 🚀 Upload ke cPanel (via SSH rsync)
       uses: easingthemes/ssh-deploy@v4.1.7
       with:
-        SSH_HOST: ${{ secrets.SSH_HOST }}
-        SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-        SSH_KEY: ${{ secrets.SSH_KEY }}
-        SSH_PORT: ${{ secrets.SSH_PORT }}
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+        REMOTE_HOST: ${{ secrets.SSH_HOST }}
+        REMOTE_USER: ${{ secrets.SSH_USERNAME }}
+        REMOTE_PORT: ${{ secrets.SSH_PORT }}
         SOURCE: .
         TARGET: /home/polkppfc/temanten.polka.biz.id/
         EXCLUDE: "/.git, /node_modules, /storage/framework/cache, /storage/framework/sessions, /storage/framework/views, /storage/logs, /storage/app/private, /bootstrap/cache, /.env"
