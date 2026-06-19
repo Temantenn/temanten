@@ -702,7 +702,7 @@
         <div class="text-center mb-8 anim-in">
             <span class="vol-ribbon inline-flex">Proses · 4 Langkah</span>
             <h1 class="font-display text-3xl md:text-5xl font-semibold italic text-[color:var(--ink)] mt-3 leading-[1.05] tracking-tight">
-                Langkah Terakhir Menuju<br>
+                <span x-text="['Langkah Pertama','Lengkapi Data','Info Acara','Langkah Terakhir'][step - 1] || 'Menuju'"></span> Menuju<br>
                 <span class="text-[color:var(--brown-light)]">Undangan Impianmu</span>
             </h1>
             <p class="mt-3 text-sm md:text-base text-[color:var(--brown)] max-w-2xl mx-auto leading-relaxed">
@@ -774,7 +774,7 @@
                 </header>
 
                 <div class="p-6 md:p-10 relative">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         @foreach($themes as $theme)
                         <div class="relative">
                             <input type="radio" name="theme_id" id="theme_{{ $theme->id }}" value="{{ $theme->id }}"
