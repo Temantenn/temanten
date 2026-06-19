@@ -33,7 +33,7 @@ jobs:
         SCRIPT_AFTER: |
           if [ -d home/polkppfc/temanten.polka.biz.id ]; then
             rsync -a home/polkppfc/temanten.polka.biz.id/ ./ && rm -rf home
-            echo "✓ Fixed phantom path from prior deploy"
+            echo "[OK] Fixed phantom path from prior deploy"
           fi
           composer dump-autoload --no-dev -o || true
           php artisan view:clear || true
