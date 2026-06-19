@@ -13,6 +13,12 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 // Register the Composer autoloader...
 require __DIR__.'/../vendor/autoload.php';
 
+// Load helpers (in case composer autoloader wasn't regenerated after deploy)
+$helpersPath = __DIR__.'/../app/helpers.php';
+if (file_exists($helpersPath)) {
+    require_once $helpersPath;
+}
+
 // Bootstrap Laravel and handle the request...
 /** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
