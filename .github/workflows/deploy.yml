@@ -12,6 +12,18 @@ jobs:
     - name: 🚚 Checkout kode terbaru
       uses: actions/checkout@v4
 
+    - name: 📦 Setup Node + install deps
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: 🔨 Build Vite assets (Alpine.js + theme CSS bundles)
+      run: |
+        npm ci --no-audit --no-fund
+        npm run build
+        echo "[OK] Vite build done — public/build/ populated"
+
     - name: 🚀 Upload via rsync (direct on runner)
       env:
         SSH_KEY: ${{ secrets.SSH_KEY }}
