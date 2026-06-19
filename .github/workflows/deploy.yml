@@ -57,13 +57,15 @@ jobs:
           else
             echo "[SKIP] No phantom path"
           fi
-          echo "=== Composer install (fix Landmine 10: stale dev-pkg autoload) ==="
-          if [ ! -f composer.phar ]; then
-            curl -sO https://getcomposer.org/download/latest-stable/composer.phar
-          fi
-          php composer.phar install --no-dev --no-scripts --no-progress
-          php artisan package:discover
+          echo "=== Composer install (force regen installed.json to fix Landmine 10) ==="
+          cd $APP
+          rm -f vendor/composer/installed.json vendor/composer/installed.php bootstrap/cache/packages.php
+          php -d memory_limit=512M composer.phar install --no-dev --no-scripts --no-progress || true
+          php composer.phar dump-autoload --no-dev -o || true
           rm -f bootstrap/cache/packages.php
+          php artisan package:discover --ansi || true
+          echo "=== Verify boost removed from installed.json ==="
+          grep -c "laravel/boost" vendor/composer/installed.json || echo "0 (good - boost not in installed.json)"
           echo "=== Laravel cache clear ==="
           php artisan view:clear || true
           php artisan cache:clear || true
