@@ -49,7 +49,41 @@ class InvitationController extends Controller
             abort(404, "File tema tidak ditemukan: $viewPath");
         }
 
-        return view($viewPath, compact('invitation', 'guest', 'comments'));
+        $content = view($viewPath, compact('invitation', 'guest', 'comments'))->render();
+
+        // Inject QR Check-in overlay untuk tamu yang buka invitation via ?to=slug
+        // Tanpa edit 16 theme files — append sebelum </body> atau </html>
+        if ($guest && $guest->checkin_token) {
+            $checkinUrl = route('checkin.show', [
+                'invitation' => $invitation->slug,
+                'token'      => $guest->checkin_token,
+            ]);
+
+            $overlay = view('partials.checkin_overlay', [
+                'guest'      => $guest,
+                'checkinUrl' => $checkinUrl,
+            ])->render();
+
+            // Cari tag penutup terakhir: </body> atau </html>
+            $bodyPos = strripos($content, '</body>');
+            $htmlPos = strripos($content, '</html>');
+            $injectPos = false;
+
+            if ($bodyPos !== false) {
+                $injectPos = $bodyPos;
+            } elseif ($htmlPos !== false) {
+                $injectPos = $htmlPos;
+            }
+
+            if ($injectPos !== false) {
+                $content = substr($content, 0, $injectPos) . $overlay . substr($content, $injectPos);
+            } else {
+                // Fallback: append di akhir (Pixel Adventure tanpa closing tags)
+                $content .= $overlay;
+            }
+        }
+
+        return response($content);
     }
 
     public function demo($themeSlug)

@@ -82,7 +82,9 @@
                 $hadir = $tamuCol->where('rsvp_status','hadir')->count();
                 $tidakHadir = $tamuCol->whereIn('rsvp_status',['tidak_hadir','ragu'])->count();
                 $pending = $tamuCol->whereIn('rsvp_status',['pending',null])->count();
+                $checkedIn = $tamuCol->whereNotNull('checked_in_at')->count();
                 $konfirmasiPct = $total > 0 ? round($hadir/$total*100) : 0;
+                $checkinPct = $total > 0 ? round($checkedIn/$total*100) : 0;
             @endphp
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {{-- Countdown --}}
@@ -130,7 +132,7 @@
                     <div class="grid grid-cols-3 gap-2 text-center">
                         <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2">
                             <div class="text-emerald-700 dark:text-emerald-400 font-bold text-lg">{{ $hadir }}</div>
-                            <div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Hadir</div>
+                            <div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">RSVP Hadir</div>
                         </div>
                         <div class="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2">
                             <div class="text-amber-700 dark:text-amber-400 font-bold text-lg">{{ $pending }}</div>
@@ -139,6 +141,19 @@
                         <div class="bg-rose-50 dark:bg-rose-900/20 rounded-lg p-2">
                             <div class="text-rose-700 dark:text-rose-400 font-bold text-lg">{{ $tidakHadir }}</div>
                             <div class="text-xs text-rose-600 dark:text-rose-400 font-semibold">Tidak Hadir</div>
+                        </div>
+                    </div>
+                    {{-- Check-in progress (separate, scanner-based) --}}
+                    <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                QR Check-in
+                            </span>
+                            <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">{{ $checkedIn }} / {{ $total }} ({{ $checkinPct }}%)</span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-full transition-all duration-700" style="width: {{ $checkinPct }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -202,6 +217,7 @@
                             <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tamu</th>
                             <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell">WhatsApp</th>
                             <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">RSVP</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Check-in</th>
                             <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
@@ -247,6 +263,19 @@
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800">
                                         <span class="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></span> Pending
                                     </span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                @if($guest->checked_in_at)
+                                    <div class="inline-flex flex-col">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                                            <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                                            Check-in
+                                        </span>
+                                        <span class="text-[10px] text-gray-500 mt-0.5">{{ $guest->checked_in_at->format('H:i') }} WIB · {{ $guest->checked_in_at->translatedFormat('d M') }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-xs text-gray-400">—</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3">
@@ -390,6 +419,10 @@
                             <a href="{{ route('client.exportGuests', $invitation->id) }}" class="flex items-center justify-center gap-2 text-sm text-green-600 dark:text-green-400 font-semibold hover:text-green-700 transition">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4 8l-4-4m0 0l4-4m-4 4h12"/></svg>
                                 Export Daftar Hadir (CSV)
+                            </a>
+                            <a href="{{ route('client.printQrCards') }}" target="_blank" class="flex items-center justify-center gap-2 text-sm text-indigo-600 dark:text-indigo-400 font-semibold hover:text-indigo-700 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                Cetak QR Check-in Tamu
                             </a>
                             @endif
                         </div>

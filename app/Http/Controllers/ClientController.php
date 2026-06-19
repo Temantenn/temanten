@@ -35,6 +35,7 @@ class ClientController extends Controller
         $hadir = 0;
         $tidakHadir = 0;
         $pending = 0;
+        $checkedIn = 0;
 
         if ($invitation) {
             $guests = $invitation->guests()->orderBy('created_at', 'desc')->get();
@@ -42,6 +43,7 @@ class ClientController extends Controller
             $hadir = $guests->where('rsvp_status', 'hadir')->count();
             $tidakHadir = $guests->where('rsvp_status', 'tidak_hadir')->count();
             $pending = $guests->whereIn('rsvp_status', ['pending', null])->count();
+            $checkedIn = $guests->whereNotNull('checked_in_at')->count();
         }
 
         return view('client.dashboard', compact(
@@ -50,7 +52,8 @@ class ClientController extends Controller
             'totalGuests',
             'hadir',
             'tidakHadir',
-            'pending'
+            'pending',
+            'checkedIn'
         ));
     }
 
@@ -284,6 +287,31 @@ class ClientController extends Controller
         }
 
         return response($csv, 200, $this->csvDownloadHeaders($filename));
+    }
+
+    /**
+     * Halaman print QR cards untuk semua tamu.
+     * Owner bisa Ctrl+P → print, potong, distribusi ke tamu (fisik) atau share via WA.
+     * Setiap kartu: nama tamu + QR code unik + kategori.
+     */
+    public function printQrCards(Request $request)
+    {
+        $user = Auth::user();
+        $invitation = $user->invitations()->first();
+
+        if (!$invitation) {
+            return redirect()->route('client.dashboard')
+                ->with('warning', 'Anda belum memiliki undangan.');
+        }
+
+        Gate::authorize('view', $invitation);
+
+        $guests = $invitation->guests()
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get();
+
+        return view('client.print_qrcards', compact('invitation', 'guests'));
     }
 
     protected function buildCsv(array $columns, iterable $rows): string

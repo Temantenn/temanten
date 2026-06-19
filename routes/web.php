@@ -9,6 +9,7 @@ use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\WilayahController;
+use App\Http\Controllers\CheckinController;
 
 Route::get('/storage/invitations/{uuid}/{filename}', function ($uuid, $filename) {
     // Validate uuid format to prevent path traversal
@@ -51,6 +52,13 @@ Route::get('/order-success/{order_number}', [OrderController::class, 'success'])
 
 Route::get('/demo/{theme}', [InvitationController::class, 'demo'])->name('demo.show');
 Route::get('/undangan/{slug}', [InvitationController::class, 'show'])->name('invitation.show');
+
+// QR Check-in — public endpoint untuk staff venue scan QR tamu
+// Throttle 30/menit per IP untuk cegah spam scan
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/check-in/{invitation}/{token}', [CheckinController::class, 'show'])->name('checkin.show');
+    Route::post('/check-in/{invitation}/{token}', [CheckinController::class, 'confirm'])->name('checkin.confirm');
+});
 
 Route::middleware('throttle:10,1')->group(function () {
     Route::post('/kirim-ucapan', [InvitationController::class, 'kirimUcapan'])->name('kirim.ucapan');
@@ -102,6 +110,7 @@ Route::middleware(['auth'])->prefix('client')->group(function () {
     Route::post('/import-guests', [ClientController::class, 'importGuests'])->name('client.importGuests');
     Route::get('/download-template', [ClientController::class, 'downloadTemplate'])->name('client.downloadTemplate');
     Route::get('/export-guests/{invitation}', [ClientController::class, 'exportGuests'])->name('client.exportGuests');
+    Route::get('/print-qr-cards', [ClientController::class, 'printQrCards'])->name('client.printQrCards');
 
     Route::post('/store-guest', [ClientController::class, 'storeGuest'])->name('client.storeGuest');
     Route::delete('/delete-guest/{guest}', [ClientController::class, 'deleteGuest'])->name('client.deleteGuest');

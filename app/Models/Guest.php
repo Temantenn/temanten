@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Guest extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -16,9 +17,15 @@ class Guest extends Model
         'category',
         'address',
         'slug',
+        'checkin_token',
         'rsvp_status',
         'jumlah_tamu',
         'comment',
+        'checked_in_at',
+    ];
+
+    protected $casts = [
+        'checked_in_at' => 'datetime',
     ];
 
     protected static function booted()
@@ -27,11 +34,46 @@ class Guest extends Model
             if (empty($model->slug)) {
                 $model->slug = Str::slug($model->name) . '-' . Str::random(8);
             }
+            if (empty($model->checkin_token)) {
+                // Loop retry sampai dapat unique token (collision harusnya sangat jarang)
+                do {
+                    $token = Str::random(48);
+                } while (static::where('checkin_token', $token)->exists());
+                $model->checkin_token = $token;
+            }
         });
     }
 
     public function invitation()
     {
         return $this->belongsTo(Invitation::class);
+    }
+
+    /**
+     * URL yang di-encode ke QR code. Staff scan → buka URL ini di browser → konfirmasi hadir.
+     */
+    public function getCheckinUrlAttribute(): string
+    {
+        return route('checkin.show', [
+            'invitation' => $this->invitation->slug,
+            'token'      => $this->checkin_token,
+        ]);
+    }
+
+    public function getIsCheckedInAttribute(): bool
+    {
+        return $this->checked_in_at !== null;
+    }
+
+    /**
+     * Mark guest as checked-in. Idempotent — kalau sudah pernah, return existing timestamp.
+     */
+    public function markCheckedIn(): bool
+    {
+        if ($this->checked_in_at) {
+            return false;
+        }
+        $this->checked_in_at = now();
+        return $this->save();
     }
 }
