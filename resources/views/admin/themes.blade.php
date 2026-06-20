@@ -223,38 +223,36 @@
                     @endforeach
                 </div>
 
-                {{-- Per-page selector + Pagination --}}
-                @if($themes->hasPages() || $perPage < $totalCount)
-                    <div class="px-6 py-3 border-t border-gray-100 dark:border-slate-700/50 space-y-3">
-                        {{-- Per-page selector --}}
-                        <form method="GET" action="{{ url()->current() }}" id="per-page-form"
-                              class="flex items-center justify-end gap-2 text-xs"
-                              style="color: var(--dashboard-muted);">
-                            @foreach(request()->except(['per_page', 'page']) as $k => $v)
-                                <input type="hidden" name="{{ $k }}" value="{{ $v }}">
-                            @endforeach
-                            <label for="per_page_select" class="font-semibold">Tampilkan</label>
-                            <div class="relative">
-                                <select id="per_page_select" name="per_page" onchange="document.getElementById('per-page-form').submit()"
-                                        class="appearance-none pr-7 pl-2.5 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:outline-none focus:border-indigo-500 cursor-pointer"
-                                        style="color: var(--dashboard-text);">
-                                    <option value="8"  {{ $perPage === 8  ? 'selected' : '' }}>8 / halaman</option>
-                                    <option value="16" {{ $perPage === 16 ? 'selected' : '' }}>16 / halaman</option>
-                                    <option value="24" {{ $perPage === 24 ? 'selected' : '' }}>24 / halaman</option>
-                                </select>
-                                <svg class="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
-                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                                </svg>
-                            </div>
-                        </form>
+                {{-- Per-page selector (always visible) + Pagination --}}
+                <div class="px-6 py-3 border-t border-gray-100 dark:border-slate-700/50 space-y-3">
+                    {{-- Per-page selector --}}
+                    <form method="GET" action="{{ url()->current() }}" id="per-page-form"
+                          class="flex items-center justify-end gap-2 text-xs"
+                          style="color: var(--dashboard-muted);">
+                        @foreach(request()->except(['per_page', 'page']) as $k => $v)
+                            <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                        @endforeach
+                        <label for="per_page_select" class="font-semibold">Tampilkan</label>
+                        <div class="relative">
+                            <select id="per_page_select" name="per_page" onchange="document.getElementById('per-page-form').submit()"
+                                    class="appearance-none pr-7 pl-2.5 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                                    style="color: var(--dashboard-text);">
+                                <option value="8"  {{ $perPage === 8  ? 'selected' : '' }}>8 / halaman</option>
+                                <option value="16" {{ $perPage === 16 ? 'selected' : '' }}>16 / halaman</option>
+                                <option value="24" {{ $perPage === 24 ? 'selected' : '' }}>24 / halaman</option>
+                            </select>
+                            <svg class="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </form>
 
-                        {{-- Pagination links (custom admin-tailwind view) --}}
-                        @if($themes->hasPages())
-                            {{ $themes->links('vendor.pagination.admin-tailwind') }}
-                        @endif
-                    </div>
-                @endif
+                    {{-- Pagination links (custom admin-tailwind view) --}}
+                    @if($themes->hasPages())
+                        {{ $themes->links('vendor.pagination.admin-tailwind') }}
+                    @endif
+                </div>
             </div>
 
             {{-- Summary stats (compact) --}}
