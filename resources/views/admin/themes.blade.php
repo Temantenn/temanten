@@ -96,8 +96,12 @@
                         <div class="relative rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700/50 shadow-sm hover:shadow-xl transition-all duration-300"
                              style="color: var(--dashboard-text);">
 
-                            {{-- Thumbnail --}}
-                            <div class="relative overflow-hidden bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 aspect-[3/4]">
+                            {{-- Thumbnail (varied aspect ratios for Pinterest feel) --}}
+                            @php
+                                $ratios = ['aspect-[3/4]', 'aspect-[4/5]', 'aspect-[1/1]', 'aspect-[2/3]', 'aspect-[5/7]'];
+                                $aspectClass = $ratios[$theme->id % count($ratios)];
+                            @endphp
+                            <div class="relative overflow-hidden bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 {{ $aspectClass }}">
                                 @if($thumbExists)
                                     <img src="{{ asset('assets/thumbnail/' . $thumbFile) }}"
                                          alt="{{ $theme->name }}"
