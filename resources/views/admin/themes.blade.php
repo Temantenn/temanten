@@ -5,11 +5,11 @@
                 <p class="text-[11px] font-semibold uppercase tracking-[0.18em]"
                    style="color: var(--dashboard-muted);">Admin Console</p>
                 <h1 class="text-[22px] font-semibold tracking-[-0.4px] mt-1"
-                    style="color: var(--dashboard-text);">
+                   style="color: var(--dashboard-text);">
                     🎨 Manajemen Harga Tema
                 </h1>
                 <p class="text-[13px] mt-0.5" style="color: var(--dashboard-muted);">
-                    Atur harga normal &amp; promo. {{ $totalCount }} tema · {{ $customCount }} harga khusus
+                    Atur harga normal &amp; promo untuk setiap tema. {{ $totalCount }} tema · {{ $customCount }} harga khusus
                 </p>
             </div>
 
@@ -35,30 +35,7 @@
         </div>
     </x-slot>
 
-    <div class="py-6" x-data="{
-            openId: null,
-            themeName: '',
-            themeId: 0,
-            price: '',
-            promo: '',
-            defaultPrice: {{ (int) $defaultPrice }},
-            hasCustom: false,
-            open(id, name, price, promo) {
-                this.openId = id;
-                this.themeName = name;
-                this.price = price;
-                this.promo = promo;
-                this.hasCustom = price !== '' && price !== null;
-                $nextTick(() => {
-                    const form = document.getElementById('edit-modal-form');
-                    if (form) form.action = '/admin/themes/' + id + '/price';
-                });
-            }
-         }"
-         @keydown.escape.window="openId = null">
-
-        <style>[x-cloak]{display:none!important}</style>
-
+    <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
             {{-- Flash messages --}}
@@ -84,97 +61,175 @@
                 </div>
             @endif
 
-            {{-- ── PINTEREST-STYLE MASONRY GRID ─────────────────────── --}}
-            <div class="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-4">
-                @foreach($themes as $theme)
-                    @php
-                        $hasCustom = !is_null($theme->price);
-                        $thumbFile = $theme->thumbnail ?: ($theme->slug . '.webp');
-                        $thumbExists = file_exists(public_path('assets/thumbnail/' . $thumbFile));
-                    @endphp
-                    <div class="break-inside-avoid mb-4 group">
-                        <div class="relative rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700/50 shadow-sm hover:shadow-xl transition-all duration-300"
-                             style="color: var(--dashboard-text);">
+            {{-- ── LIST HARGA PER TEMA ────────────────────────────── --}}
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700/50 overflow-hidden">
 
-                            {{-- Thumbnail (varied aspect ratios for Pinterest feel) --}}
-                            @php
-                                $ratios = ['aspect-[3/4]', 'aspect-[4/5]', 'aspect-[1/1]', 'aspect-[2/3]', 'aspect-[5/7]'];
-                                $aspectClass = $ratios[$theme->id % count($ratios)];
-                            @endphp
-                            <div class="relative overflow-hidden bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 {{ $aspectClass }}">
-                                @if($thumbExists)
-                                    <img src="{{ asset('assets/thumbnail/' . $thumbFile) }}"
-                                         alt="{{ $theme->name }}"
-                                         loading="lazy"
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                                @else
-                                    <div class="w-full h-full flex items-center justify-center">
-                                        <span class="text-3xl font-extrabold text-indigo-400 dark:text-indigo-500 tracking-tighter">
-                                            {{ substr($theme->name, 0, 2) }}
-                                        </span>
+                {{-- Table header (desktop) --}}
+                <div class="hidden md:grid grid-cols-12 gap-4 px-6 py-3 text-[10px] font-bold tracking-wider uppercase border-b border-gray-100 dark:border-slate-700/50"
+                     style="color: var(--dashboard-muted);">
+                    <div class="col-span-5">Tema</div>
+                    <div class="col-span-3">Harga Normal</div>
+                    <div class="col-span-3">Harga Promo</div>
+                    <div class="col-span-1 text-right">Aksi</div>
+                </div>
+
+                <div class="divide-y divide-gray-50 dark:divide-slate-700/50">
+                    @foreach($themes as $theme)
+                        @php
+                            $hasCustom = !is_null($theme->price);
+                            $thumbFile = $theme->thumbnail ?: ($theme->slug . '.webp');
+                            $thumbExists = file_exists(public_path('assets/thumbnail/' . $thumbFile));
+                        @endphp
+                        <div class="px-4 sm:px-6 py-4 hover:bg-gray-50/50 dark:hover:bg-slate-700/20 transition-colors">
+
+                            {{-- Desktop: grid layout --}}
+                            <div class="hidden md:grid grid-cols-12 gap-4 items-center">
+                                {{-- Tema --}}
+                                <div class="col-span-5 flex items-center gap-3 min-w-0">
+                                    <div class="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 shadow-sm border border-gray-100 dark:border-slate-600 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50">
+                                        @if($thumbExists)
+                                            <img src="{{ asset('assets/thumbnail/' . $thumbFile) }}" alt="{{ $theme->name }}" class="w-full h-full object-cover">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center text-xs font-bold text-indigo-500 dark:text-indigo-300">{{ substr($theme->name,0,2) }}</div>
+                                        @endif
                                     </div>
-                                @endif
-
-                                {{-- Badges (top-left) --}}
-                                <div class="absolute top-2 left-2 flex flex-col gap-1 items-start">
-                                    @if($theme->has_promo)
-                                        <span class="bg-amber-500/95 backdrop-blur-sm text-white text-[10px] font-extrabold px-2 py-1 rounded-md uppercase tracking-wider shadow-lg">
-                                            ⚡ Promo
-                                        </span>
-                                    @elseif($hasCustom)
-                                        <span class="bg-rose-500/95 backdrop-blur-sm text-white text-[10px] font-extrabold px-2 py-1 rounded-md uppercase tracking-wider shadow-lg">
-                                            Custom
-                                        </span>
-                                    @else
-                                        <span class="bg-slate-900/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">
-                                            Default
-                                        </span>
-                                    @endif
+                                    <div class="min-w-0 flex-1">
+                                        <h3 class="font-bold text-sm leading-tight truncate" style="color: var(--dashboard-text);">{{ $theme->name }}</h3>
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            @if($theme->has_promo)
+                                                <span class="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Promo</span>
+                                                <span class="text-[11px] line-through font-semibold" style="color: var(--dashboard-muted);">{{ $theme->formatted_original_price }}</span>
+                                                <span class="text-[11px] font-extrabold text-amber-600 dark:text-amber-400">{{ $theme->formatted_price }}</span>
+                                            @elseif($hasCustom)
+                                                <span class="bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Custom</span>
+                                                <span class="text-[11px] font-bold" style="color: var(--dashboard-text);">{{ $theme->formatted_price }}</span>
+                                            @else
+                                                <span class="bg-gray-100 dark:bg-slate-700 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider" style="color: var(--dashboard-muted);">Default</span>
+                                                <span class="text-[11px] font-semibold" style="color: var(--dashboard-muted);">{{ $theme->formatted_price }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {{-- Edit button (top-right) --}}
-                                <button type="button"
-                                        @click="open({{ $theme->id }}, @js($theme->name), @js((string)($theme->price ?? '')), @js((string)($theme->promo_price ?? '')))"
-                                        class="absolute top-2 right-2 w-9 h-9 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-lg flex items-center justify-center transition opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                        title="Edit harga">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                    </svg>
-                                </button>
+                                {{-- Harga Normal --}}
+                                <div class="col-span-3">
+                                    <form action="{{ route('admin.themes.price', $theme->id) }}" method="POST" id="form-{{ $theme->id }}-price">
+                                        @csrf
+                                        <div class="flex rounded-lg overflow-hidden border border-gray-200 dark:border-slate-600 focus-within:border-indigo-500 dark:focus-within:border-indigo-400 transition-all">
+                                            <span class="inline-flex items-center px-2 bg-gray-50 dark:bg-slate-700/50 text-[11px] font-bold border-r border-gray-200 dark:border-slate-600" style="color: var(--dashboard-muted);">Rp</span>
+                                            <input type="number" name="price" value="{{ $theme->price ?? '' }}" min="0" max="99999999" step="1000"
+                                                   placeholder="{{ number_format($defaultPrice, 0, ',', '.') }}"
+                                                   class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none bg-white dark:bg-slate-800" style="color: var(--dashboard-text);">
+                                        </div>
+                                        <input type="hidden" name="promo_price" value="{{ $theme->promo_price ?? '' }}">
+                                    </form>
+                                </div>
+
+                                {{-- Harga Promo --}}
+                                <div class="col-span-3">
+                                    <form action="{{ route('admin.themes.price', $theme->id) }}" method="POST" id="form-{{ $theme->id }}-promo">
+                                        @csrf
+                                        <input type="hidden" name="price" value="{{ $theme->price ?? '' }}">
+                                        <div class="flex rounded-lg overflow-hidden border border-amber-200 dark:border-amber-500/30 focus-within:border-amber-500 dark:focus-within:border-amber-400 transition-all">
+                                            <span class="inline-flex items-center px-2 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-bold border-r border-amber-200 dark:border-amber-500/30">Rp</span>
+                                            <input type="number" name="promo_price" value="{{ $theme->promo_price ?? '' }}" min="0" max="99999999" step="1000"
+                                                   placeholder="Opsional"
+                                                   class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none bg-amber-50/30 dark:bg-slate-800" style="color: var(--dashboard-text);">
+                                        </div>
+                                    </form>
+                                </div>
+
+                                {{-- Aksi --}}
+                                <div class="col-span-1 flex flex-col items-stretch gap-1">
+                                    <button type="submit" form="form-{{ $theme->id }}-price"
+                                            class="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold px-2 py-1.5 rounded-md transition shadow-sm">
+                                        Simpan
+                                    </button>
+                                    @if($hasCustom)
+                                        <button type="submit" form="form-{{ $theme->id }}-reset"
+                                                class="bg-gray-100 dark:bg-slate-700/50 hover:bg-red-50 dark:hover:bg-red-500/10 text-[11px] font-semibold px-2 py-1.5 rounded-md transition border border-gray-200 dark:border-slate-600 hover:border-red-200 dark:hover:border-red-500/30"
+                                                style="color: var(--dashboard-muted);"
+                                                onclick="return confirm('Reset {{ $theme->name }} ke harga default?')">
+                                            Reset
+                                        </button>
+                                        <form id="form-{{ $theme->id }}-reset" action="{{ route('admin.themes.price', $theme->id) }}" method="POST" class="hidden">
+                                            @csrf
+                                            <input type="hidden" name="price" value="">
+                                            <input type="hidden" name="promo_price" value="">
+                                        </form>
+                                    @endif
+                                </div>
                             </div>
 
-                            {{-- Footer info --}}
-                            <div class="p-3">
-                                <h3 class="font-bold text-sm leading-tight truncate">
-                                    {{ $theme->name }}
-                                </h3>
-                                <div class="flex items-baseline gap-1.5 mt-1">
-                                    @if($theme->has_promo)
-                                        <span class="text-[10px] line-through font-semibold"
-                                              style="color: var(--dashboard-muted);">
-                                            {{ $theme->formatted_original_price }}
-                                        </span>
-                                        <span class="text-sm font-extrabold text-amber-600 dark:text-amber-400">
-                                            {{ $theme->formatted_price }}
-                                        </span>
-                                    @else
-                                        <span class="text-sm font-extrabold">
-                                            {{ $theme->formatted_price }}
-                                        </span>
-                                    @endif
+                            {{-- Mobile: stacked layout --}}
+                            <div class="md:hidden space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 shadow-sm border border-gray-100 dark:border-slate-600 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50">
+                                        @if($thumbExists)
+                                            <img src="{{ asset('assets/thumbnail/' . $thumbFile) }}" alt="{{ $theme->name }}" class="w-full h-full object-cover">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center text-xs font-bold text-indigo-500 dark:text-indigo-300">{{ substr($theme->name,0,2) }}</div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-bold text-sm leading-tight truncate" style="color: var(--dashboard-text);">{{ $theme->name }}</h3>
+                                        <div class="flex items-center gap-1.5 mt-0.5">
+                                            @if($theme->has_promo)
+                                                <span class="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Promo</span>
+                                            @elseif($hasCustom)
+                                                <span class="bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Custom</span>
+                                            @else
+                                                <span class="bg-gray-100 dark:bg-slate-700 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider" style="color: var(--dashboard-muted);">Default</span>
+                                            @endif
+                                            <span class="text-[11px] font-bold" style="color: var(--dashboard-text);">{{ $theme->formatted_price }}</span>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <form action="{{ route('admin.themes.price', $theme->id) }}" method="POST" class="space-y-2">
+                                    @csrf
+                                    <div>
+                                        <label class="text-[10px] uppercase font-bold tracking-wider block mb-1" style="color: var(--dashboard-muted);">Harga Normal</label>
+                                        <div class="flex rounded-lg overflow-hidden border border-gray-200 dark:border-slate-600 focus-within:border-indigo-500 dark:focus-within:border-indigo-400 transition-all">
+                                            <span class="inline-flex items-center px-2 bg-gray-50 dark:bg-slate-700/50 text-[11px] font-bold border-r border-gray-200 dark:border-slate-600" style="color: var(--dashboard-muted);">Rp</span>
+                                            <input type="number" name="price" value="{{ $theme->price ?? '' }}" min="0" max="99999999" step="1000"
+                                                   placeholder="{{ number_format($defaultPrice, 0, ',', '.') }}"
+                                                   class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none bg-white dark:bg-slate-800" style="color: var(--dashboard-text);">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] uppercase font-bold tracking-wider text-amber-600 dark:text-amber-400 block mb-1">Harga Promo <span class="text-amber-500/60 normal-case font-medium">(opsional)</span></label>
+                                        <div class="flex rounded-lg overflow-hidden border border-amber-200 dark:border-amber-500/30 focus-within:border-amber-500 dark:focus-within:border-amber-400 transition-all">
+                                            <span class="inline-flex items-center px-2 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-bold border-r border-amber-200 dark:border-amber-500/30">Rp</span>
+                                            <input type="number" name="promo_price" value="{{ $theme->promo_price ?? '' }}" min="0" max="99999999" step="1000"
+                                                   placeholder="Opsional"
+                                                   class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none bg-amber-50/30 dark:bg-slate-800" style="color: var(--dashboard-text);">
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow-sm">Simpan</button>
+                                        @if($hasCustom)
+                                            <button type="submit" form="form-{{ $theme->id }}-reset-m" class="bg-gray-100 dark:bg-slate-700/50 text-xs font-semibold px-3 py-2 rounded-lg transition border border-gray-200 dark:border-slate-600" style="color: var(--dashboard-muted);">Reset</button>
+                                            <form id="form-{{ $theme->id }}-reset-m" action="{{ route('admin.themes.price', $theme->id) }}" method="POST" class="hidden">
+                                                @csrf
+                                                <input type="hidden" name="price" value="">
+                                                <input type="hidden" name="promo_price" value="">
+                                            </form>
+                                        @endif
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                    </div>
-                @endforeach
-            </div>
-
-            {{-- Pagination --}}
-            @if($themes->hasPages())
-                <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700/50 px-4 py-3">
-                    {{ $themes->links('vendor.pagination.admin-tailwind') }}
+                    @endforeach
                 </div>
-            @endif
+
+                {{-- Pagination --}}
+                @if($themes->hasPages())
+                    <div class="px-6 py-3 border-t border-gray-100 dark:border-slate-700/50">
+                        {{ $themes->links('vendor.pagination.admin-tailwind') }}
+                    </div>
+                @endif
+            </div>
 
             {{-- Summary stats (compact) --}}
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -194,82 +249,6 @@
                     <div class="text-sm font-extrabold text-purple-600 dark:text-purple-400 tabular-nums mt-1">Rp {{ number_format($maxPrice, 0, ',', '.') }}</div>
                     <div class="text-[10px] font-bold tracking-wider uppercase mt-1" style="color: var(--dashboard-muted);">Tertinggi</div>
                 </div>
-            </div>
-        </div>
-
-        {{-- ── EDIT MODAL ─────────────────────────────────────────── --}}
-        <div x-show="openId !== null"
-             x-cloak
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             @click.self="openId = null"
-             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-             style="display: none;">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
-                 @click.stop>
-                <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-base font-bold" style="color: var(--dashboard-text);">Edit Harga</h2>
-                        <p class="text-xs mt-0.5" style="color: var(--dashboard-muted);" x-text="themeName"></p>
-                    </div>
-                    <button @click="openId = null" class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition" style="color: var(--dashboard-muted);">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
-
-                <form id="edit-modal-form" method="POST" action="" class="px-6 py-5 space-y-4">
-                    @csrf
-
-                    {{-- Normal price --}}
-                    <div>
-                        <label class="block text-[11px] uppercase font-bold tracking-wider mb-1.5"
-                               style="color: var(--dashboard-muted);">Harga Normal</label>
-                        <div class="flex rounded-xl overflow-hidden border-2 border-gray-200 dark:border-slate-600 focus-within:border-indigo-500 dark:focus-within:border-indigo-400 transition-all">
-                            <span class="inline-flex items-center px-3 bg-gray-50 dark:bg-slate-700/50 text-sm font-bold border-r border-gray-200 dark:border-slate-600"
-                                  style="color: var(--dashboard-muted);">Rp</span>
-                            <input type="number" name="price" x-model="price"
-                                   min="0" max="99999999" step="1000"
-                                   :placeholder="defaultPrice.toLocaleString('id-ID')"
-                                   class="flex-1 px-3 py-2.5 text-base font-bold focus:outline-none bg-white dark:bg-slate-800"
-                                   style="color: var(--dashboard-text);">
-                        </div>
-                        <p class="text-[10px] mt-1" style="color: var(--dashboard-muted);">
-                            Kosongkan untuk kembali ke harga default
-                        </p>
-                    </div>
-
-                    {{-- Promo price --}}
-                    <div>
-                        <label class="block text-[11px] uppercase font-bold tracking-wider mb-1.5 text-amber-600 dark:text-amber-400">
-                            Harga Promo <span class="text-amber-500/60 normal-case font-medium">(opsional)</span>
-                        </label>
-                        <div class="flex rounded-xl overflow-hidden border-2 border-amber-200 dark:border-amber-500/30 focus-within:border-amber-500 dark:focus-within:border-amber-400 transition-all">
-                            <span class="inline-flex items-center px-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-bold border-r border-amber-200 dark:border-amber-500/30">Rp</span>
-                            <input type="number" name="promo_price" x-model="promo"
-                                   min="0" max="99999999" step="1000"
-                                   placeholder="Tanpa promo"
-                                   class="flex-1 px-3 py-2.5 text-base font-bold focus:outline-none bg-amber-50/30 dark:bg-slate-800"
-                                   style="color: var(--dashboard-text);">
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-2 pt-2">
-                        <button type="submit"
-                                class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl transition shadow-sm">
-                            Simpan
-                        </button>
-                        <button type="button"
-                                @click="price = ''; promo = ''"
-                                class="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-slate-600 text-xs font-bold hover:bg-gray-50 dark:hover:bg-slate-700 transition"
-                                style="color: var(--dashboard-muted);">
-                            Clear
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
