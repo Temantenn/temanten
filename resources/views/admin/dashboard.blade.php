@@ -235,11 +235,11 @@
                                     <span class="tbl-date mono">{{ $client->event_date->format('d M Y') }}</span>
                                 </div>
                                 <div class="tbl-cell text-right">
-                                    <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block">
-                                        <button @click="open = !open" class="row-btn" data-testid="row-actions-{{ $client->id }}">
+                                    <div x-data="{ open: false, pos: 'below' }" @click.outside="open = false" class="relative inline-block">
+                                        <button @click="open = !open; $nextTick(() => { if(open){ const r = $el.getBoundingClientRect(); const m = $el.parentElement.querySelector('.row-menu'); const mh = m ? m.offsetHeight : 180; pos = (r.bottom + mh + 8 > window.innerHeight) ? 'above' : 'below'; }})" class="row-btn" data-testid="row-actions-{{ $client->id }}">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
                                         </button>
-                                        <div x-show="open" x-cloak x-transition.opacity class="row-menu">
+                                        <div x-show="open" x-cloak x-transition.opacity class="row-menu" :class="pos === 'above' ? 'row-menu-above' : ''">
                                             <a href="{{ url('undangan/'.$client->slug) }}" target="_blank" class="row-menu-item">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                                 Lihat Undangan
@@ -770,6 +770,7 @@ Terima kasih!</textarea>
             padding: 4px;
             z-index: 50;
         }
+        .admin-cmd .row-menu-above { top: auto; bottom: calc(100% + 4px); }
         @media (max-width: 768px) {
             .admin-cmd .row-btn { width: 44px; height: 44px; border-radius: 8px; background: var(--dashboard-bg); border-color: var(--dashboard-border); }
             .admin-cmd .tbl-cell.text-right { text-align: right; }
