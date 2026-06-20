@@ -211,7 +211,10 @@ class AdminController extends Controller
 
     public function themes()
     {
-        $themes       = \App\Models\Theme::orderBy('name')->paginate(20)->withQueryString();
+        $perPage      = in_array((int) request('per_page'), [8, 16, 24], true)
+                          ? (int) request('per_page')
+                          : 8;
+        $themes       = \App\Models\Theme::orderBy('name')->paginate($perPage)->withQueryString();
         $defaultPrice = config('app.default_price', 99000);
 
         // Stats for the "Ringkasan" section (must reflect ALL themes, not just the paginated page).
@@ -224,7 +227,7 @@ class AdminController extends Controller
         $maxPrice      = $allThemes->max('effective_price');
 
         return view('admin.themes', compact(
-            'themes', 'defaultPrice',
+            'themes', 'defaultPrice', 'perPage',
             'totalCount', 'customCount', 'defaultCount', 'minPrice', 'maxPrice'
         ));
     }
