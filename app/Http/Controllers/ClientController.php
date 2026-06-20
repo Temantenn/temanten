@@ -38,7 +38,10 @@ class ClientController extends Controller
         $checkedIn = 0;
 
         if ($invitation) {
-            $guests = $invitation->guests()->orderBy('created_at', 'desc')->get();
+            $guests = $invitation->guests()
+                ->where('is_anonymous_wish', false)
+                ->orderBy('created_at', 'desc')
+                ->get();
             $totalGuests = $guests->count();
             $hadir = $guests->where('rsvp_status', 'hadir')->count();
             $tidakHadir = $guests->where('rsvp_status', 'tidak_hadir')->count();
@@ -252,6 +255,7 @@ class ClientController extends Controller
             $columns = ['Nama', 'Kategori', 'WhatsApp', 'Status Kehadiran', 'Ucapan', 'Jumlah Tamu', 'Tanggal Input'];
 
             $rows = $invitation->guests()
+                ->where('is_anonymous_wish', false)
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function (Guest $guest): array {
@@ -307,6 +311,7 @@ class ClientController extends Controller
         Gate::authorize('view', $invitation);
 
         $guests = $invitation->guests()
+            ->where('is_anonymous_wish', false)
             ->orderBy('category')
             ->orderBy('name')
             ->get();

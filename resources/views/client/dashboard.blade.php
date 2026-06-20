@@ -1,4 +1,7 @@
 <x-app-layout>
+    @section('title', 'Dashboard Klien - Temanten')
+    @section('seo_description', 'Dashboard klien Temanten — kelola tamu, RSVP, QR check-in, ucapan, dan analytics undangan pernikahan Anda.')
+
     <x-slot name="header">
         <div class="flex flex-col gap-1">
             <p class="text-xs font-bold uppercase tracking-[0.24em]" style="color: var(--dashboard-accent);">Temanten Control Center</p>

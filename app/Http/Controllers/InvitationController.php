@@ -211,6 +211,24 @@ class InvitationController extends Controller
         $invitation->comments = collect([]);
         $invitation->og_image = asset('favicon.ico');
 
+        // Resolve guest token from ?to= query param so the public page
+        // can prefill the RSVP form with the right guest name + token,
+        // enabling a secure per-tamu update (no guest-list pollution).
+        $toToken = trim((string) $request->query('to', ''));
+        $resolvedGuest = null;
+
+        if ($toToken !== '') {
+            $resolvedGuest = $invitation->guests()
+                ->where(function ($q) use ($toToken) {
+                    $q->where('checkin_token', $toToken)
+                      ->orWhere('slug', $toToken);
+                })
+                ->first();
+        }
+
+        $invitation->resolved_guest = $resolvedGuest;
+        $invitation->resolved_to_token = $toToken;
+
         return view($theme->view_path, compact('invitation'));
     }
 
@@ -403,25 +421,55 @@ class InvitationController extends Controller
             $payload['comment'] = $comment === '' ? null : $comment;
         }
 
-        $guest = $invitation->guests()
-            ->where('name', $name)
-            ->first();
+        // Resolve target guest. Match priority:
+        //   1) ?to={token_or_slug} (explicit invitation link per tamu, e.g. /undangan/{slug}?to={token})
+        //   2) name match against existing guest (real guest from Excel / manual entry)
+        //   3) fallback: anonymous wish (NOT created as real guest → no headcount pollution)
+        $guest = null;
+        // Token bisa datang dari URL ?to= (untuk client dashboard deep link
+        // dan QR check-in) atau dari form body _to (untuk theme RSVP form
+        // yang gak support query string rewrite).
+        $toToken = trim((string) (request()->query('to') ?? request()->input('_to', '')));
+
+        if ($toToken !== '') {
+            $guest = $invitation->guests()
+                ->where(function ($q) use ($toToken) {
+                    $q->where('checkin_token', $toToken)
+                      ->orWhere('slug', $toToken);
+                })
+                ->first();
+        }
+
+        if (! $guest) {
+            $guest = $invitation->guests()
+                ->where('name', $name)
+                ->first();
+        }
 
         if ($guest) {
+            // Real guest matched → update RSVP, ensure anonymous flag is off
+            $payload['is_anonymous_wish'] = false;
             $guest->update($payload);
         } else {
+            // Anonymous wish: still record so it shows in wishes/comments list,
+            // but flag as anonymous → dashboard filters it out from guest list
+            // + headcount (hadir/pending/tidak_hadir stats).
             $guest = $invitation->guests()->create(array_merge([
-                'name'     => $name,
-                'slug'     => Str::slug($name) . '-' . Str::random(8),
-                'category' => 'Umum',
+                'name'              => $name,
+                'slug'              => Str::slug($name) . '-' . Str::random(8),
+                'category'          => 'Umum',
+                'is_anonymous_wish' => true,
+                'rsvp_status'       => null,
             ], $payload));
         }
 
         Cache::forget("invitation:{$invitation->slug}");
 
         ActivityLog::record('info', 'guest.rsvp_submitted', $invitation, [
-            'nama'      => $name,
-            'kehadiran' => $data['kehadiran'],
+            'nama'             => $name,
+            'kehadiran'        => $data['kehadiran'],
+            'matched_existing' => (bool) $guest->getOriginal('is_anonymous_wish') === false,
+            'via_to_token'     => $toToken !== '',
         ]);
 
         return $guest->fresh();

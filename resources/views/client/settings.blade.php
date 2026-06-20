@@ -1,4 +1,7 @@
 <x-app-layout>
+    @section('title', 'Edit Undangan - Temanten')
+    @section('seo_description', 'Edit detail undangan pernikahan Anda: profil mempelai, acara, media, cerita cinta, dan amplop digital. Semua dalam satu halaman.')
+
     <x-slot name="header">
         <div class="flex justify-between items-center max-w-7xl mx-auto">
             <h2 class="font-bold text-2xl text-gray-800 dark:text-white leading-tight flex items-center gap-3">

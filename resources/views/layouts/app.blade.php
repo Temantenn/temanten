@@ -5,12 +5,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Dashboard - Temanten</title>
+        <title>@yield('title', 'Dashboard - Temanten')</title>
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
         @include('partials.seo', [
-            'seoTitle'       => 'Dashboard - Temanten',
-            'seoDescription' => 'Dashboard Temanten — kelola undangan pernikahan digital Anda. Buat tema, atur acara, dan kirim undangan ke tamu.',
+            'seoTitle'       => trim(View::yieldContent('title')) ?: 'Dashboard - Temanten',
+            'seoDescription' => trim(View::yieldContent('seo_description')) ?: 'Dashboard Temanten — kelola undangan pernikahan digital Anda. Buat tema, atur acara, dan kirim undangan ke tamu.',
             'seoType'        => 'website',
         ])
 

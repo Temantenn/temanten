@@ -971,7 +971,10 @@
                     <form action="{{ route('kirim.ucapan') }}" method="POST">
                         @csrf
                         <input type="hidden" name="invitation_slug" value="{{ $invitation->slug }}">
-                        <input type="text" name="nama" class="form-control" placeholder="Nama Anda" required>
+                        @if(!empty($invitation->resolved_to_token ?? ''))
+                            <input type="hidden" name="_to" value="{{ $invitation->resolved_to_token }}">
+                        @endif
+                        <input type="text" name="nama" class="form-control" placeholder="Nama Anda" required value="{{ $invitation->resolved_guest->name ?? '' }}" @if(!empty($invitation->resolved_guest)) readonly @endif>
                         <select name="kehadiran" class="form-control" required>
                             <option value="hadir">✦ Hadir</option>
                             <option value="tidak_hadir">✦ Tidak Hadir</option>

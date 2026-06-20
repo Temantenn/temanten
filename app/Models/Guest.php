@@ -20,6 +20,7 @@ class Guest extends Model
         'checkin_token',
         'rsvp_status',
         'jumlah_tamu',
+        'is_anonymous_wish',
         'comment',
         'checked_in_at',
     ];
