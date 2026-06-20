@@ -132,10 +132,29 @@ class InvitationService
             'qris_image'  => ['amplop', 'qris_image'],
         ];
 
+        $allowImageExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        $allowAudioExts  = ['mp3', 'wav', 'ogg'];
+
         foreach ($fileMap as $inputName => $contentPath) {
             if ($request->hasFile($inputName)) {
                 $file = $request->file($inputName);
-                $filename = uniqid() . '_' . $inputName . '.' . $file->getClientOriginalExtension();
+
+                // Resolve extension via MIME-type detection (defense-in-depth
+                // against polyglot / shell.jpg.php uploads). Fall back to
+                // original extension if mime guess is unreliable, but reject
+                // anything not in the allowlist for this file's category.
+                $isAudio = in_array($inputName, ['music_file'], true);
+                $allow   = $isAudio ? $allowAudioExts : $allowImageExts;
+
+                $ext = strtolower((string) $file->guessExtension());
+                if (!in_array($ext, $allow, true)) {
+                    $ext = strtolower($file->getClientOriginalExtension());
+                }
+                if (!in_array($ext, $allow, true)) {
+                    $ext = $isAudio ? 'mp3' : 'jpg';
+                }
+
+                $filename = uniqid() . '_' . $inputName . '.' . $ext;
                 $path = $file->storeAs("public/invitations/{$folderName}", $filename);
                 $value = str_replace('public/', 'storage/', $path);
 
@@ -205,7 +224,8 @@ class InvitationService
         // New uploads
         if ($request->hasFile('gallery_photos')) {
             foreach ($request->file('gallery_photos') as $photo) {
-                $filename = uniqid() . '_gallery.' . $photo->getClientOriginalExtension();
+                $ext = $this->safeImageExt($photo);
+                $filename = uniqid() . '_gallery.' . $ext;
                 $path = $photo->storeAs("public/invitations/{$folderName}", $filename);
                 $galleryPaths[] = str_replace('public/', 'storage/', $path);
             }
@@ -231,7 +251,8 @@ class InvitationService
         foreach ($stories as $key => $story) {
             if ($request->hasFile("love_stories.{$key}.image")) {
                 $file = $request->file("love_stories.{$key}.image");
-                $filename = uniqid() . '_story.' . $file->getClientOriginalExtension();
+                $ext = $this->safeImageExt($file);
+                $filename = uniqid() . '_story.' . $ext;
                 $path = $file->storeAs("public/invitations/{$folderName}", $filename);
                 $story['image'] = str_replace('public/', 'storage/', $path);
             } elseif (isset($content['love_stories'][$key]['image'])) {
@@ -245,5 +266,29 @@ class InvitationService
 
         $content['love_stories'] = array_values($filteredStories);
         return $content;
+    }
+
+    /**
+     * Resolve a safe image extension by trusting MIME-type detection
+     * over the user-supplied filename. Defense-in-depth against
+     * polyglot files like shell.jpg.php that bypass naive extension
+     * checks. Falls back to 'jpg' if neither original nor guessed
+     * extension is in the whitelist.
+     */
+    private function safeImageExt(\Illuminate\Http\UploadedFile $file): string
+    {
+        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+        $guessed = strtolower((string) $file->guessExtension());
+        if (in_array($guessed, $allowed, true)) {
+            return $guessed;
+        }
+
+        $original = strtolower($file->getClientOriginalExtension());
+        if (in_array($original, $allowed, true)) {
+            return $original;
+        }
+
+        return 'jpg';
     }
 }
