@@ -235,11 +235,26 @@
                                     <span class="tbl-date mono">{{ $client->event_date->format('d M Y') }}</span>
                                 </div>
                                 <div class="tbl-cell text-right">
-                                    <div x-data="{ open: false, pos: 'below' }" @click.outside="open = false" class="relative inline-block">
-                                        <button @click="open = !open; $nextTick(() => { if(open){ const r = $el.getBoundingClientRect(); const m = $el.parentElement.querySelector('.row-menu'); const mh = m ? m.offsetHeight : 180; pos = (r.bottom + mh + 8 > window.innerHeight) ? 'above' : 'below'; }})" class="row-btn" data-testid="row-actions-{{ $client->id }}">
+                                    <div x-data="{ open: false, pos: 'below', style: '' }" @click.outside="open = false" class="relative inline-block">
+                                        <button @click="
+                                            const wasOpen = open;
+                                            open = false;
+                                            $nextTick(() => {
+                                                if (!wasOpen) {
+                                                    const r = $el.getBoundingClientRect();
+                                                    const mh = 200;
+                                                    const mw = 220;
+                                                    const openUp = (r.bottom + mh + 8 > window.innerHeight);
+                                                    style = openUp
+                                                        ? 'top:' + (r.top - mh - 4) + 'px;left:' + Math.max(8, r.right - mw) + 'px;'
+                                                        : 'top:' + (r.bottom + 4) + 'px;left:' + Math.max(8, r.right - mw) + 'px;';
+                                                    open = true;
+                                                }
+                                            });
+                                        " class="row-btn" data-testid="row-actions-{{ $client->id }}">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
                                         </button>
-                                        <div x-show="open" x-cloak x-transition.opacity class="row-menu" :class="pos === 'above' ? 'row-menu-above' : ''">
+                                        <div x-show="open" x-cloak x-transition.opacity class="row-menu" :style="style">
                                             <a href="{{ url('undangan/'.$client->slug) }}" target="_blank" class="row-menu-item">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                                 Lihat Undangan
@@ -760,17 +775,16 @@ Terima kasih!</textarea>
         .admin-cmd .row-btn:active { transform: scale(0.94); }
         .admin-cmd .row-btn:hover { background: var(--dashboard-bg); color: var(--dashboard-text); }
         .admin-cmd .row-menu {
-            position: absolute;
-            right: 0; top: calc(100% + 4px);
+            position: fixed;
             min-width: 200px;
             background: var(--dashboard-surface);
             border: 1px solid var(--dashboard-border);
             border-radius: 8px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04);
             padding: 4px;
-            z-index: 50;
+            z-index: 60;
         }
-        .admin-cmd .row-menu-above { top: auto; bottom: calc(100% + 4px); }
+        .admin-cmd .row-menu-above { display: none; }
         @media (max-width: 768px) {
             .admin-cmd .row-btn { width: 44px; height: 44px; border-radius: 8px; background: var(--dashboard-bg); border-color: var(--dashboard-border); }
             .admin-cmd .tbl-cell.text-right { text-align: right; }
