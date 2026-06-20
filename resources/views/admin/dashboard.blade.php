@@ -91,15 +91,15 @@
                         <span class="qa-sub">Upload per tema</span>
                     </span>
                 </a>
-                <a href="#" onclick="event.preventDefault();" class="qa">
+                <div class="qa qa-disabled" aria-disabled="true">
                     <span class="qa-icon" style="background: rgba(139, 92, 246, 0.08); color: #8b5cf6;">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </span>
                     <span class="qa-text">
-                        <span class="qa-title">Activity Log</span>
+                        <span class="qa-title">Activity Log <span class="qa-soon">Segera</span></span>
                         <span class="qa-sub">Audit jejak admin</span>
                     </span>
-                </a>
+                </div>
             </section>
 
             {{-- INCOMING REQUESTS — Kanban --}}
@@ -179,7 +179,7 @@
                 <header class="panel-head">
                     <div>
                         <h2 class="panel-title">Klien Aktif</h2>
-                        <p class="panel-sub"><span x-text="filtered.length"></span> dari {{ $actCount }} akun aktif</p>
+                        <p class="panel-sub"><span x-text="visibleCount"></span> dari {{ $actCount }} akun aktif</p>
                     </div>
                     <div class="flex items-center gap-2 w-full sm:w-auto">
                         <div class="search-wrap">
@@ -255,16 +255,16 @@
                                                 Hubungi WA
                                             </a>
                                             <div class="row-menu-sep"></div>
-                                            <button type="button" class="row-menu-item row-menu-danger" onclick="if(confirm('Suspend akun ini? Tindakan ini akan menonaktifkan undangan.')) { /* TODO: suspend endpoint */ }">
+                                            <button type="button" class="row-menu-item row-menu-danger" onclick="openCancelModal({{ $client->id }}, '{{ $client->content['mempelai']['pria']['nama'] ?? '' }} & {{ $client->content['mempelai']['wanita']['nama'] ?? '' }}')">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                                                Suspend Akun
+                                                Batalkan Undangan
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         @endforeach
-                        <div x-show="filtered.length === 0" x-cloak class="empty-search">
+                        <div x-show="visibleCount === 0" x-cloak class="empty-search">
                             <p>Tidak ada klien yang cocok dengan pencarian.</p>
                         </div>
                     </div>
@@ -318,6 +318,29 @@
                 <div class="modal-actions">
                     <button type="button" onclick="closeModal('reset-modal')" class="btn btn-ghost">Batal</button>
                     <button type="submit" class="btn btn-warn">Reset Sekarang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Cancel Invitation Modal --}}
+    <div id="cancel-modal" class="modal-ov" style="display:none;">
+        <div class="modal-box">
+            <button type="button" onclick="closeModal('cancel-modal')" class="modal-x">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <div class="modal-icon-wrap modal-icon-danger">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+            </div>
+            <h3 class="modal-title">Batalkan undangan?</h3>
+            <p class="modal-desc">Undangan <br><strong id="cancel-target-name" class="modal-target"></strong> akan dinonaktifkan dan tidak bisa diakses tamu lagi.</p>
+            <form id="cancel-form" method="POST">
+                @csrf
+                <textarea name="reason" rows="3" maxlength="500" placeholder="Alasan pembatalan (opsional)…"
+                          class="modal-textarea"></textarea>
+                <div class="modal-actions">
+                    <button type="button" onclick="closeModal('cancel-modal')" class="btn btn-ghost">Batal</button>
+                    <button type="submit" class="btn btn-danger">Ya, Batalkan</button>
                 </div>
             </form>
         </div>
@@ -454,6 +477,29 @@ Terima kasih!</textarea>
         .admin-cmd .qa:hover {
             border-color: var(--dashboard-text);
             background: color-mix(in srgb, var(--dashboard-text) 4%, var(--dashboard-surface));
+        }
+        .admin-cmd .qa-disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+        .admin-cmd .qa-disabled:hover {
+            border-color: var(--dashboard-border);
+            background: var(--dashboard-surface);
+        }
+        .admin-cmd .qa-soon {
+            display: inline-block;
+            margin-left: 0.4rem;
+            padding: 1px 6px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--dashboard-muted);
+            background: var(--dashboard-surface-soft);
+            border: 1px solid var(--dashboard-border);
+            border-radius: 4px;
+            vertical-align: middle;
+            line-height: 1.4;
         }
         .admin-cmd .qa-icon {
             width: 32px; height: 32px;
@@ -962,6 +1008,14 @@ Terima kasih!</textarea>
             document.body.style.overflow = 'hidden';
         }
 
+        function openCancelModal(id, coupleName) {
+            const form = document.getElementById('cancel-form');
+            form.action = `/admin/invitations/${id}/cancel`;
+            document.getElementById('cancel-target-name').textContent = coupleName;
+            document.getElementById('cancel-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
             document.body.style.overflow = '';
@@ -981,12 +1035,24 @@ Terima kasih!</textarea>
             return {
                 q: '',
                 themeFilter: '',
-                filtered: Array({{ $actCount }}).fill(0).map((_, i) => i),
+                visibleCount: {{ $actCount }},
                 matches(searchKey, themeSlug) {
                     const q = this.q.toLowerCase().trim();
                     const matchesQ = !q || searchKey.includes(q);
                     const matchesT = !this.themeFilter || themeSlug === this.themeFilter;
                     return matchesQ && matchesT;
+                },
+                recompute() {
+                    this.$nextTick(() => {
+                        const rows = document.querySelectorAll('.tbl-row');
+                        let n = 0;
+                        rows.forEach(r => { if (r.offsetParent !== null) n++; });
+                        this.visibleCount = n;
+                    });
+                },
+                init() {
+                    this.$watch('q', () => this.recompute());
+                    this.$watch('themeFilter', () => this.recompute());
                 }
             };
         }

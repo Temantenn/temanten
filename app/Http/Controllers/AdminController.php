@@ -179,6 +179,49 @@ class AdminController extends Controller
         }
     }
 
+    public function cancelInvitation(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $invitation = Invitation::findOrFail($id);
+
+        if ($invitation->status !== 'active') {
+            return redirect()->back()->with('error', 'Hanya undangan aktif yang dapat dibatalkan.');
+        }
+
+        try {
+            DB::transaction(function () use ($invitation, $request) {
+                $invitation->update([
+                    'status' => 'cancelled',
+                ]);
+
+                ActivityLog::record('admin_action', 'invitation.cancelled', $invitation, [
+                    'invitation_slug' => $invitation->slug,
+                    'cancelled_by'    => Auth::user()->email,
+                    'reason'          => $request->input('reason'),
+                ]);
+
+                Log::channel('daily')->info('Admin cancelled active invitation', [
+                    'admin'           => Auth::user()->email,
+                    'invitation_id'   => $invitation->id,
+                    'invitation_slug' => $invitation->slug,
+                    'reason'          => $request->input('reason'),
+                ]);
+            });
+
+            return redirect()->back()->with('success', 'Undangan berhasil dibatalkan.');
+        } catch (\Exception $e) {
+            Log::channel('daily')->error('Failed to cancel invitation', [
+                'admin'         => Auth::user()->email,
+                'invitation_id' => $id,
+                'error'         => $e->getMessage(),
+            ]);
+            return redirect()->back()->with('error', 'Terjadi kesalahan sistem saat membatalkan undangan.');
+        }
+    }
+
     public function resetPassword($user_id)
     {
         $user = User::findOrFail($user_id);

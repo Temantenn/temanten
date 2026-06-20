@@ -104,6 +104,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/approve/{id}', [AdminController::class, 'approve'])->name('admin.approve');
     Route::post('/reject/{id}', [AdminController::class, 'reject'])->name('admin.reject');
     Route::post('/reset-password/{user_id}', [AdminController::class, 'resetPassword'])->name('admin.resetPassword');
+    Route::post('/invitations/{id}/cancel', [AdminController::class, 'cancelInvitation'])->name('admin.invitations.cancel');
 
     // Harga: dipindah ke /themes-pricing agar tidak konflik dengan resource 'themes' di bawah
     Route::get('/themes-pricing', [AdminController::class, 'themes'])->name('admin.themes.pricing');
