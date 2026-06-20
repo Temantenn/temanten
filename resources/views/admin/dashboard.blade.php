@@ -736,7 +736,7 @@ Terima kasih!</textarea>
         .admin-cmd .tbl-cell { min-width: 0; }
         .admin-cmd .tbl-name { font-size: 13px; font-weight: 500; color: var(--dashboard-text); }
         .admin-cmd .tbl-sub { font-size: 12px; color: var(--dashboard-muted); margin-top: 1px; }
-        .admin-cmd .tbl-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: var(--dashboard-text); }
+        .admin-cmd .tbl-mono { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px; color: var(--dashboard-muted); word-break: break-all; overflow-wrap: anywhere; line-height: 1.4; }
         .admin-cmd .tbl-err {
             font-size: 11px; color: var(--dashboard-danger); font-weight: 500;
             padding: 2px 6px; border-radius: 4px;
@@ -753,19 +753,27 @@ Terima kasih!</textarea>
             border: 1px solid transparent;
             color: var(--dashboard-muted);
             cursor: pointer;
-            transition: background 0.12s, color 0.12s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.12s, color 0.12s, transform 0.08s;
         }
+        .admin-cmd .row-btn:active { transform: scale(0.94); }
         .admin-cmd .row-btn:hover { background: var(--dashboard-bg); color: var(--dashboard-text); }
         .admin-cmd .row-menu {
             position: absolute;
             right: 0; top: calc(100% + 4px);
-            min-width: 180px;
+            min-width: 200px;
             background: var(--dashboard-surface);
             border: 1px solid var(--dashboard-border);
             border-radius: 8px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04);
             padding: 4px;
-            z-index: 20;
+            z-index: 50;
+        }
+        @media (max-width: 768px) {
+            .admin-cmd .row-btn { width: 44px; height: 44px; border-radius: 8px; background: var(--dashboard-bg); border-color: var(--dashboard-border); }
+            .admin-cmd .tbl-cell.text-right { text-align: right; }
+            .admin-cmd .row-menu { right: 0; left: auto; min-width: 220px; z-index: 60; }
         }
         .admin-cmd .row-menu-item {
             display: flex; align-items: center; gap: 8px;
