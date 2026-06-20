@@ -114,8 +114,20 @@ Alpine.data('orderForm', () => ({
 
     nextStep() {
         if (!this.validateStep()) return;
-        if (this.step < 4) this.step++;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (this.step < 4) {
+            this.step++;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+        // Step 4 → submit form via hidden #btnSubmit so @submit handler runs
+        // (loading overlay, then browser POSTs to order.store → controller redirects to payment)
+        const form = this.$refs.form;
+        const submitBtn = document.getElementById('btnSubmit');
+        if (submitBtn) {
+            submitBtn.click();
+        } else if (form) {
+            form.requestSubmit();
+        }
     },
 
     prevStep() {

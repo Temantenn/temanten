@@ -195,7 +195,11 @@ class OrderController extends Controller
         $orderNumber = session('order_number');
 
         if (!$orderNumber) {
-            return redirect()->route('order.create');
+            // Session lost (cookie blocked? or user opened /pembayaran directly).
+            // Send them to form with a clear message instead of silent redirect loop.
+            return redirect()->route('order.create')->withErrors([
+                'msg' => 'Sesi pesanan tidak ditemukan. Silakan buat pesanan ulang.',
+            ]);
         }
 
         $order = Order::with(['theme', 'user'])->where('order_number', $orderNumber)->firstOrFail();
@@ -203,8 +207,14 @@ class OrderController extends Controller
         $masterQris = config('temanten.qris_master_string');
 
         if (!$masterQris) {
-            Log::warning('QRIS master string not configured');
-            return back()->withErrors(['msg' => 'Konfigurasi pembayaran belum tersedia. Silakan hubungi admin.']);
+            Log::warning('QRIS master string not configured', [
+                'order_number' => $orderNumber,
+                'env_QRIS_MASTER_STRING_set' => env('QRIS_MASTER_STRING') !== null && env('QRIS_MASTER_STRING') !== '',
+            ]);
+            // Redirect to order create (NOT back()) to avoid potential redirect loop.
+            return redirect()->route('order.create')->withErrors([
+                'msg' => 'Pembayaran sedang diproses. Silakan hubungi admin jika masalah berlanjut.',
+            ]);
         }
 
         // Nominal di QR = total_amount (harga flat) + unique_code (suffix verifikasi).
