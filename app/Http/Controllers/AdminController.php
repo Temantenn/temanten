@@ -35,23 +35,25 @@ class AdminController extends Controller
 
     public function approve($id)
     {
-        $invitation = Invitation::with('user')->findOrFail($id);
-
-        if ($invitation->status === 'active') {
-            return redirect()->back()->with('error', 'Pesanan ini sudah aktif sebelumnya!');
-        }
-
-        $credentials = [];
-        $user = $invitation->user;
-
         try {
-            DB::transaction(function () use ($invitation, &$credentials, $user) {
+            $result = DB::transaction(function () use ($id) {
+                // Lock BOTH the invitation AND the user row to prevent race
+                // condition where two admins approve the same pending order
+                // simultaneously → double email generation, duplicate slug
+                // detection, inconsistent status transitions.
+                $invitation = Invitation::with('user')->lockForUpdate()->findOrFail($id);
 
-                // Lock the user row to prevent concurrent email generation race
-                $lockedUser = User::lockForUpdate()->find($user->id);
+                if ($invitation->status === 'active') {
+                    return ['error' => 'Pesanan ini sudah aktif sebelumnya!'];
+                }
+
+                $user = $invitation->user;
+                if (!$user) {
+                    abort(500, 'User tidak ditemukan untuk pesanan ini.');
+                }
 
                 // Simpan original email SEBELUM diubah, untuk dicek apakah perlu kirim notif
-                $originalEmail = $lockedUser->email;
+                $originalEmail = $user->email;
 
                 // Cek jika email masih dummy bawaan order
                 $email = $originalEmail;
@@ -67,7 +69,7 @@ class AdminController extends Controller
                     $newEmail  = $baseEmail . '@temanten.inv';
 
                     $counter = 1;
-                    while (User::where('email', $newEmail)->where('id', '!=', $lockedUser->id)->exists()) {
+                    while (User::where('email', $newEmail)->where('id', '!=', $user->id)->exists()) {
                         $newEmail = $baseEmail . $counter . '@temanten.inv';
                         $counter++;
                     }
@@ -76,7 +78,7 @@ class AdminController extends Controller
 
                 $rawPassword = Str::random(8);
 
-                $lockedUser->update([
+                $user->update([
                     'email'    => $email,
                     'password' => Hash::make($rawPassword),
                 ]);
@@ -88,13 +90,23 @@ class AdminController extends Controller
                 // Set default expiry
                 $invitation->setDefaultExpiry();
 
-                $credentials = [
-                    'name'     => $lockedUser->name,
-                    'email'    => $email,
-                    'password' => $rawPassword,
-                    'original_email' => $originalEmail,
+                return [
+                    'invitation' => $invitation,
+                    'credentials' => [
+                        'name'           => $user->name,
+                        'email'          => $email,
+                        'password'       => $rawPassword,
+                        'original_email' => $originalEmail,
+                    ],
                 ];
             });
+
+            if (isset($result['error'])) {
+                return redirect()->back()->with('error', $result['error']);
+            }
+
+            $invitation = $result['invitation'];
+            $credentials = $result['credentials'];
 
             // Log aktivitas admin: persetujuan undangan
             ActivityLog::record('admin_action', 'invitation.approved', $invitation, [
@@ -109,8 +121,8 @@ class AdminController extends Controller
             ]);
 
             // Jangan kirim email jika original email adalah dummy .biz.id / .inv
-            $originalEmail = $credentials['original_email'] ?? $user->email;
-            if (!str_ends_with($originalEmail, '.inv') && !str_ends_with($originalEmail, '.biz.id')) {
+            $originalEmail = $credentials['original_email'] ?? null;
+            if ($originalEmail && !str_ends_with($originalEmail, '.inv') && !str_ends_with($originalEmail, '.biz.id')) {
                 try {
                     Mail::to($originalEmail)->send(new InvitationApprovedMail($invitation, $credentials['password']));
                 } catch (\Throwable $e) {
@@ -124,7 +136,6 @@ class AdminController extends Controller
             return redirect()->back()->with('new_account', $credentials);
 
         } catch (\Exception $e) {
-
             Log::channel('daily')->error('Failed to approve invitation', [
                 'admin'         => Auth::user()->email,
                 'invitation_id' => $id,

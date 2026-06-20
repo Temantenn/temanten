@@ -25,9 +25,30 @@ class UpdateSettingsRequest extends FormRequest
         foreach ($nullableUrlFields as $field) {
             $value = $this->input($field);
 
-            if (is_string($value) && trim($value) === '#') {
+            // Empty / placeholder → null
+            if (is_string($value) && (trim($value) === '' || trim($value) === '#')) {
                 $normalized[$field] = null;
+                continue;
             }
+
+            if (!is_string($value)) {
+                continue;
+            }
+
+            $trimmed = trim($value);
+
+            // Reject dangerous schemes: javascript:, data:, vbscript:, file:
+            // → XSS via href / src. Only allow http(s) and mailto:.
+            // Drop the value entirely so validation rejects it.
+            $scheme = strtolower(parse_url($trimmed, PHP_URL_SCHEME) ?? '');
+            $allowed = ['', 'http', 'https', 'mailto'];
+
+            if (!in_array($scheme, $allowed, true)) {
+                $normalized[$field] = null;
+                continue;
+            }
+
+            $normalized[$field] = $trimmed;
         }
 
         if ($normalized !== []) {
@@ -125,7 +146,7 @@ class UpdateSettingsRequest extends FormRequest
             'bride_name.required' => 'Nama mempelai wanita wajib diisi.',
             '*.image'  => 'File harus berupa gambar (JPG, PNG, WebP).',
             '*.max'    => 'Ukuran file terlalu besar.',
-            '*.url'    => 'Format URL tidak valid.',
+            '*.url'    => 'Format URL tidak valid. Gunakan http://, https://, atau mailto:. Scheme lain (javascript:, data:, file:) tidak diizinkan demi keamanan.',
         ];
     }
 }

