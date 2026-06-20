@@ -178,14 +178,19 @@
 
         .nav-cta { display: flex; align-items: center; gap: 0.5rem; }
         .nav-cta .nav-auth {
-            display: none;
             color: var(--ink); text-decoration: none;
             font-size: 0.78rem; font-weight: 600;
             text-transform: uppercase; letter-spacing: 0.14em;
             padding: 0.5rem 0.85rem;
             border: 1px solid var(--line);
         }
-        @media (min-width: 768px) { .nav-cta .nav-auth { display: inline-block; } }
+        @media (max-width: 479px) {
+            .nav-cta .nav-auth {
+                padding: 0.45rem 0.6rem;
+                font-size: 0.7rem;
+                letter-spacing: 0.1em;
+            }
+        }
         .nav-cta .nav-auth:hover { border-color: var(--ink); font-style: italic; }
         .nav-cta .btn-dark { padding: 0.7rem 1.1rem; font-size: 0.7rem; }
 
