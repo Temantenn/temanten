@@ -227,6 +227,29 @@
             border-bottom: 1px solid var(--line-soft);
         }
         .mobile-panel a.mobile-link:hover { font-style: italic; }
+        .mobile-panel .mobile-link-secondary {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--brown);
+            border: 1px solid var(--line);
+            padding: 0.85rem 1rem;
+            margin-top: 1rem;
+            border-radius: 0;
+            background: transparent;
+        }
+        .mobile-panel .mobile-link-secondary:hover {
+            background: var(--ink);
+            color: var(--paper-light);
+            font-style: normal;
+            border-color: var(--ink);
+        }
+        .mobile-panel .mobile-link-secondary svg { flex-shrink: 0; }
         .mobile-panel .mobile-cta {
             margin-top: 1.25rem;
             display: block;
@@ -764,6 +787,21 @@
     <a href="{{ route('themes.index') }}" class="mobile-link">Katalog</a>
     <a href="#cara-kerja" class="mobile-link">Cara Kerja</a>
     <a href="#faq" class="mobile-link">FAQ</a>
+
+    <div class="mobile-auth">
+        @auth
+            <a href="{{ route('dashboard') }}" class="mobile-link mobile-link-secondary">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard Saya
+            </a>
+        @else
+            <a href="{{ route('login') }}" class="mobile-link mobile-link-secondary">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                Masuk
+            </a>
+        @endauth
+    </div>
+
     <a href="{{ route('order.create') }}" class="btn-dark mobile-cta">Buat Undangan</a>
 </div>
 
