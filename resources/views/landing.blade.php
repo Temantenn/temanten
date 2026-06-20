@@ -48,6 +48,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TEMANTEN — Platform Undangan Digital Elegan</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+
+    @include('partials.seo', [
+        'seoTitle'       => 'TEMANTEN — Platform Undangan Digital Elegan',
+        'seoDescription' => 'Buat undangan pernikahan digital yang elegan dan modern. 16+ tema eksklusif Islami, Boho, Floral, Modern, Tradisional. RSVP, galeri, musik, dan amplop digital dalam satu paket.',
+        'seoImage'       => asset('assets/og-image.jpg'),
+        'seoType'        => 'website',
+    ])
+
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {

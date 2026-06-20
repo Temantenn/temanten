@@ -8,6 +8,12 @@
         <title>Dashboard - Temanten</title>
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
+        @include('partials.seo', [
+            'seoTitle'       => 'Dashboard - Temanten',
+            'seoDescription' => 'Dashboard Temanten — kelola undangan pernikahan digital Anda. Buat tema, atur acara, dan kirim undangan ke tamu.',
+            'seoType'        => 'website',
+        ])
+
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|jetbrains-mono:500,600,700&display=swap" rel="stylesheet" />
 

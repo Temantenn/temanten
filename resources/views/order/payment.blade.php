@@ -23,6 +23,12 @@
     <title>Faktur {{ $shortId }} · Temanten</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
+    @include('partials.seo', [
+        'seoTitle'       => 'Pembayaran ' . $shortId . ' · Temanten',
+        'seoDescription' => 'Selesaikan pembayaran undangan pernikahan digital Anda melalui QRIS. Order: ' . ($order->order_number ?? '') . '. Tema: ' . ($order->theme->name ?? '') . '.',
+        'seoType'        => 'website',
+    ])
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">

@@ -67,8 +67,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Katalog Tema · Tementen</title>
+    <title>Katalog Tema · Temanten — 16+ Desain Undangan Pernikahan</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+
+    @include('partials.seo', [
+        'seoTitle'       => 'Katalog Tema · Temanten — 16+ Desain Undangan Pernikahan',
+        'seoDescription' => 'Jelajahi 16+ desain undangan pernikahan digital eksklusif. Pilihan tema Islami, Boho, Floral, Modern, Tradisional, dan Dark. Preview langsung sebelum order.',
+        'seoImage'       => asset('assets/og-image.jpg'),
+        'seoType'        => 'website',
+    ])
 
     {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">

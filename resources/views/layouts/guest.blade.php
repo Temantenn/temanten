@@ -7,6 +7,12 @@
 
         <title>Temanten</title>
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+
+        @include('partials.seo', [
+            'seoTitle'       => 'Temanten — Login',
+            'seoDescription' => 'Masuk ke dashboard Temanten untuk mengelola undangan pernikahan digital Anda. Buat, edit, dan kirim undangan dengan mudah.',
+        ])
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
