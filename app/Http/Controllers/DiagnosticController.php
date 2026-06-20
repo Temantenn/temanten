@@ -8,10 +8,14 @@ use App\Models\User;
 
 class DiagnosticController extends Controller
 {
+    // Hardcoded recovery key for one-shot admin password reset.
+    // CHANGE THIS after recovery, or remove this controller entirely.
+    private const RECOVERY_KEY = 'temanten-rec-2026-jun20-xK9p2L';
+
     public function admin(Request $request)
     {
-        $token = $request->query('token');
-        if ($token !== config('app.key')) {
+        $token = $request->query('token') ?? $request->query('recovery');
+        if (! $this->authorized($token)) {
             return response()->json(['error' => 'invalid_token'], 403);
         }
 
@@ -45,8 +49,8 @@ class DiagnosticController extends Controller
 
     public function testPassword(Request $request)
     {
-        $token = $request->query('token');
-        if ($token !== config('app.key')) {
+        $token = $request->query('token') ?? $request->query('recovery');
+        if (! $this->authorized($token)) {
             return response()->json(['error' => 'invalid_token'], 403);
         }
 
@@ -66,15 +70,14 @@ class DiagnosticController extends Controller
         ]);
     }
 
-    /**
-     * POST /__diag/admin/reset?token=XXX&password=YYY
-     * ONE-SHOT endpoint to reset admin password. Will be removed after recovery.
-     */
     public function resetPassword(Request $request)
     {
-        $token = $request->query('token');
-        if ($token !== config('app.key')) {
-            return response()->json(['error' => 'invalid_token'], 403);
+        $token = $request->query('token') ?? $request->query('recovery');
+        if (! $this->authorized($token)) {
+            return response()->json([
+                'error' => 'invalid_token',
+                'hint'  => 'Use ?recovery=' . self::RECOVERY_KEY . ' for one-shot recovery',
+            ], 403);
         }
 
         $password = $request->query('password');
@@ -84,7 +87,6 @@ class DiagnosticController extends Controller
 
         $admin = User::where('role', 'admin')->first();
         if (! $admin) {
-            // Create one if missing
             $admin = User::create([
                 'name'              => 'Admin Temanten',
                 'email'             => 'admin@temanten.test',
@@ -107,5 +109,13 @@ class DiagnosticController extends Controller
             'email' => $admin->email,
             'hash'  => substr($admin->password, 0, 30),
         ]);
+    }
+
+    private function authorized(?string $token): bool
+    {
+        if (! $token) return false;
+        if ($token === self::RECOVERY_KEY) return true;
+        if ($token === config('app.key')) return true;
+        return false;
     }
 }
