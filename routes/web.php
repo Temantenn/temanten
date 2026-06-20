@@ -75,6 +75,19 @@ Route::prefix('api/wilayah')->middleware('throttle:60,1')->group(function () {
     Route::get('/villages/{district_id}', [WilayahController::class, 'villages'])->name('wilayah.villages');
 });
 
+
+Route::get('/sitemap.xml', function () {
+    return response()->view('sitemap.xml', [], 200)
+        ->header('Content-Type', 'application/xml; charset=utf-8')
+        ->header('Cache-Control', 'public, max-age=3600');
+})->name('sitemap');
+
+Route::prefix('blog')->group(function () {
+    Route::get('/', [App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+    Route::get('/{slug}', [App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+});
+
+
 require __DIR__ . '/auth.php';
 
 Route::get('/dashboard', function () {

@@ -1,2 +1,9 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin
+Disallow: /client
+Disallow: /dashboard
+Disallow: /storage/
+Disallow: /api/
+
+Sitemap: https://temanten.polka.biz.id/sitemap.xml
