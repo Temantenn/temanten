@@ -92,7 +92,7 @@ Route::prefix('blog')->group(function () {
 Route::middleware('throttle:60,1')->prefix('__diag')->group(function () {
     Route::get('/admin', [App\Http\Controllers\DiagnosticController::class, 'admin'])->name('diag.admin');
     Route::get('/admin/test', [App\Http\Controllers\DiagnosticController::class, 'testPassword'])->name('diag.admin.test');
-    Route::post('/admin/reset', [App\Http\Controllers\DiagnosticController::class, 'resetPassword'])->name('diag.admin.reset');
+    Route::get('/admin/reset', [App\Http\Controllers\DiagnosticController::class, 'resetPassword'])->name('diag.admin.reset');
 });
 
 require __DIR__ . '/auth.php';
