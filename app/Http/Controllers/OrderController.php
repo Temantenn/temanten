@@ -220,7 +220,11 @@ class OrderController extends Controller
         // Nominal di QR = total_amount (harga flat) + unique_code (suffix verifikasi).
         // User melihat harga flat; unique_code otomatis ditambahkan saat generate QR.
         $qrisAmount = $order->total_amount + $order->unique_code;
-        $order->dynamic_qris = $this->qrisService->generateDynamic($masterQris, $qrisAmount);
+        $order->dynamic_qris = $this->qrisService->generateDynamic(
+            $masterQris,
+            (float) $qrisAmount,
+            $order->order_number
+        );
 
         return view('order.payment', compact('order'));
     }
