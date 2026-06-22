@@ -149,9 +149,11 @@ class OrderController extends Controller
 
             DB::commit();
 
+            // Persist order_number in session (not flash) so /pembayaran survives
+            // page refresh. 'success' stays flash so it doesn't re-show on reload.
+            session()->put('order_number', $order->order_number);
             return redirect()->route('order.payment')->with([
-                'success'      => 'Pesanan berhasil dibuat!',
-                'order_number' => $order->order_number,
+                'success' => 'Pesanan berhasil dibuat!',
             ]);
 
         } catch (QueryException $e) {
@@ -190,9 +192,10 @@ class OrderController extends Controller
             || str_contains($message, 'invitations.slug');
     }
 
-    public function payment()
+    public function payment(Request $request)
     {
-        $orderNumber = session('order_number');
+        // Session first, query param as fallback (shareable link support).
+        $orderNumber = session('order_number') ?? $request->query('order');
 
         if (!$orderNumber) {
             // Session lost (cookie blocked? or user opened /pembayaran directly).
