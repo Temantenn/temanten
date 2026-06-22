@@ -67,6 +67,11 @@ jobs:
           else
             echo "[SKIP] public/storage already a symlink"
           fi
+          echo "=== Fix storage permissions (755 dirs, 644 files) ==="
+          find storage/app/public -type d -exec chmod 755 {} \; 2>/dev/null || true
+          find storage/app/public -type f -exec chmod 644 {} \; 2>/dev/null || true
+          chmod 755 storage/app/public 2>/dev/null || true
+          echo "[OK] Permissions fixed"
           echo "=== Fix phantom path (dari deploy lama) ==="
           PHANTOM="$APP/home/polkppfc/temanten.polka.biz.id"
           if [ -d "$PHANTOM" ]; then
