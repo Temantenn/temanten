@@ -1056,8 +1056,15 @@
                     {{-- GROOM --}}
                     <div class="person-card glass-card">
                         <div class="person-avatar">
-                            @if(!empty($invitation->content['mempelai']['pria']['foto']))
-                                <img src="{{ $invitation->content['mempelai']['pria']['foto'] }}" alt="{{ $invitation->content['mempelai']['pria']['nama'] ?? '' }}">
+@php
+function cnImg($path, $fallback = 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=400&fit=crop') {
+    if (!$path || str_contains($path, 'placeholder')) return $fallback;
+    return \Illuminate\Support\Str::startsWith($path, 'http') ? $path : asset($path);
+}
+@endphp
+
+@if(!empty($invitation->content['mempelai']['pria']['foto']))
+<img src="{{ cnImg($invitation->content['mempelai']['pria']['foto']) }}" alt="{{ $invitation->content['mempelai']['pria']['nama'] ?? '' }}">
                             @else
                                 <i class="ph ph-user"></i>
                             @endif
@@ -1081,7 +1088,7 @@
                     <div class="person-card glass-card">
                         <div class="person-avatar">
                             @if(!empty($invitation->content['mempelai']['wanita']['foto']))
-                                <img src="{{ $invitation->content['mempelai']['wanita']['foto'] }}" alt="{{ $invitation->content['mempelai']['wanita']['nama'] ?? '' }}">
+                                <img src="{{ cnImg($invitation->content['mempelai']['wanita']['foto']) }}" alt="{{ $invitation->content['mempelai']['wanita']['nama'] ?? '' }}">
                             @else
                                 <i class="ph ph-user"></i>
                             @endif
@@ -1270,7 +1277,7 @@
                 <div class="gallery-grid">
                     @foreach($invitation->content['media']['gallery'] as $photo)
                         <div class="gallery-item">
-                            <img src="{{ $photo }}" alt="Gallery" loading="lazy">
+                            <img src="{{ cnImg($photo) }}" alt="Gallery" loading="lazy">
                         </div>
                     @endforeach
                 </div>
