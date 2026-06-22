@@ -263,7 +263,7 @@ $target = \Carbon\Carbon::parse($akad['waktu'] ?? now()->addDays(90));
 
     {{-- Music --}}
     <audio id="bgAudio" loop>
-        <source src="{{ asset($invitation->content['media']['music'] ?? 'assets/music/sekar-jagad.mp3') }}" type="audio/mpeg">
+        <source src="{{ asset($invitation->content['media']['music'] ?? 'assets/music/jawa-keraton.mp3') }}" type="audio/mpeg">
     </audio>
     <div class="music-fab" id="musicFab" onclick="toggleMusic()">♪</div>
 

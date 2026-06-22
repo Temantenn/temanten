@@ -1310,14 +1310,18 @@
 <div class="pixel-phone">
 
 <!-- Music Button -->
-@if(isset($invitation->content['media']['music']))
+@php
+    $paMusic = $invitation->content['media']['music'] ?? null;
+    $paMusicSrc = ($paMusic && !str_contains($paMusic, 'placeholder'))
+        ? getFileUrl($paMusic)
+        : asset('assets/music/pixel-adventure.mp3');
+@endphp
 <div class="music-btn" id="musicBtn" onclick="toggleMusic()">
     🎵
 </div>
 <audio id="bgMusic" loop>
-    <source src="{{ getFileUrl($invitation->content['media']['music'] ?? null) }}" type="audio/mp3">
+    <source src="{{ $paMusicSrc }}" type="audio/mp3">
 </audio>
-@endif
 
 <!-- Gate Screen -->
 <div id="gate">

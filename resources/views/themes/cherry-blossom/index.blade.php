@@ -722,14 +722,18 @@
 
     <div class="mobile-container">
 
-        @if(isset($invitation->content['media']['music']))
+        @php
+            $cbMusic = $invitation->content['media']['music'] ?? null;
+            $cbMusicSrc = ($cbMusic && !str_contains($cbMusic, 'placeholder'))
+                ? getImgUrl($cbMusic)
+                : asset('assets/music/cherry-blossom.mp3');
+        @endphp
         <div class="music-box" onclick="toggleMusic()" id="musicBtn" style="display:none;">
             <i class="ph-fill ph-music-note"></i>
         </div>
         <audio id="bgMusic" loop>
-            <source src="{{ getImgUrl($invitation->content['media']['music']) }}" type="audio/mpeg">
+            <source src="{{ $cbMusicSrc }}" type="audio/mpeg">
         </audio>
-        @endif
 
         {{-- ═══════════ COVER ═══════════ --}}
         <section class="hero" id="heroCover" style="background-image: url('{{ getImgUrl($invitation->content['media']['cover'] ?? '') }}');">

@@ -1420,17 +1420,18 @@ function cnImg($path, $fallback = 'https://images.unsplash.com/photo-15197414976
 
 {{-- Music Toggle --}}
 @php
-    $musicFile = data_get($invitation, 'music_file') ?? data_get($invitation, 'content.media.music');
-    $musicFile = $musicFile && file_exists(public_path($musicFile)) ? $musicFile : null;
+    $cnMusic = data_get($invitation, 'content.media.music');
+    $cnDefault = asset('assets/music/celestial-night.mp3');
+    $musicFile = ($cnMusic && !str_contains($cnMusic, 'placeholder') && file_exists(public_path($cnMusic)))
+        ? $cnMusic
+        : 'assets/music/celestial-night.mp3';
 @endphp
-    @if($musicFile)
     <button class="music-toggle" id="musicToggle" onclick="toggleMusic()" title="Toggle Music">
         <i class="ph ph-speaker-simple-high" id="musicIcon"></i>
     </button>
     <audio id="bgMusic" loop preload="auto">
         <source src="{{ asset($musicFile) }}" type="audio/mpeg">
     </audio>
-    @endif
 
     <script>
         // ===== STARS CANVAS =====
