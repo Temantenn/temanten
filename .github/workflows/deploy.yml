@@ -86,7 +86,7 @@ jobs:
           echo "=== Verify boost removed from installed.json ==="
           grep -c "laravel/boost" vendor/composer/installed.json || echo "0 (good - boost not in installed.json)"
           echo "=== Run pending migrations (idempotent, safe) ==="
-          php artisan migrate --force || echo "[WARN] migrate failed, will not block deploy"
+          php artisan migrate --force
           echo "=== Laravel cache clear ==="
           php artisan view:clear || true
           php artisan cache:clear || true
