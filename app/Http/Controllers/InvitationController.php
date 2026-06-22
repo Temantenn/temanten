@@ -441,9 +441,20 @@ class InvitationController extends Controller
         }
 
         if (! $guest) {
+            // Improved matching: case-insensitive + partial match
+            // Priority: exact (case-insensitive) → partial match
             $guest = $invitation->guests()
-                ->where('name', $name)
+                ->whereRaw('LOWER(name) = ?', [strtolower($name)])
                 ->first();
+            
+            // Fallback: partial match (submitted name is part of guest name, or vice versa)
+            if (! $guest) {
+                $nameLower = strtolower($name);
+                $guest = $invitation->guests()
+                    ->whereRaw('LOWER(name) LIKE ?', ['%' . $nameLower . '%'])
+                    ->orWhereRaw('? LIKE CONCAT(\'%\', LOWER(name), \'%\')', [$nameLower])
+                    ->first();
+            }
         }
 
         if ($guest) {
