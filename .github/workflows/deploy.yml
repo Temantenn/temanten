@@ -59,19 +59,23 @@ jobs:
           set -e
           APP=/home/polkppfc/temanten.polka.biz.id
           cd $APP
-          echo "=== Ensure public/storage is symlink (recreate if dir/stub) ==="
-          if [ ! -L public/storage ]; then
-            rm -rf public/storage
-            php artisan storage:link
-            echo "[OK] symlink created"
-          else
-            echo "[SKIP] public/storage already a symlink"
-          fi
-          echo "=== Fix storage permissions (755 dirs, 644 files) ==="
-          find storage/app/public -type d -exec chmod 755 {} \; 2>/dev/null || true
+          echo "=== DIAGNOSTIC: Check current storage state ==="
+          ls -la public/ | grep storage || echo "No storage link/dir in public/"
+          ls -la storage/app/public/ 2>/dev/null | head -5 || echo "storage/app/public not found"
+          echo "=== Force recreate storage symlink ==="
+          rm -rf public/storage
+          php artisan storage:link --force || php artisan storage:link
+          ls -la public/storage
+          echo "=== Fix storage permissions (comprehensive) ==="
+          chmod -R 755 storage/app/public 2>/dev/null || true
           find storage/app/public -type f -exec chmod 644 {} \; 2>/dev/null || true
-          chmod 755 storage/app/public 2>/dev/null || true
-          echo "[OK] Permissions fixed"
+          # Try to set ownership to web server user (common cPanel users)
+          chown -R polkppfc:polkppfc storage/app/public 2>/dev/null || true
+          chown -R polkppfc:nobody storage/app/public 2>/dev/null || true
+          echo "[OK] Permissions and ownership fixed"
+          echo "=== Verify symlink target ==="
+          readlink -f public/storage
+          ls -la $(readlink -f public/storage) 2>/dev/null | head -5 || echo "Symlink target not accessible"
           echo "=== Fix phantom path (dari deploy lama) ==="
           PHANTOM="$APP/home/polkppfc/temanten.polka.biz.id"
           if [ -d "$PHANTOM" ]; then
@@ -100,3 +104,19 @@ jobs:
           php artisan config:clear || true
           php artisan route:clear || true
           php artisan optimize || true
+          echo "=== TEST: Verify storage access ==="
+          # List any invitation files that exist
+          find storage/app/public/invitations -type f 2>/dev/null | head -5 || echo "No invitation files found"
+          # Test access via symlink
+          FIRST_FILE=$(find storage/app/public/invitations -type f 2>/dev/null | head -1)
+          if [ -n "$FIRST_FILE" ]; then
+            RELATIVE_PATH=${FIRST_FILE#storage/app/public/}
+            echo "Testing: public/storage/$RELATIVE_PATH"
+            ls -la "public/storage/$RELATIVE_PATH" 2>/dev/null && echo "✓ File accessible via symlink" || echo "✗ File NOT accessible via symlink"
+            # Test via curl
+            curl -sI "http://localhost/storage/$RELATIVE_PATH" 2>/dev/null | head -3 || echo "curl test skipped"
+          fi
+          echo "=== Check .htaccess in public/storage ==="
+          cat public/storage/.htaccess 2>/dev/null || echo "No .htaccess in storage (good)"
+          echo "=== Check if cPanel has hotlink protection ==="
+          cat public/.htaccess 2>/dev/null | grep -i "storage\|hotlink\|deny" || echo "No storage-related rules in public/.htaccess"
