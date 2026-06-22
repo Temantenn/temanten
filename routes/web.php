@@ -36,7 +36,30 @@ Route::get('/storage/invitations/{uuid}/{filename}', function ($uuid, $filename)
     $response->header("Cache-Control", "public, max-age=3600");
 
     return $response;
-})->middleware(['signed', 'throttle:signed-images'])->name('storage.images');
+})->middleware('throttle:signed-images')->name('storage.images');
+
+// Fallback: serve storage files directly (bypass symlink issue on LiteSpeed/cPanel)
+// This route catches ALL /storage/* requests that aren't served by the symlink
+Route::get('/storage/{path}', function ($path) {
+    // Prevent path traversal
+    $path = str_replace('..', '', $path);
+    $fullPath = storage_path('app/public/' . $path);
+
+    // Ensure the resolved path is within storage
+    if (!str_starts_with(realpath($fullPath) ?: '', realpath(storage_path('app/public')) ?: '')) {
+        abort(404);
+    }
+
+    if (!file_exists($fullPath) || !is_file($fullPath)) {
+        abort(404);
+    }
+
+    $mime = mime_content_type($fullPath);
+    return response()->file($fullPath, [
+        'Content-Type' => $mime,
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->where('path', '.*')->name('storage.fallback');
 
 Route::get('/', function () {
     return view('landing');
