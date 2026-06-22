@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -30,7 +31,7 @@ class ClientController extends Controller
         $user = Auth::user();
         $invitation = Invitation::where('user_id', $user->id)->first();
 
-        $guests = [];
+        $guests = collect();
         $totalGuests = 0;
         $hadir = 0;
         $tidakHadir = 0;
@@ -38,10 +39,14 @@ class ClientController extends Controller
         $checkedIn = 0;
 
         if ($invitation) {
-            $guests = $invitation->guests()
-                ->where('is_anonymous_wish', false)
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query = $invitation->guests();
+            
+            // Defensive: check if column exists before filtering
+            if (\Schema::hasColumn('guests', 'is_anonymous_wish')) {
+                $query->where('is_anonymous_wish', false);
+            }
+            
+            $guests = $query->orderBy('created_at', 'desc')->get();
             $totalGuests = $guests->count();
             $hadir = $guests->where('rsvp_status', 'hadir')->count();
             $tidakHadir = $guests->where('rsvp_status', 'tidak_hadir')->count();
@@ -254,9 +259,14 @@ class ClientController extends Controller
         try {
             $columns = ['Nama', 'Kategori', 'WhatsApp', 'Status Kehadiran', 'Ucapan', 'Jumlah Tamu', 'Tanggal Input'];
 
-            $rows = $invitation->guests()
-                ->where('is_anonymous_wish', false)
-                ->orderBy('created_at', 'desc')
+            $query = $invitation->guests();
+            
+            // Defensive: check if column exists before filtering
+            if (\Schema::hasColumn('guests', 'is_anonymous_wish')) {
+                $query->where('is_anonymous_wish', false);
+            }
+            
+            $rows = $query->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function (Guest $guest): array {
                     $status = match ($guest->rsvp_status) {
@@ -310,9 +320,14 @@ class ClientController extends Controller
 
         Gate::authorize('view', $invitation);
 
-        $guests = $invitation->guests()
-            ->where('is_anonymous_wish', false)
-            ->orderBy('category')
+        $query = $invitation->guests();
+        
+        // Defensive: check if column exists before filtering
+        if (\Schema::hasColumn('guests', 'is_anonymous_wish')) {
+            $query->where('is_anonymous_wish', false);
+        }
+        
+        $guests = $query->orderBy('category')
             ->orderBy('name')
             ->get();
 

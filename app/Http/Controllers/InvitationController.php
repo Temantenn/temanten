@@ -448,19 +448,26 @@ class InvitationController extends Controller
 
         if ($guest) {
             // Real guest matched → update RSVP, ensure anonymous flag is off
-            $payload['is_anonymous_wish'] = false;
+            if (\Schema::hasColumn('guests', 'is_anonymous_wish')) {
+                $payload['is_anonymous_wish'] = false;
+            }
             $guest->update($payload);
         } else {
             // Anonymous wish: still record so it shows in wishes/comments list,
             // but flag as anonymous → dashboard filters it out from guest list
             // + headcount (hadir/pending/tidak_hadir stats).
-            $guest = $invitation->guests()->create(array_merge([
+            $createData = array_merge([
                 'name'              => $name,
                 'slug'              => Str::slug($name) . '-' . Str::random(8),
                 'category'          => 'Umum',
-                'is_anonymous_wish' => true,
                 'rsvp_status'       => null,
-            ], $payload));
+            ], $payload);
+            
+            if (\Schema::hasColumn('guests', 'is_anonymous_wish')) {
+                $createData['is_anonymous_wish'] = true;
+            }
+            
+            $guest = $invitation->guests()->create($createData);
         }
 
         Cache::forget("invitation:{$invitation->slug}");
@@ -468,7 +475,7 @@ class InvitationController extends Controller
         ActivityLog::record('info', 'guest.rsvp_submitted', $invitation, [
             'nama'             => $name,
             'kehadiran'        => $data['kehadiran'],
-            'matched_existing' => (bool) $guest->getOriginal('is_anonymous_wish') === false,
+            'matched_existing' => \Schema::hasColumn('guests', 'is_anonymous_wish') ? (bool) $guest->getOriginal('is_anonymous_wish') === false : true,
             'via_to_token'     => $toToken !== '',
         ]);
 
