@@ -939,7 +939,7 @@
                     @if(!empty($invitation->content['amplop']['qris_image']))
                     <div style="margin-top: 20px; text-align: center;">
                         <p style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 3px; margin-bottom: 12px; color: var(--primary-dark); font-weight: 600;">Atau Pindai QRIS</p>
-                        <img src="{{ asset($invitation->content['amplop']['qris_image']) }}" alt="QRIS" loading="lazy" style="width: 170px; max-width: 70%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; background: #fff; padding: 10px; border-radius: 16px; border: 1px solid rgba(232,160,191,0.2); box-shadow: 0 4px 15px rgba(232,160,191,0.15); margin: 0 auto; display: block;">
+                        <img src="{{ getImgUrl($invitation->content['amplop']['qris_image'] ?? '') }}" alt="QRIS" loading="lazy" style="width: 170px; max-width: 70%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; background: #fff; padding: 10px; border-radius: 16px; border: 1px solid rgba(232,160,191,0.2); box-shadow: 0 4px 15px rgba(232,160,191,0.15); margin: 0 auto; display: block;">
                     </div>
                     @endif
 

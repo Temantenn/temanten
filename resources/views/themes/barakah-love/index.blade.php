@@ -1255,7 +1255,7 @@
                 <div class="gift-card" style="margin-top: 20px; text-align: center;">
                     <div class="gift-card-content">
                         <p class="gift-bank" style="margin-bottom: 12px;">Atau Pindai QRIS</p>
-                        <img src="{{ asset($invitation->content['amplop']['qris_image']) }}" alt="QRIS" loading="lazy" style="width: 180px; max-width: 70%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; background: #fff; padding: 8px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); margin: 0 auto; display: block;">
+                        <img src="{{ getImgUrl($invitation->content['amplop']['qris_image'] ?? '') }}" alt="QRIS" loading="lazy" style="width: 180px; max-width: 70%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; background: #fff; padding: 8px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); margin: 0 auto; display: block;">
                     </div>
                 </div>
                 @endif
