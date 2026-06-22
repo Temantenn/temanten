@@ -117,6 +117,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/admins', [AdminController::class, 'admins'])->name('admin.admins');
     Route::post('/admins', [AdminController::class, 'storeAdmin'])->name('admin.storeAdmin');
     Route::delete('/admins/{id}', [AdminController::class, 'destroyAdmin'])->name('admin.destroyAdmin');
+    Route::post('/change-password', [AdminController::class, 'changePassword'])->name('admin.changePassword');
 });
 
 Route::middleware(['auth'])->prefix('client')->group(function () {

@@ -420,4 +420,28 @@ class AdminController extends Controller
 
         return redirect()->back()->with('success', "Akun admin {$email} berhasil dihapus permanen.");
     }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return redirect()->back()->withErrors(['current_password' => 'Password saat ini tidak cocok.']);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        ActivityLog::record('admin_action', 'admin.password_changed', $user, [
+            'changed_by' => $user->email,
+        ]);
+
+        return redirect()->back()->with('success', 'Password berhasil diubah.');
+    }
 }
