@@ -50,7 +50,12 @@ class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff', false);
 
         // Anti-clickjacking — DENY = tidak boleh di-frame sama sekali
-        $response->headers->set('X-Frame-Options', 'DENY', false);
+        $isThemePreview = $request->routeIs('demo.show') || $request->is('demo/*');
+        $response->headers->set(
+            'X-Frame-Options',
+            $isThemePreview ? 'SAMEORIGIN' : 'DENY',
+            true
+        );
 
         // Legacy XSS auditor (defense-in-depth, sebagian besar browser modern sudah ignore)
         $response->headers->set('X-XSS-Protection', '1; mode=block', false);
@@ -75,7 +80,7 @@ class SecurityHeaders
 
         // Content Security Policy — longgar supaya tema interaktif (YouTube embed, Unsplash, Google Fonts, Vite dev, inline scripts) tetap jalan
         // Untuk produksi strict, nanti bisa di-tighten per route
-        $csp = $this->buildContentSecurityPolicy($request);
+        $csp = $this->buildContentSecurityPolicy($request, $isThemePreview);
         $response->headers->set('Content-Security-Policy', $csp, false);
 
         // Hapus X-Powered-By untuk sembunyikan fingerprint
@@ -97,7 +102,7 @@ class SecurityHeaders
      *
      * @return string
      */
-    protected function buildContentSecurityPolicy(Request $request): string
+    protected function buildContentSecurityPolicy(Request $request, bool $isThemePreview = false): string
     {
         $isDev = config('app.debug');
 
@@ -114,7 +119,7 @@ class SecurityHeaders
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",
-            "frame-ancestors 'none'",
+            "frame-ancestors " . ($isThemePreview ? "'self'" : "'none'"),
         ];
 
         // Upgrade insecure requests hanya di production HTTPS
