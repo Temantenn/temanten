@@ -26,6 +26,7 @@ class Guest extends Model
     ];
 
     protected $casts = [
+        'jumlah_tamu' => 'integer',
         'checked_in_at' => 'datetime',
     ];
 
@@ -74,7 +75,22 @@ class Guest extends Model
         if ($this->checked_in_at) {
             return false;
         }
-        $this->checked_in_at = now();
-        return $this->save();
+
+        $timestamp = now();
+        $updated = static::query()
+            ->whereKey($this->getKey())
+            ->whereNull('checked_in_at')
+            ->update([
+                'checked_in_at' => $timestamp,
+                'updated_at'    => $timestamp,
+            ]);
+
+        if ($updated > 0) {
+            $this->checked_in_at = $timestamp;
+            return true;
+        }
+
+        $this->refresh();
+        return false;
     }
 }

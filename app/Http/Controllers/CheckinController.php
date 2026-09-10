@@ -34,6 +34,10 @@ class CheckinController extends Controller
             abort(404, 'Undangan tidak ditemukan atau belum aktif.');
         }
 
+        if ($invitation->isExpired()) {
+            abort(410, 'Undangan ini sudah kedaluwarsa.');
+        }
+
         $guest = Guest::where('invitation_id', $invitation->id)
             ->where('checkin_token', $token)
             ->first();
@@ -55,14 +59,19 @@ class CheckinController extends Controller
             ->where('status', 'active')
             ->firstOrFail();
 
+        if ($invitation->isExpired()) {
+            abort(410, 'Undangan ini sudah kedaluwarsa.');
+        }
+
         $guest = Guest::where('invitation_id', $invitation->id)
             ->where('checkin_token', $token)
             ->firstOrFail();
 
-        $alreadyCheckedIn = $guest->checked_in_at !== null;
+        $wasCheckedIn = $guest->checked_in_at !== null;
+        $justCheckedIn = false;
 
-        if (!$alreadyCheckedIn) {
-            $guest->markCheckedIn();
+        if (!$wasCheckedIn) {
+            $justCheckedIn = $guest->markCheckedIn();
 
             // Bust invitation cache (kalau ada views yang pakai checked_in_at)
             Cache::forget("invitation:{$invitation->slug}");
@@ -77,8 +86,8 @@ class CheckinController extends Controller
         return view('checkin.show', [
             'invitation'       => $invitation,
             'guest'            => $guest,
-            'alreadyCheckedIn' => $alreadyCheckedIn,
-            'justCheckedIn'    => !$alreadyCheckedIn,
+            'alreadyCheckedIn' => $wasCheckedIn || !$justCheckedIn,
+            'justCheckedIn'    => $justCheckedIn,
         ]);
     }
 }

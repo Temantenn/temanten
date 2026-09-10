@@ -13,6 +13,7 @@ class Order extends Model
         'order_number',
         'theme_id',
         'user_id',
+        'invitation_id',
         'unique_code',
         'total_amount',
         'status',
@@ -31,5 +32,10 @@ class Order extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function invitation()
+    {
+        return $this->belongsTo(Invitation::class);
     }
 }

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\URL;
 
 class InvitationController extends Controller
 {
@@ -17,6 +18,16 @@ class InvitationController extends Controller
     {
         $cacheKey = "invitation:{$slug}";
         $cached = Cache::get($cacheKey);
+
+        // Cache TTL can outlive the invitation expiry. Never render a cached
+        // invitation that is no longer active or has already expired.
+        if ($cached && isset($cached['invitation'])) {
+            $cachedInvitation = $cached['invitation'];
+            if (!$cachedInvitation->isViewable()) {
+                Cache::forget($cacheKey);
+                $cached = null;
+            }
+        }
 
         if ($cached) {
             $invitation = $cached['invitation'];
@@ -44,6 +55,11 @@ class InvitationController extends Controller
         }
 
         $viewPath = $invitation->theme->view_path;
+
+        // Convert stored invitation media paths into short-lived signed URLs
+        // only for the public invitation render. Client dashboard paths remain
+        // unchanged and continue to use the normal storage disk.
+        $this->signInvitationMedia($invitation);
 
         if (!view()->exists($viewPath)) {
             abort(404, "File tema tidak ditemukan: $viewPath");
@@ -86,7 +102,46 @@ class InvitationController extends Controller
         return response($content);
     }
 
-    public function demo($themeSlug)
+    private function signInvitationMedia(Invitation $invitation): void
+    {
+        $content = $invitation->content ?? [];
+        $expiresAt = now()->addSeconds((int) config('temanten.invitation_cache_ttl', 3600));
+
+        $walk = function (&$value) use (&$walk, $invitation, $expiresAt): void {
+            if (is_array($value)) {
+                foreach ($value as &$item) {
+                    $walk($item);
+                }
+                unset($item);
+                return;
+            }
+
+            if (!is_string($value)) {
+                return;
+            }
+
+            $prefix = 'storage/invitations/' . $invitation->id . '/';
+            if (!str_starts_with($value, $prefix)) {
+                return;
+            }
+
+            $filename = substr($value, strlen($prefix));
+            if ($filename === '' || basename($filename) !== $filename) {
+                return;
+            }
+
+            $value = URL::temporarySignedRoute(
+                'storage.images',
+                $expiresAt,
+                ['uuid' => $invitation->uuid, 'filename' => $filename]
+            );
+        };
+
+        $walk($content);
+        $invitation->content = $content;
+    }
+
+    public function demo($themeSlug, Request $request)
     {
         $theme = Theme::where('slug', $themeSlug)->firstOrFail();
 
@@ -421,6 +476,10 @@ class InvitationController extends Controller
             $payload['comment'] = $comment === '' ? null : $comment;
         }
 
+        if (array_key_exists('jumlah_tamu', $data) && $data['jumlah_tamu'] !== null) {
+            $payload['jumlah_tamu'] = (int) $data['jumlah_tamu'];
+        }
+
         // Resolve target guest. Match priority:
         //   1) ?to={token_or_slug} (explicit invitation link per tamu, e.g. /undangan/{slug}?to={token})
         //   2) name match against existing guest (real guest from Excel / manual entry)
@@ -451,8 +510,10 @@ class InvitationController extends Controller
             if (! $guest) {
                 $nameLower = strtolower($name);
                 $guest = $invitation->guests()
-                    ->whereRaw('LOWER(name) LIKE ?', ['%' . $nameLower . '%'])
-                    ->orWhereRaw('? LIKE CONCAT(\'%\', LOWER(name), \'%\')', [$nameLower])
+                    ->where(function ($query) use ($nameLower) {
+                        $query->whereRaw('LOWER(name) LIKE ?', ['%' . $nameLower . '%'])
+                            ->orWhereRaw('? LIKE CONCAT(\'%\', LOWER(name), \'%\')', [$nameLower]);
+                    })
                     ->first();
             }
         }

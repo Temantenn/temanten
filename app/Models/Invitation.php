@@ -155,15 +155,15 @@ class Invitation extends Model
     {
         $clientOg = $this->content['media']['og_image'] ?? null;
 
-        if ($clientOg && Storage::disk('public')->exists($clientOg)) {
-            return asset('storage/' . $clientOg);
+        if ($clientOg && $this->publicFileUrl($clientOg)) {
+            return $this->publicFileUrl($clientOg);
         }
 
         // Fallback to Cover Image (which might be handled by theme or specific path)
         $cover = $this->cover_image;
         if ($cover) {
             // Check if cover is a placeholder (http) or a local storage path
-            return \Illuminate\Support\Str::startsWith($cover, 'http') ? $cover : asset('storage/' . $cover);
+            return $this->publicFileUrl($cover) ?? asset('favicon.ico');
         }
 
         return asset('favicon.ico');
@@ -173,8 +173,8 @@ class Invitation extends Model
     {
         $clientMusic = $this->content['media']['music'] ?? null;
 
-        if ($clientMusic && Storage::disk('public')->exists($clientMusic)) {
-            return 'storage/' . $clientMusic;
+        if ($clientMusic && $this->publicFileUrl($clientMusic)) {
+            return $this->publicFileUrl($clientMusic);
         }
 
         if ($this->theme) {
@@ -182,6 +182,32 @@ class Invitation extends Model
         }
 
         return '';
+    }
+
+    /**
+     * Normalize both legacy `storage/invitations/...` values and relative
+     * public-disk paths into one browser URL without `storage/storage/...`.
+     */
+    protected function publicFileUrl(?string $path): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+
+        if (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        $relative = ltrim($path, '/');
+        if (\Illuminate\Support\Str::startsWith($relative, 'storage/')) {
+            $relative = substr($relative, strlen('storage/'));
+        }
+
+        if (!Storage::disk('public')->exists($relative)) {
+            return null;
+        }
+
+        return asset('storage/' . $relative);
     }
 
     public function getGalleryPhotosAttribute()

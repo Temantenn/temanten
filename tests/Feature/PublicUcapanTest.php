@@ -44,6 +44,7 @@ class PublicUcapanTest extends TestCase
             'invitation_id' => $invitation->id,
             'name'          => 'Budi Santoso',
             'rsvp_status'   => 'hadir',
+            'jumlah_tamu'   => 2,
             'comment'       => 'Selamat menempuh hidup baru.',
         ]);
 
@@ -128,6 +129,50 @@ class PublicUcapanTest extends TestCase
         ]);
     }
 
+    public function test_partial_name_match_cannot_update_guest_from_another_invitation(): void
+    {
+        $invitation = $this->createInvitation();
+        $otherTheme = Theme::create([
+            'name'      => 'Other Test Theme',
+            'slug'      => 'other-test-theme',
+            'view_path' => 'themes.test.index',
+            'is_active' => true,
+        ]);
+        $otherInvitation = Invitation::create([
+            'uuid'            => (string) Str::uuid(),
+            'theme_id'        => $otherTheme->id,
+            'slug'            => 'other-undangan',
+            'client_whatsapp' => '6281234567890',
+            'status'          => 'active',
+            'event_date'      => now()->addDay(),
+            'expires_at'      => now()->addDay(),
+            'content'         => ['mempelai' => ['pria' => [], 'wanita' => []]],
+        ]);
+
+        $otherGuest = $otherInvitation->guests()->create([
+            'name'        => 'Budi Santoso',
+            'category'    => 'Umum',
+            'rsvp_status' => 'pending',
+        ]);
+
+        $this->postJson("/undangan/{$invitation->slug}/ucapan", [
+            'nama'      => 'Santoso',
+            'ucapan'    => 'Salam untuk kalian.',
+            'kehadiran' => 'hadir',
+        ])->assertOk();
+
+        $this->assertDatabaseHas('guests', [
+            'id'            => $otherGuest->id,
+            'rsvp_status'   => 'pending',
+            'comment'       => null,
+        ]);
+        $this->assertDatabaseHas('guests', [
+            'invitation_id'     => $invitation->id,
+            'name'              => 'Santoso',
+            'is_anonymous_wish' => true,
+        ]);
+    }
+
     private function createInvitation(string $status = 'active', mixed $expiresAt = null): Invitation
     {
         $theme = Theme::create([
@@ -195,9 +240,15 @@ class PublicUcapanTest extends TestCase
             $table->string('name');
             $table->string('slug');
             $table->string('category')->default('Regular');
-            $table->string('phone_number')->nullable();
+            $table->string('whatsapp')->nullable();
+            $table->string('address', 500)->nullable();
+            $table->string('checkin_token', 64)->nullable()->unique();
             $table->string('rsvp_status')->default('pending');
+            $table->unsignedTinyInteger('jumlah_tamu')->nullable();
+            $table->timestamp('checked_in_at')->nullable();
+            $table->boolean('is_anonymous_wish')->default(false)->index();
             $table->text('comment')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
 

@@ -39,7 +39,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'slug'            => ['required', 'alpha_dash', 'not_regex:/^demo(?:-|$)/i', 'unique:invitations,slug'],
-            'theme_id'        => 'required|exists:themes,id',
+            'theme_id'        => 'required|exists:themes,id,is_active,1',
             'client_whatsapp' => [
                 'required',
                 'string',
@@ -135,7 +135,7 @@ class OrderController extends Controller
                 'quote'        => 'Kami mengundang Anda untuk merayakan pernikahan kami.'
             ];
 
-            Invitation::create([
+            $invitation = Invitation::create([
                 'uuid'            => (string) Str::uuid(),
                 'user_id'         => $user->id,
                 'theme_id'        => $request->theme_id,
@@ -146,6 +146,10 @@ class OrderController extends Controller
                 'client_whatsapp' => $whatsapp,
                 'content'         => $content
             ]);
+
+            // Keep order and invitation lifecycle linked for expiry and admin
+            // approval. This also avoids guessing the invitation by user/theme.
+            $order->update(['invitation_id' => $invitation->id]);
 
             DB::commit();
 

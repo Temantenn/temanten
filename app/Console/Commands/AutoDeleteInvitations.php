@@ -28,7 +28,9 @@ class AutoDeleteInvitations extends Command
                 Storage::deleteDirectory($directoryPath);
                 $this->info("- Folder foto undangan ID {$invitation->id} dihapus.");
             }
-            $invitation->delete();
+            // Invitation uses SoftDeletes; cleanup is explicitly the permanent
+            // retention job, so remove the row and its guests permanently.
+            $invitation->forceDelete();
             
             $this->info("- Data database ID {$invitation->id} dihapus.");
             $count++;

@@ -117,7 +117,12 @@ class ThemeController extends Controller
             if (!is_dir($musicDir)) {
                 @mkdir($musicDir, 0775, true);
             }
-            $musicName = Str::slug($theme->slug) . '-' . time() . '.' . strtolower($musicFile->getClientOriginalExtension());
+            $musicExt = strtolower((string) $musicFile->guessExtension());
+            if (!in_array($musicExt, ['mp3', 'm4a', 'wav', 'ogg'], true)) {
+                abort(422, 'Format musik tidak valid.');
+            }
+
+            $musicName = Str::slug($theme->slug) . '-' . time() . '.' . $musicExt;
 
             // Hapus file lama jika ada
             if (!empty($theme->default_music) && $theme->default_music !== $musicName && Storage::disk('public')->exists('themes/music/' . $theme->default_music)) {

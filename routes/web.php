@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
+use App\Models\Invitation;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ThemeController;
@@ -22,27 +23,39 @@ Route::get('/storage/invitations/{uuid}/{filename}', function ($uuid, $filename)
         abort(404);
     }
 
-    $path = "public/invitations/{$uuid}/{$filename}";
-
-    if (!Storage::exists($path)) {
+    $invitation = Invitation::where('uuid', $uuid)->first();
+    if (!$invitation) {
         abort(404);
     }
 
-    $file = Storage::get($path);
-    $type = Storage::mimeType($path);
+    $relativePath = "invitations/{$invitation->id}/{$filename}";
+
+    $disk = Storage::disk(config('filesystems.default', 'public'));
+
+    if (!$disk->exists($relativePath)) {
+        abort(404);
+    }
+
+    $file = $disk->get($relativePath);
+    $type = $disk->mimeType($relativePath);
 
     $response = Response::make($file, 200);
     $response->header("Content-Type", $type);
     $response->header("Cache-Control", "public, max-age=3600");
 
     return $response;
-})->middleware('throttle:signed-images')->name('storage.images');
+})->middleware(['signed', 'throttle:signed-images'])->name('storage.images');
 
 // Fallback: serve storage files directly (bypass symlink issue on LiteSpeed/cPanel)
 // This route catches ALL /storage/* requests that aren't served by the symlink
 Route::get('/storage/{path}', function ($path) {
     // Prevent path traversal
     $path = str_replace('..', '', $path);
+
+    // Invitation media must go through the signed route above.
+    if (str_starts_with($path, 'invitations/')) {
+        abort(404);
+    }
     $fullPath = storage_path('app/public/' . $path);
 
     // Ensure the resolved path is within storage
@@ -182,4 +195,3 @@ Route::get("/dev-payment-audit/{orderNumber}", function ($orderNumber) {
     $order->dynamic_qris = '00000000000000000000';
     return view('order.payment', ['order' => $order, '__dev_audit' => true]);
 });
-

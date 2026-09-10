@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\Invitation;
+use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -30,18 +30,23 @@ class AutoCancelOrders extends Command
     {
         $this->info('Mengecek pesanan pending yang kadaluarsa...');
         
-        // Cari pesanan dengan status 'pending' yang dibuat lebih dari 24 jam yang lalu
-        $limitDate = Carbon::now()->subHours(24);
-        
-        $expiredOrders = Invitation::where('status', 'pending')
-                                   ->where('created_at', '<', $limitDate)
-                                   ->get();
+        // Order punya expiry sendiri (default 2 jam). Jangan memakai umur
+        // invitation karena keduanya memiliki lifecycle yang berbeda.
+        $expiredOrders = Order::where('status', 'pending')
+            ->whereNotNull('expired_at')
+            ->where('expired_at', '<=', Carbon::now())
+            ->with('invitation')
+            ->get();
 
         $count = $expiredOrders->count();
 
         if ($count > 0) {
             foreach ($expiredOrders as $order) {
-                $order->update(['status' => 'cancelled']);
+                $order->update(['status' => 'expired']);
+
+                if ($order->invitation && $order->invitation->status === 'pending') {
+                    $order->invitation->update(['status' => 'cancelled']);
+                }
                 
                 $this->info("- Pesanan ID {$order->id} (Slug: {$order->slug}) dibatalkan.");
                 

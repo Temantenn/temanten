@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Invitation;
+use App\Models\Order;
 use App\Models\ActivityLog;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -43,8 +44,8 @@ class AdminController extends Controller
                 // detection, inconsistent status transitions.
                 $invitation = Invitation::with('user')->lockForUpdate()->findOrFail($id);
 
-                if ($invitation->status === 'active') {
-                    return ['error' => 'Pesanan ini sudah aktif sebelumnya!'];
+                if ($invitation->status !== 'pending') {
+                    return ['error' => 'Hanya pesanan pending yang dapat disetujui.'];
                 }
 
                 $user = $invitation->user;
@@ -86,6 +87,10 @@ class AdminController extends Controller
                 $invitation->update([
                     'status'  => 'active',
                 ]);
+
+                Order::where('invitation_id', $invitation->id)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'paid']);
 
                 // Set default expiry
                 $invitation->setDefaultExpiry();
@@ -236,6 +241,10 @@ class AdminController extends Controller
     public function resetPassword($user_id)
     {
         $user = User::findOrFail($user_id);
+
+        if ($user->role !== 'client') {
+            return redirect()->back()->with('error', 'Reset password ini hanya tersedia untuk akun client.');
+        }
 
         $newPassword = Str::random(8);
 
