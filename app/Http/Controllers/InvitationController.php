@@ -218,6 +218,12 @@ class InvitationController extends Controller
                     'tempat' => 'Masjid Besar Istiqlal',
                     'alamat' => 'Jl. Taman Wijaya Kusuma, Jakarta Pusat',
                     'maps' => 'https://goo.gl/maps/contoh',
+                    'wilayah' => [
+                        'village' => 'Gambir',
+                        'district' => 'Gambir',
+                        'regency' => 'Jakarta Pusat',
+                        'province' => 'DKI Jakarta',
+                    ],
                 ],
                 'resepsi' => [
                     'judul' => 'Resepsi Pernikahan',
@@ -225,6 +231,12 @@ class InvitationController extends Controller
                     'tempat' => 'Grand Ballroom Hotel Mulia',
                     'alamat' => 'Jl. Asia Afrika, Senayan, Jakarta',
                     'maps' => 'https://goo.gl/maps/contoh',
+                    'wilayah' => [
+                        'village' => 'Senayan',
+                        'district' => 'Kebayoran Baru',
+                        'regency' => 'Jakarta Selatan',
+                        'province' => 'DKI Jakarta',
+                    ],
                 ],
             ],
             'quote' => 'Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu isteri-isteri dari jenismu sendiri...',
@@ -259,6 +271,7 @@ class InvitationController extends Controller
                 'account_holder' => 'Romeo Putra',
                 'alamat_kado' => 'Jl. Mawar Melati No. 123, Jakarta Selatan',
                 'maps_kado' => 'https://goo.gl/maps/kado',
+                'qris_image' => asset('img/qris.webp'),
             ],
         ];
 
@@ -272,7 +285,7 @@ class InvitationController extends Controller
         $toToken = trim((string) $request->query('to', ''));
         $resolvedGuest = null;
 
-        if ($toToken !== '') {
+        if ($toToken !== '' && method_exists($invitation, 'guests')) {
             $resolvedGuest = $invitation->guests()
                 ->where(function ($q) use ($toToken) {
                     $q->where('checkin_token', $toToken)

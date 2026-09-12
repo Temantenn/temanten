@@ -1296,12 +1296,12 @@
     $giftAddress = trim((string) ($invitation->content['amplop']['alamat_kado'] ?? ''));
     $giftMap = $mapsUrl($invitation->content['amplop']['maps_kado'] ?? '', $giftAddress);
 
-    function getFileUrl($path, $default = 'https://via.placeholder.com/300') {
-        if (empty($path)) return $default;
-        if (filter_var($path, FILTER_VALIDATE_URL)) return $path;
-        if (strpos($path, 'storage/') === 0) return asset($path);
-        if (strpos($path, 'assets/') === 0) return asset($path);
-        return asset('storage/' . $path);
+    $pixelAdventureFileUrl = function ($path, $default = 'https://via.placeholder.com/300') {
+            if (empty($path)) return $default;
+            if (filter_var($path, FILTER_VALIDATE_URL)) return $path;
+            if (strpos($path, 'storage/') === 0) return asset($path);
+            if (strpos($path, 'assets/') === 0) return asset($path);
+            return asset('storage/' . $path);
     }
 @endphp
 
@@ -1313,7 +1313,7 @@
 @php
     $paMusic = $invitation->content['media']['music'] ?? null;
     $paMusicSrc = ($paMusic && !str_contains($paMusic, 'placeholder'))
-        ? getFileUrl($paMusic)
+        ? $pixelAdventureFileUrl($paMusic)
         : asset('assets/music/pixel-adventure.mp3');
 @endphp
 <div class="music-btn" id="musicBtn" onclick="toggleMusic()">
@@ -1586,7 +1586,7 @@
         
         <div class="modal-body">
             <div class="couple-detail">
-                <img src="{{ getFileUrl($invitation->content['mempelai']['pria']['foto'] ?? null) }}"
+                <img src="{{ $pixelAdventureFileUrl($invitation->content['mempelai']['pria']['foto'] ?? null) }}"
                      class="couple-detail-photo">
                 
                 <div class="couple-detail-info">
@@ -1637,7 +1637,7 @@
         
         <div class="modal-body">
             <div class="couple-detail">
-                <img src="{{ getFileUrl($invitation->content['mempelai']['wanita']['foto'] ?? null) }}"
+                <img src="{{ $pixelAdventureFileUrl($invitation->content['mempelai']['wanita']['foto'] ?? null) }}"
                      class="couple-detail-photo">
                 
                 <div class="couple-detail-info">
@@ -1818,7 +1818,7 @@
             @if(isset($invitation->content['amplop']['qris_image']) && $invitation->content['amplop']['qris_image'])
             <div style="margin-top: 1rem;">
                 <p style="color: #ffd700; margin-bottom: 0.5rem;"><strong>QRIS:</strong></p>
-                <img src="{{ getFileUrl($invitation->content['amplop']['qris_image']) }}" 
+                <img src="{{ $pixelAdventureFileUrl($invitation->content['amplop']['qris_image']) }}"
                      style="max-width: 200px; border: 3px solid #ffd700;">
             </div>
             @endif
@@ -1951,8 +1951,8 @@
         <div class="modal-body">
         <div class="photo-grid">
             @foreach($invitation->content['media']['gallery'] as $photo)
-            <div class="photo-item" onclick="viewPhoto('{{ getFileUrl($photo) }}')">
-                <img src="{{ getFileUrl($photo) }}" alt="Gallery">
+            <div class="photo-item" onclick="viewPhoto('{{ $pixelAdventureFileUrl($photo) }}')">
+                <img src="{{ $pixelAdventureFileUrl($photo) }}" alt="Gallery">
             </div>
             @endforeach
         </div>
@@ -2232,6 +2232,3 @@
 
 </body>
 </html>
-
-
-

@@ -151,6 +151,8 @@ Akses default Laragon: **http://temanten.test**
 
 ## Local Development
 
+Untuk debugging lokal, ubah `APP_DEBUG=true` di file `.env`. Nilai pada `.env.example` sengaja `false` agar konfigurasi awal tidak membuka stack trace ke publik.
+
 ```bash
 # Terminal 1: Vite dev server
 npm run dev
@@ -397,6 +399,14 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
+
+Jalankan scheduler di production agar pembatalan order dan pembersihan undangan terjadwal tetap berjalan:
+
+```bash
+* * * * * cd /path/ke/temanten && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Endpoint health-check tersedia di `/up`; gunakan endpoint ini untuk uptime monitor atau load balancer.
 
 Risiko yang perlu dicek manual:
 

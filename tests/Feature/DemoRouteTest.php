@@ -38,6 +38,37 @@ class DemoRouteTest extends TestCase
         }
     }
 
+    public function test_demo_supplies_optional_region_and_qris_data(): void
+    {
+        Theme::create([
+            'name' => 'Cherry Blossom',
+            'slug' => 'cherry-blossom',
+            'view_path' => 'themes.cherry-blossom.index',
+            'thumbnail' => 'cherry-blossom.png',
+            'is_active' => true,
+        ]);
+
+        $response = $this->get(route('demo.show', 'cherry-blossom'));
+
+        $response->assertOk()
+            ->assertSee('DKI Jakarta')
+            ->assertSee('img/qris.webp');
+    }
+
+    public function test_demo_guest_token_query_does_not_break_dummy_invitation(): void
+    {
+        Theme::create([
+            'name' => 'Floral Pastel',
+            'slug' => 'floral-pastel',
+            'view_path' => 'themes.floral-pastel.index',
+            'thumbnail' => 'floral-pastel.png',
+            'is_active' => true,
+        ]);
+
+        $this->get(route('demo.show', ['theme' => 'floral-pastel', 'to' => 'demo-guest']))
+            ->assertOk();
+    }
+
     private function resetSchema(): void
     {
         Schema::dropIfExists('themes');

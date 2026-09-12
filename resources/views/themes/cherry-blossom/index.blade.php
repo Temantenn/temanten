@@ -714,9 +714,9 @@
             : 'https://www.google.com/maps/search/?api=1&query=' . urlencode($target);
     };
 
-    function getImgUrl($path) {
-        if (!$path) return 'https://via.placeholder.com/150';
-        return \Illuminate\Support\Str::startsWith($path, 'http') ? $path : asset($path);
+    $cherryBlossomImgUrl = function ($path) {
+            if (!$path) return 'https://via.placeholder.com/150';
+            return \Illuminate\Support\Str::startsWith($path, 'http') ? $path : asset($path);
     }
 @endphp
 
@@ -725,7 +725,7 @@
         @php
             $cbMusic = $invitation->content['media']['music'] ?? null;
             $cbMusicSrc = ($cbMusic && !str_contains($cbMusic, 'placeholder'))
-                ? getImgUrl($cbMusic)
+                ? $cherryBlossomImgUrl($cbMusic)
                 : asset('assets/music/cherry-blossom.mp3');
         @endphp
         <div class="music-box" onclick="toggleMusic()" id="musicBtn" style="display:none;">
@@ -736,7 +736,7 @@
         </audio>
 
         {{-- ═══════════ COVER ═══════════ --}}
-        <section class="hero" id="heroCover" style="background-image: url('{{ getImgUrl($invitation->content['media']['cover'] ?? '') }}');">
+        <section class="hero" id="heroCover" style="background-image: url('{{ $cherryBlossomImgUrl($invitation->content['media']['cover'] ?? '') }}');">
             <div class="hero-box">
                 <div class="hero-ornament">🌸</div>
                 <p class="hero-subtitle">The Wedding Of</p>
@@ -763,7 +763,7 @@
         <div id="mainContent">
 
             {{-- Inner Hero --}}
-            <div style="position: relative; text-align: center; color: white; padding: 60px 25px; background-image: url('{{ getImgUrl($invitation->content['media']['cover'] ?? '') }}'); background-size: cover; background-position: center;">
+            <div style="position: relative; text-align: center; color: white; padding: 60px 25px; background-image: url('{{ $cherryBlossomImgUrl($invitation->content['media']['cover'] ?? '') }}'); background-size: cover; background-position: center;">
                 <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(232,160,191,0.5), rgba(74,53,64,0.6));"></div>
                 <div style="position: relative; z-index: 2;">
                     <div style="font-size: 1.5rem; margin-bottom: 10px;">🌸</div>
@@ -791,7 +791,7 @@
                 <div class="glass-card">
                     <div style="margin-bottom: 30px;">
                         <div class="couple-img-wrapper">
-                            <img src="{{ getImgUrl($invitation->content['mempelai']['pria']['foto'] ?? '') }}" class="couple-img">
+                            <img src="{{ $cherryBlossomImgUrl($invitation->content['mempelai']['pria']['foto'] ?? '') }}" class="couple-img">
                             <div class="couple-img-frame"></div>
                         </div>
                         <h3 class="couple-name">{{ $invitation->content['mempelai']['pria']['nama'] ?? 'Mempelai Pria' }}</h3>
@@ -807,7 +807,7 @@
 
                     <div>
                         <div class="couple-img-wrapper">
-                            <img src="{{ getImgUrl($invitation->content['mempelai']['wanita']['foto'] ?? '') }}" class="couple-img">
+                            <img src="{{ $cherryBlossomImgUrl($invitation->content['mempelai']['wanita']['foto'] ?? '') }}" class="couple-img">
                             <div class="couple-img-frame"></div>
                         </div>
                         <h3 class="couple-name">{{ $invitation->content['mempelai']['wanita']['nama'] ?? 'Mempelai Wanita' }}</h3>
@@ -869,7 +869,7 @@
                         @php
                             $akadW = $invitation->content['acara']['akad']['wilayah'] ?? [];
                             $akadL1 = collect([!empty($akadW['village']) ? 'Kel. '.Str::title(strtolower($akadW['village'])) : null, !empty($akadW['district']) ? 'Kec. '.Str::title(strtolower($akadW['district'])) : null])->filter()->implode(', ');
-                            $akadL2 = collect([!empty($akadW['regency']) ? Str::title(strtolower($akadW['regency'])) : null, !empty($akadW['province']) ? Str::title(strtolower($akadW['province'])) : null])->filter()->implode(', ');
+                            $akadL2 = collect([!empty($akadW['regency']) ? Str::title(strtolower($akadW['regency'])) : null, !empty($akadW['province']) ? (strtoupper($akadW['province']) === 'DKI JAKARTA' ? 'DKI Jakarta' : Str::title(strtolower($akadW['province']))) : null])->filter()->implode(', ');
                         @endphp
                         @if($akadL1)<p class="event-address">{{ $akadL1 }}</p>@endif
                         @if($akadL2)<p class="event-address">{{ $akadL2 }}</p>@endif
@@ -891,7 +891,7 @@
                         @php
                             $resepsiW = $invitation->content['acara']['resepsi']['wilayah'] ?? [];
                             $resepsiL1 = collect([!empty($resepsiW['village']) ? 'Kel. '.Str::title(strtolower($resepsiW['village'])) : null, !empty($resepsiW['district']) ? 'Kec. '.Str::title(strtolower($resepsiW['district'])) : null])->filter()->implode(', ');
-                            $resepsiL2 = collect([!empty($resepsiW['regency']) ? Str::title(strtolower($resepsiW['regency'])) : null, !empty($resepsiW['province']) ? Str::title(strtolower($resepsiW['province'])) : null])->filter()->implode(', ');
+                            $resepsiL2 = collect([!empty($resepsiW['regency']) ? Str::title(strtolower($resepsiW['regency'])) : null, !empty($resepsiW['province']) ? (strtoupper($resepsiW['province']) === 'DKI JAKARTA' ? 'DKI Jakarta' : Str::title(strtolower($resepsiW['province']))) : null])->filter()->implode(', ');
                         @endphp
                         @if($resepsiL1)<p class="event-address">{{ $resepsiL1 }}</p>@endif
                         @if($resepsiL2)<p class="event-address">{{ $resepsiL2 }}</p>@endif
@@ -914,7 +914,7 @@
                 <div class="glass-card">
                     <div class="gallery-grid">
                         @foreach($invitation->content['media']['gallery'] as $photo)
-                            <img src="{{ getImgUrl($photo) }}" class="gallery-item" loading="lazy">
+                            <img src="{{ $cherryBlossomImgUrl($photo) }}" class="gallery-item" loading="lazy">
                         @endforeach
                     </div>
                 </div>
@@ -943,7 +943,7 @@
                     @if(!empty($invitation->content['amplop']['qris_image']))
                     <div style="margin-top: 20px; text-align: center;">
                         <p style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 3px; margin-bottom: 12px; color: var(--primary-dark); font-weight: 600;">Atau Pindai QRIS</p>
-                        <img src="{{ getImgUrl($invitation->content['amplop']['qris_image'] ?? '') }}" alt="QRIS" loading="lazy" style="width: 170px; max-width: 70%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; background: #fff; padding: 10px; border-radius: 16px; border: 1px solid rgba(232,160,191,0.2); box-shadow: 0 4px 15px rgba(232,160,191,0.15); margin: 0 auto; display: block;">
+                        <img src="{{ $cherryBlossomImgUrl($invitation->content['amplop']['qris_image'] ?? '') }}" alt="QRIS" loading="lazy" style="width: 170px; max-width: 70%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; background: #fff; padding: 10px; border-radius: 16px; border: 1px solid rgba(232,160,191,0.2); box-shadow: 0 4px 15px rgba(232,160,191,0.15); margin: 0 auto; display: block;">
                     </div>
                     @endif
 

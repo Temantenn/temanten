@@ -59,10 +59,8 @@ if (!function_exists('theme_music_url')) {
     {
         if ($theme instanceof \App\Models\Theme) {
             $filename = $theme->default_music ?: ($theme->slug . '.mp3');
-            $fallbackSlug = $theme->slug ?: $fallbackSlug;
         } elseif (is_string($theme) && $theme !== '') {
             $filename = $theme . '.mp3';
-            $fallbackSlug = $theme;
         } else {
             $filename = $fallbackSlug . '.mp3';
         }

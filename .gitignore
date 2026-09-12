@@ -25,6 +25,7 @@
 /storage/logs/**
 /storage/pail
 /test-results/
+/playwright-report/
 /bootstrap/cache/*.php
 /vendor
 Homestead.json
